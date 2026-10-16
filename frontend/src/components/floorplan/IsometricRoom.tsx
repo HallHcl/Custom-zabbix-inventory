@@ -24,14 +24,13 @@ export function IsometricRoom({
 }: IsometricRoomProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('3d')
   const [zoom, setZoom] = useState<number>(1)
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
-  // Isometric projection helper
-  // Grid coordinates: row (0: C, 1: B, 2: A), col (0..3)
+  // Isometric projection coordinates
   const getRackCoordinates = (rowLetter: string, colNum: number) => {
     const rowIdx = rowLetter.includes('C') ? 0 : rowLetter.includes('B') ? 1 : 2
     const colIdx = colNum - 1
 
-    // 2.5D Isometric projection mapping
     const originX = 540
     const originY = 240
     const tileW = 110
@@ -45,32 +44,35 @@ export function IsometricRoom({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'critical':
-        return '#f43f5e' // Rose red
+        return '#e82127' // Tesla Red
       case 'warning':
         return '#f59e0b' // Amber yellow
       case 'offline':
-        return '#64748b' // Slate
+        return '#52525b' // Slate
       case 'healthy':
       default:
-        return '#10b981' // Emerald green
+        return '#10b981' // Emerald
     }
   }
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.15, 1.4))
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.15, 0.7))
-  const handleReset = () => setZoom(1)
+  const handleReset = () => {
+    setZoom(1)
+    setStatusFilter(null)
+  }
 
   return (
-    <div className="relative rounded-2xl bg-[#090f1d] border border-slate-800/80 shadow-2xl overflow-hidden flex flex-col h-[520px]">
+    <div className="relative rounded-2xl bg-[#090909] border border-[#1f1f1f] shadow-2xl overflow-hidden flex flex-col h-[520px]">
       {/* Top View Mode Toggles */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 p-1 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur shadow-lg">
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
         <button
           type="button"
           onClick={() => setViewMode('3d')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             viewMode === '3d'
-              ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#292929] text-white shadow-sm'
+              : 'text-zinc-400 hover:text-white'
           }`}
         >
           <Eye className="w-3.5 h-3.5" />
@@ -79,10 +81,10 @@ export function IsometricRoom({
         <button
           type="button"
           onClick={() => setViewMode('status')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             viewMode === 'status'
-              ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#292929] text-white shadow-sm'
+              : 'text-zinc-400 hover:text-white'
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
@@ -91,10 +93,10 @@ export function IsometricRoom({
         <button
           type="button"
           onClick={() => setViewMode('temp')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             viewMode === 'temp'
-              ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#292929] text-white shadow-sm'
+              : 'text-zinc-400 hover:text-white'
           }`}
         >
           <Thermometer className="w-3.5 h-3.5" />
@@ -103,10 +105,10 @@ export function IsometricRoom({
         <button
           type="button"
           onClick={() => setViewMode('power')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             viewMode === 'power'
-              ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[#292929] text-white shadow-sm'
+              : 'text-zinc-400 hover:text-white'
           }`}
         >
           <Zap className="w-3.5 h-3.5" />
@@ -122,29 +124,28 @@ export function IsometricRoom({
           style={{ transform: `scale(${zoom})` }}
         >
           <defs>
-            {/* Ambient Room Grid Floor Pattern */}
-            <pattern id="floorTiles" width="40" height="20" patternUnits="userSpaceOnUse">
+            {/* Tesla Floor Tiles Pattern */}
+            <pattern id="floorTilesTesla" width="40" height="20" patternUnits="userSpaceOnUse">
               <path
                 d="M 20 0 L 40 10 L 20 20 L 0 10 Z"
-                fill="#0b1322"
-                stroke="#1e293b"
-                strokeWidth="0.6"
+                fill="#0d0d0d"
+                stroke="#1c1c1c"
+                strokeWidth="0.7"
               />
             </pattern>
 
-            {/* Blue Airflow Perforated Tiles under Racks */}
-            <pattern id="coolTiles" width="40" height="20" patternUnits="userSpaceOnUse">
+            {/* Aisle Grid */}
+            <pattern id="aisleTiles" width="40" height="20" patternUnits="userSpaceOnUse">
               <path
                 d="M 20 0 L 40 10 L 20 20 L 0 10 Z"
-                fill="#082f49"
-                stroke="#0284c7"
+                fill="#161616"
+                stroke="#2b2b2b"
                 strokeWidth="0.8"
               />
             </pattern>
 
-            {/* Glowing filter for status LEDs */}
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+            <filter id="teslaGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -152,56 +153,52 @@ export function IsometricRoom({
             </filter>
           </defs>
 
-          {/* Background Room Walls & Perimeter */}
-          {/* Back Wall Left */}
-          <polygon points="120,180 540,60 540,300 120,420" fill="#152136" stroke="#1e293b" />
-          {/* Back Wall Right */}
-          <polygon points="540,60 960,180 960,420 540,300" fill="#111c30" stroke="#1e293b" />
+          {/* Back Walls */}
+          <polygon points="120,180 540,60 540,300 120,420" fill="#141414" stroke="#222222" />
+          <polygon points="540,60 960,180 960,420 540,300" fill="#0f0f0f" stroke="#222222" />
 
-          {/* Data Center Double Doors on back wall */}
-          <polygon points="500,105 580,80 580,240 500,265" fill="#1e293b" stroke="#334155" />
-          <line x1="540" y1="92" x2="540" y2="252" stroke="#475569" strokeWidth="2" />
+          {/* Double Doors */}
+          <polygon points="500,105 580,80 580,240 500,265" fill="#1c1c1c" stroke="#2c2c2c" />
+          <line x1="540" y1="92" x2="540" y2="252" stroke="#3f3f46" strokeWidth="2" />
 
-          {/* Cable Trays & Overhead Pipes */}
-          <line x1="180" y1="200" x2="540" y2="100" stroke="#38bdf8" strokeWidth="3" opacity="0.6" />
-          <line x1="540" y1="100" x2="900" y2="200" stroke="#38bdf8" strokeWidth="3" opacity="0.6" />
+          {/* Overhead Cable Trays */}
+          <line x1="180" y1="200" x2="540" y2="100" stroke="#52525b" strokeWidth="2.5" opacity="0.4" />
+          <line x1="540" y1="100" x2="900" y2="200" stroke="#52525b" strokeWidth="2.5" opacity="0.4" />
 
-          {/* Floor Polygon */}
-          <polygon points="120,420 540,300 960,420 540,540" fill="url(#floorTiles)" />
+          {/* Floor */}
+          <polygon points="120,420 540,300 960,420 540,540" fill="url(#floorTilesTesla)" />
 
-          {/* Cold Aisle Blue Floor Under Racks */}
+          {/* Cold Aisle Mat */}
           <polygon
             points="280,380 540,290 800,380 540,470"
-            fill="url(#coolTiles)"
-            opacity="0.85"
+            fill="url(#aisleTiles)"
+            opacity="0.9"
           />
 
-          {/* CRAC / AC Units on Left & Right */}
-          {/* Left AC Unit */}
+          {/* CRAC Cooling Units */}
           <g transform="translate(180, 260)">
-            <polygon points="0,40 40,25 40,110 0,125" fill="#1e293b" stroke="#334155" />
-            <polygon points="40,25 90,45 90,130 40,110" fill="#0f172a" stroke="#334155" />
-            <polygon points="0,40 40,25 90,45 50,60" fill="#334155" stroke="#475569" />
-            <circle cx="65" cy="80" r="12" fill="#0284c7" opacity="0.8" />
-            <circle cx="65" cy="110" r="12" fill="#0284c7" opacity="0.8" />
+            <polygon points="0,40 40,25 40,110 0,125" fill="#181818" stroke="#2a2a2a" />
+            <polygon points="40,25 90,45 90,130 40,110" fill="#111111" stroke="#2a2a2a" />
+            <polygon points="0,40 40,25 90,45 50,60" fill="#242424" stroke="#333333" />
+            <circle cx="65" cy="80" r="11" fill="#3f3f46" opacity="0.8" />
+            <circle cx="65" cy="110" r="11" fill="#3f3f46" opacity="0.8" />
           </g>
 
-          {/* Right AC Unit */}
           <g transform="translate(810, 260)">
-            <polygon points="0,45 50,25 50,110 0,130" fill="#0f172a" stroke="#334155" />
-            <polygon points="50,25 90,40 90,125 50,110" fill="#1e293b" stroke="#334155" />
-            <polygon points="0,45 50,25 90,40 40,60" fill="#334155" stroke="#475569" />
-            <circle cx="25" cy="80" r="12" fill="#0284c7" opacity="0.8" />
-            <circle cx="25" cy="110" r="12" fill="#0284c7" opacity="0.8" />
+            <polygon points="0,45 50,25 50,110 0,130" fill="#111111" stroke="#2a2a2a" />
+            <polygon points="50,25 90,40 90,125 50,110" fill="#181818" stroke="#2a2a2a" />
+            <polygon points="0,45 50,25 90,40 40,60" fill="#242424" stroke="#333333" />
+            <circle cx="25" cy="80" r="11" fill="#3f3f46" opacity="0.8" />
+            <circle cx="25" cy="110" r="11" fill="#3f3f46" opacity="0.8" />
           </g>
 
-          {/* Render 12 Racks (Ordered from back to front for proper 2.5D overlap) */}
+          {/* 12 Racks */}
           {racks.map((rack) => {
             const { x, y } = getRackCoordinates(rack.row, rack.col)
             const isSelected = selectedRackId === rack.id
+            const isDimmed = statusFilter !== null && rack.status !== statusFilter
             const statusColor = getStatusColor(rack.status)
 
-            // Badge text depending on viewMode
             let badgeText = rack.name.replace('Rack ', '')
             if (viewMode === 'temp') badgeText = `${rack.inlet_temp_c}°C`
             if (viewMode === 'power') badgeText = `${rack.power_kw}kW`
@@ -215,77 +212,78 @@ export function IsometricRoom({
               <g
                 key={rack.id}
                 onClick={() => onSelectRack(rack)}
-                className="cursor-pointer transition-all duration-200 group"
+                className={`cursor-pointer transition-opacity duration-200 ${
+                  isDimmed ? 'opacity-30' : 'opacity-100'
+                }`}
               >
-                {/* Selection Highlight Ring on Floor */}
+                {/* Selection Ring */}
                 {isSelected && (
                   <ellipse
                     cx={x}
                     cy={y + 12}
                     rx="38"
                     ry="18"
-                    fill="#06b6d4"
-                    fillOpacity="0.25"
-                    stroke="#22d3ee"
-                    strokeWidth="2.5"
-                    filter="url(#glow)"
+                    fill="#ffffff"
+                    fillOpacity="0.1"
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                    filter="url(#teslaGlow)"
                   />
                 )}
 
                 {/* Base Shadow */}
-                <ellipse cx={x} cy={y + 10} rx="26" ry="12" fill="#000000" fillOpacity="0.5" />
+                <ellipse cx={x} cy={y + 10} rx="26" ry="12" fill="#000000" fillOpacity="0.8" />
 
-                {/* Rack Cabinet 3D Faces */}
                 {/* Front Left Face */}
                 <polygon
                   points={`${x - rackWidth / 2},${y - rackHeight + 8} ${x},${y - rackHeight + 20} ${x},${y + 12} ${x - rackWidth / 2},${y}`}
-                  fill={isSelected ? '#155e75' : '#1e293b'}
-                  stroke={isSelected ? '#38bdf8' : '#334155'}
+                  fill={isSelected ? '#2e2e2e' : '#1c1c1c'}
+                  stroke={isSelected ? '#ffffff' : '#333333'}
                   strokeWidth={isSelected ? '2' : '1'}
                 />
 
-                {/* Front Right Face (Glass door / Perforated mesh) */}
+                {/* Front Right Face */}
                 <polygon
                   points={`${x},${y - rackHeight + 20} ${x + rackDepth},${y - rackHeight + 6} ${x + rackDepth},${y - 2} ${x},${y + 12}`}
-                  fill={isSelected ? '#0e7490' : '#0f172a'}
-                  stroke={isSelected ? '#38bdf8' : '#334155'}
+                  fill={isSelected ? '#222222' : '#141414'}
+                  stroke={isSelected ? '#ffffff' : '#333333'}
                   strokeWidth={isSelected ? '2' : '1'}
                 />
 
                 {/* Top Face */}
                 <polygon
                   points={`${x - rackWidth / 2},${y - rackHeight + 8} ${x},${y - rackHeight - 4} ${x + rackDepth},${y - rackHeight + 6} ${x},${y - rackHeight + 20}`}
-                  fill={isSelected ? '#0891b2' : '#334155'}
-                  stroke={isSelected ? '#67e8f9' : '#475569'}
+                  fill={isSelected ? '#3f3f46' : '#262626'}
+                  stroke={isSelected ? '#ffffff' : '#404040'}
                   strokeWidth={isSelected ? '2' : '1'}
                 />
 
-                {/* Status LED on top of Rack */}
+                {/* Status LED */}
                 <circle
                   cx={x + 5}
                   cy={y - rackHeight + 8}
                   r={isSelected ? '5.5' : '4'}
                   fill={statusColor}
-                  filter="url(#glow)"
+                  filter="url(#teslaGlow)"
                   className="animate-pulse"
                 />
 
-                {/* Tooltip / Label Floating above Rack */}
+                {/* Label Floating above Rack */}
                 <g transform={`translate(${x - 30}, ${y - rackHeight - 26})`}>
                   <rect
                     width="60"
                     height="18"
                     rx="6"
-                    fill={isSelected ? '#0891b2' : '#090f1d'}
+                    fill={isSelected ? '#ffffff' : '#141414'}
                     fillOpacity="0.95"
-                    stroke={isSelected ? '#67e8f9' : '#334155'}
+                    stroke={isSelected ? '#ffffff' : '#333333'}
                     strokeWidth="1"
                   />
                   <text
                     x="30"
                     y="13"
                     textAnchor="middle"
-                    fill="#ffffff"
+                    fill={isSelected ? '#000000' : '#ffffff'}
                     fontSize="10"
                     fontWeight="700"
                     letterSpacing="0.5"
@@ -297,45 +295,72 @@ export function IsometricRoom({
             )
           })}
 
-          {/* Foreground Glass Partition Wall with sliding door */}
+          {/* Front Wall */}
           <polygon
             points="120,420 540,540 960,420 960,435 540,555 120,435"
-            fill="#0ea5e9"
+            fill="#27272a"
             fillOpacity="0.2"
-            stroke="#38bdf8"
+            stroke="#3f3f46"
             strokeWidth="1.5"
           />
         </svg>
       </div>
 
-      {/* Bottom Controls: Zoom + Status Legend */}
+      {/* Bottom Controls & Clickable Legend */}
       <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
-        {/* Status Legend */}
-        <div className="pointer-events-auto flex items-center gap-4 px-4 py-2 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur text-xs">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-            <span className="text-slate-300 font-medium">Healthy ({statusCounts.healthy})</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />
-            <span className="text-slate-300 font-medium">Warning ({statusCounts.warning})</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50" />
-            <span className="text-slate-300 font-medium">Critical ({statusCounts.critical})</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
-            <span className="text-slate-400 font-medium">Offline ({statusCounts.offline})</span>
-          </div>
+        {/* Clickable Status Legend */}
+        <div className="pointer-events-auto flex items-center gap-3 px-3 py-1.5 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur text-xs">
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'healthy' ? null : 'healthy')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+              statusFilter === 'healthy' ? 'bg-[#262626] text-white' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
+            <span>Healthy ({statusCounts.healthy})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'warning' ? null : 'warning')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+              statusFilter === 'warning' ? 'bg-[#262626] text-white' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" />
+            <span>Warning ({statusCounts.warning})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'critical' ? null : 'critical')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+              statusFilter === 'critical' ? 'bg-[#262626] text-white' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-[#e82127] shadow-sm" />
+            <span>Critical ({statusCounts.critical})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'offline' ? null : 'offline')}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
+              statusFilter === 'offline' ? 'bg-[#262626] text-white' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-zinc-600" />
+            <span>Offline ({statusCounts.offline})</span>
+          </button>
         </div>
 
         {/* Zoom & Reset Controls */}
-        <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur shadow-lg">
+        <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
           <button
             type="button"
             onClick={handleZoomIn}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
             title="Zoom In"
           >
             <Plus className="w-4 h-4" />
@@ -343,7 +368,7 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
             title="Zoom Out"
           >
             <Minus className="w-4 h-4" />
@@ -351,7 +376,7 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={handleReset}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
             title="Reset View"
           >
             <RotateCcw className="w-4 h-4" />

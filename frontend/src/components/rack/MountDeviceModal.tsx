@@ -85,31 +85,31 @@ export function MountDeviceModal({
   )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-lg p-6 rounded-2xl bg-[#0f172a] border border-slate-800 shadow-2xl relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="w-full max-w-lg p-6 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-2xl relative">
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+          className="absolute top-5 right-5 text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-            <Server className="w-6 h-6" />
+          <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white">
+            <Server className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Mount Device to Rack</h3>
-            <p className="text-xs text-slate-400">Positioning at Unit U{startU}</p>
+            <h3 className="text-lg font-bold text-white tracking-tight">Mount Device to Rack</h3>
+            <p className="text-xs text-zinc-400">Positioning at Unit U{startU}</p>
           </div>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center gap-2.5 text-xs text-rose-300">
+          <div className="mb-4 p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 flex items-center gap-2.5 text-xs text-rose-300">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{error}</span>
           </div>
@@ -120,22 +120,22 @@ export function MountDeviceModal({
           {/* Device Name & Type */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Device Name *</label>
+              <label className="block text-zinc-300 font-medium mb-1.5">Device Name *</label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. SRV-APP-05"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Device Type</label>
+              <label className="block text-zinc-300 font-medium mb-1.5">Device Type</label>
               <select
                 value={deviceType}
                 onChange={(e) => setDeviceType(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-zinc-400 transition-colors"
               >
                 <option value="Server">Server</option>
                 <option value="Switch">Switch</option>
@@ -151,23 +151,23 @@ export function MountDeviceModal({
           {/* Model & Manufacturer */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Model</label>
+              <label className="block text-zinc-300 font-medium mb-1.5">Model</label>
               <input
                 type="text"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 placeholder="e.g. PowerEdge R750"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Manufacturer</label>
+              <label className="block text-zinc-300 font-medium mb-1.5">Manufacturer</label>
               <input
                 type="text"
                 value={manufacturer}
                 onChange={(e) => setManufacturer(e.target.value)}
                 placeholder="e.g. Dell EMC"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors"
               />
             </div>
           </div>
@@ -175,22 +175,22 @@ export function MountDeviceModal({
           {/* Start U & Height U */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Starting Position (U)</label>
+              <label className="block text-zinc-300 font-medium mb-1.5">Starting Position (U)</label>
               <input
                 type="number"
                 min="1"
                 max="42"
                 value={startU}
                 onChange={(e) => setStartU(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-zinc-400 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Unit Height (U)</label>
+              <label className="block text-zinc-300 font-medium mb-1.5">Unit Height (U)</label>
               <select
                 value={heightU}
                 onChange={(e) => setHeightU(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-zinc-400 transition-colors"
               >
                 <option value={1}>1U</option>
                 <option value={2}>2U</option>
@@ -202,19 +202,19 @@ export function MountDeviceModal({
 
           {/* IP Address */}
           <div>
-            <label className="block text-slate-300 font-medium mb-1.5">IP Address</label>
+            <label className="block text-zinc-300 font-medium mb-1.5">IP Address</label>
             <input
               type="text"
               value={ipAddress}
               onChange={(e) => setIpAddress(e.target.value)}
               placeholder="e.g. 10.10.20.45"
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+              className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 font-mono text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors"
             />
           </div>
 
           {/* Link Zabbix Host Picker */}
           <div>
-            <label className="block text-slate-300 font-medium mb-1.5">
+            <label className="block text-zinc-300 font-medium mb-1.5">
               Link to Zabbix Host (Optional)
             </label>
             <input
@@ -222,12 +222,12 @@ export function MountDeviceModal({
               value={searchHostQuery}
               onChange={(e) => setSearchHostQuery(e.target.value)}
               placeholder="Search live Zabbix hosts..."
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 mb-2"
+              className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors mb-2"
             />
             {/* Scrollable Host Options */}
-            <div className="max-h-32 overflow-y-auto space-y-1 rounded-xl border border-slate-800 bg-slate-950 p-1.5">
+            <div className="max-h-32 overflow-y-auto space-y-1 rounded-xl border border-[#262626] bg-[#0c0c0c] p-1.5">
               {filteredHosts.length === 0 ? (
-                <div className="text-slate-500 py-2 text-center">No matching hosts found</div>
+                <div className="text-zinc-500 py-2 text-center">No matching hosts found</div>
               ) : (
                 filteredHosts.map((h) => {
                   const isSelected = zabbixHostId === h.hostid
@@ -237,15 +237,15 @@ export function MountDeviceModal({
                       onClick={() => handleSelectZabbixHost(h)}
                       className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${
                         isSelected
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                          : 'text-slate-300 hover:bg-slate-900'
+                          ? 'bg-zinc-800 text-white border border-zinc-600'
+                          : 'text-zinc-300 hover:bg-[#1a1a1a]'
                       }`}
                     >
                       <div>
-                        <div className="font-semibold">{h.name}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{h.ip || 'No IP'}</div>
+                        <div className="font-semibold text-xs">{h.name}</div>
+                        <div className="text-[10px] text-zinc-500 font-mono">{h.ip || 'No IP'}</div>
                       </div>
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
+                      {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
                     </div>
                   )
                 })
@@ -258,14 +258,14 @@ export function MountDeviceModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 font-semibold transition-colors"
+              className="flex-1 py-2.5 rounded-xl border border-[#2e2e2e] text-zinc-300 hover:bg-[#1c1c1c] hover:text-white font-medium transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-bold shadow-lg shadow-cyan-500/20 transition-all disabled:opacity-50"
+              className="flex-1 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-semibold shadow-lg shadow-white/5 transition-all disabled:opacity-50"
             >
               {loading ? 'Mounting...' : 'Mount Device'}
             </button>

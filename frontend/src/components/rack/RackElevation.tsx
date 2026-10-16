@@ -49,18 +49,15 @@ export function RackElevation({
   for (let u = rack.total_u; u >= 1; u--) {
     const dev = slotMap[u]
 
-    // If this slot is covered by a multi-U device that started higher up, skip rendering row
     const isCoveredByHigherU = !dev && occupiedSlots.has(u)
     if (isCoveredByHigherU) continue
 
     if (dev) {
       uRows.push(
         <div key={`device-${dev.id}`} className="flex items-center w-full">
-          {/* U number indicator */}
-          <div className="w-8 shrink-0 text-right pr-2 font-mono text-[10px] text-slate-500 font-bold select-none">
+          <div className="w-8 shrink-0 text-right pr-2 font-mono text-[10px] text-zinc-500 font-bold select-none">
             {u}
           </div>
-          {/* Bezel */}
           <div className="flex-1">
             <DeviceBezel
               device={dev}
@@ -71,15 +68,14 @@ export function RackElevation({
         </div>
       )
     } else {
-      // Empty slot
       uRows.push(
         <div key={`slot-${u}`} className="flex items-center w-full group/slot">
-          <div className="w-8 shrink-0 text-right pr-2 font-mono text-[10px] text-slate-600 font-medium select-none">
+          <div className="w-8 shrink-0 text-right pr-2 font-mono text-[10px] text-zinc-600 font-medium select-none">
             {u}
           </div>
           <div
             onClick={() => onEmptySlotClick(u)}
-            className="flex-1 h-7 border-y border-dashed border-slate-800/80 bg-slate-900/30 hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all cursor-pointer flex items-center justify-center text-transparent hover:text-cyan-400 text-xs font-medium"
+            className="flex-1 h-7 border-y border-dashed border-[#222222] bg-[#0d0d0d] hover:bg-zinc-800/40 hover:border-zinc-500 transition-all cursor-pointer flex items-center justify-center text-transparent hover:text-white text-xs font-medium"
             title={`Click to mount device at U${u}`}
           >
             <div className="flex items-center gap-1.5 opacity-0 group-hover/slot:opacity-100 transition-opacity">
@@ -95,14 +91,14 @@ export function RackElevation({
   return (
     <div className="flex flex-col items-center">
       {/* Front / Rear Toggle */}
-      <div className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 mb-4 shadow-md">
+      <div className="flex items-center p-1 rounded-xl bg-[#141414] border border-[#262626] mb-4 shadow-md">
         <button
           type="button"
           onClick={() => setFace('Front')}
-          className={`px-6 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-6 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             face === 'Front'
-              ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-white text-black shadow-md font-bold'
+              : 'text-zinc-400 hover:text-white'
           }`}
         >
           Front
@@ -110,10 +106,10 @@ export function RackElevation({
         <button
           type="button"
           onClick={() => setFace('Rear')}
-          className={`px-6 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-6 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
             face === 'Rear'
-              ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-white text-black shadow-md font-bold'
+              : 'text-zinc-400 hover:text-white'
           }`}
         >
           Rear
@@ -121,12 +117,9 @@ export function RackElevation({
       </div>
 
       {/* 42U Cabinet Frame */}
-      <div className="w-[430px] p-3 rounded-2xl bg-[#090e17] border-4 border-slate-800/90 shadow-2xl relative">
-        {/* Mounting Rails Left and Right */}
-        <div className="absolute top-3 bottom-3 left-10 w-1.5 bg-slate-700/60 rounded-full" />
-        <div className="absolute top-3 bottom-3 right-3 w-1.5 bg-slate-700/60 rounded-full" />
-
-        {/* Rack U Rows */}
+      <div className="w-[430px] p-3 rounded-2xl bg-[#0a0a0a] border-4 border-[#1f1f1f] shadow-2xl relative">
+        <div className="absolute top-3 bottom-3 left-10 w-1 bg-[#2b2b2b] rounded-full" />
+        <div className="absolute top-3 bottom-3 right-3 w-1 bg-[#2b2b2b] rounded-full" />
         <div className="space-y-0.5">{uRows}</div>
       </div>
     </div>

@@ -18,13 +18,13 @@ export function RoomStatsCards({
       title: 'Racks',
       value: totalRacks,
       icon: Server,
-      iconBg: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20',
+      iconBg: 'bg-[#181818] text-white border border-[#2b2b2b]',
     },
     {
       title: 'Devices',
       value: totalDevices,
       icon: Database,
-      iconBg: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+      iconBg: 'bg-[#181818] text-zinc-300 border border-[#2b2b2b]',
     },
     {
       title: 'Alerts',
@@ -32,14 +32,14 @@ export function RoomStatsCards({
       icon: AlertTriangle,
       iconBg:
         totalAlerts > 0
-          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+          ? 'bg-rose-950/40 text-rose-400 border border-rose-800/60'
+          : 'bg-[#181818] text-emerald-400 border border-[#2b2b2b]',
     },
     {
       title: 'Room Temp',
       value: `${roomTemp.toFixed(1)}°C`,
       icon: Thermometer,
-      iconBg: 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
+      iconBg: 'bg-[#181818] text-zinc-300 border border-[#2b2b2b]',
     },
   ]
 
@@ -50,16 +50,16 @@ export function RoomStatsCards({
         return (
           <div
             key={card.title}
-            className="p-5 rounded-2xl bg-[#0f172a]/70 border border-slate-800/80 shadow-md backdrop-blur flex items-center justify-between transition-all hover:border-slate-700"
+            className="p-5 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-lg flex items-center justify-between transition-all hover:border-[#383838]"
           >
             <div>
-              <div className="text-3xl font-bold tracking-tight text-white mb-1">
+              <div className="text-3xl font-bold tracking-tight text-white mb-1 font-sans">
                 {card.value}
               </div>
-              <div className="text-xs font-medium text-slate-400">{card.title}</div>
+              <div className="text-xs font-medium text-zinc-400">{card.title}</div>
             </div>
-            <div className={`p-3.5 rounded-2xl ${card.iconBg} shadow-inner`}>
-              <Icon className="w-6 h-6" />
+            <div className={`p-3 rounded-xl ${card.iconBg}`}>
+              <Icon className="w-5 h-5" />
             </div>
           </div>
         )

@@ -20,6 +20,22 @@ export async function fetchRackElevation(rackId: number): Promise<RackElevation>
   return res.json()
 }
 
+export async function fetchRacks(roomId: number = 1) {
+  const res = await fetch(`${API_BASE}/racks?room_id=${roomId}`)
+  if (!res.ok) throw new Error('Failed to fetch racks')
+  return res.json()
+}
+
+export async function fetchDevices(params?: { rack_id?: number; device_type?: string }): Promise<Device[]> {
+  const url = new URL(`${window.location.origin}${API_BASE}/devices`)
+  if (params?.rack_id) url.searchParams.append('rack_id', String(params.rack_id))
+  if (params?.device_type) url.searchParams.append('device_type', params.device_type)
+
+  const res = await fetch(url.toString())
+  if (!res.ok) throw new Error('Failed to fetch devices')
+  return res.json()
+}
+
 export async function fetchDeviceMetrics(deviceId: number): Promise<DeviceMetrics> {
   const res = await fetch(`${API_BASE}/devices/${deviceId}/metrics`)
   if (!res.ok) throw new Error(`Failed to fetch device metrics for ID ${deviceId}`)

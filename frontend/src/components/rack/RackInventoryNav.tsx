@@ -16,7 +16,6 @@ export function RackInventoryNav({
   searchFilter,
   onSearchChange,
 }: RackInventoryNavProps) {
-  // Count devices by type
   const counts: Record<string, number> = {
     all: devices.length,
     'Patch Panel': 0,
@@ -48,18 +47,18 @@ export function RackInventoryNav({
   ]
 
   return (
-    <div className="w-64 p-4 rounded-2xl bg-[#0f172a]/80 border border-slate-800/80 shadow-xl backdrop-blur flex flex-col gap-4">
+    <div className="w-64 p-4 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-xl flex flex-col gap-4 select-none">
       <div>
-        <h3 className="font-bold text-white text-base mb-3">Rack Inventory</h3>
+        <h3 className="font-bold text-white text-sm mb-3 tracking-wide">Rack Inventory</h3>
         {/* Search */}
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchFilter}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search devices in this rack..."
-            className="w-full bg-slate-900/90 text-xs text-slate-200 placeholder:text-slate-500 pl-9 pr-3 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-cyan-500/50"
+            placeholder="Filter rack devices..."
+            className="w-full bg-[#171717] text-xs text-white placeholder:text-zinc-500 pl-8 pr-3 py-2 rounded-xl border border-[#262626] focus:outline-none focus:border-zinc-500"
           />
         </div>
       </div>
@@ -75,19 +74,19 @@ export function RackInventoryNav({
               key={cat.label}
               type="button"
               onClick={() => onSelectType(cat.id)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                  ? 'bg-[#1f1f1f] text-white border border-[#333333] shadow-sm font-semibold'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#141414]'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-zinc-500'}`} />
                 <span>{cat.label}</span>
               </div>
               <span
-                className={`px-2 py-0.5 rounded-md font-semibold text-[11px] ${
-                  isActive ? 'bg-cyan-500/20 text-cyan-300' : 'bg-slate-800 text-slate-400'
+                className={`px-2 py-0.5 rounded-md font-mono text-[10px] ${
+                  isActive ? 'bg-white text-black font-bold' : 'bg-[#181818] text-zinc-400'
                 }`}
               >
                 {cat.count || 0}
