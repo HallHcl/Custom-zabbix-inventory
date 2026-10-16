@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Any, Dict, List, Optional
 import redis.asyncio as aioredis
@@ -7,9 +8,16 @@ from backend.app.config import settings
 class RedisService:
     def __init__(self):
         self._client: Optional[aioredis.Redis] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     def get_client(self) -> aioredis.Redis:
-        if self._client is None:
+        try:
+            current_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            current_loop = None
+
+        if self._client is None or self._loop != current_loop:
+            self._loop = current_loop
             self._client = aioredis.from_url(
                 settings.redis_url,
                 encoding="utf-8",
@@ -21,6 +29,7 @@ class RedisService:
         if self._client is not None:
             await self._client.close()
             self._client = None
+            self._loop = None
 
     async def set_json(self, key: str, value: Any, ttl: int = 60):
         client = self.get_client()

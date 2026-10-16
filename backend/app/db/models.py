@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy import (
     DateTime,
@@ -13,6 +13,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.db.session import Base
 
 
+def utc_now():
+    return datetime.now().replace(microsecond=0)
+
+
 class Site(Base):
     __tablename__ = "sites"
 
@@ -20,7 +24,7 @@ class Site(Base):
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     # Relationships
     rooms: Mapped[List["Room"]] = relationship("Room", back_populates="site", cascade="all, delete-orphan")
@@ -36,7 +40,7 @@ class Room(Base):
     grid_rows: Mapped[int] = mapped_column(Integer, default=3)  # Rows: A, B, C
     grid_cols: Mapped[int] = mapped_column(Integer, default=4)  # Cols: 01, 02, 03, 04
     zabbix_room_temp_item_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     # Relationships
     site: Mapped["Site"] = relationship("Site", back_populates="rooms")
@@ -59,7 +63,7 @@ class Rack(Base):
     max_power_kw: Mapped[float] = mapped_column(Float, default=8.0)
     zabbix_power_item_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     zabbix_inlet_temp_item_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     # Relationships
     room: Mapped["Room"] = relationship("Room", back_populates="racks")
@@ -93,7 +97,7 @@ class Device(Base):
     zabbix_host_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
     
     tags: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     # Relationships
     rack: Mapped["Rack"] = relationship("Rack", back_populates="devices")
