@@ -105,7 +105,7 @@ async def get_room_overview(
 
     # 5. Build recent alerts list
     recent_alerts = []
-    for p in active_problems[:10]:
+    for p in active_problems[:250]:
         recent_alerts.append({
             "triggerid": p.get("triggerid"),
             "description": p.get("description"),

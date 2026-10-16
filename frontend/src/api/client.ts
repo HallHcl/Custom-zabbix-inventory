@@ -27,11 +27,12 @@ export async function fetchRacks(roomId: number = 1) {
 }
 
 export async function fetchDevices(params?: { rack_id?: number; device_type?: string }): Promise<Device[]> {
-  const url = new URL(`${window.location.origin}${API_BASE}/devices`)
-  if (params?.rack_id) url.searchParams.append('rack_id', String(params.rack_id))
-  if (params?.device_type) url.searchParams.append('device_type', params.device_type)
+  const query = new URLSearchParams()
+  if (params?.rack_id) query.append('rack_id', String(params.rack_id))
+  if (params?.device_type) query.append('device_type', params.device_type)
+  const qs = query.toString() ? `?${query.toString()}` : ''
 
-  const res = await fetch(url.toString())
+  const res = await fetch(`${API_BASE}/devices${qs}`)
   if (!res.ok) throw new Error('Failed to fetch devices')
   return res.json()
 }

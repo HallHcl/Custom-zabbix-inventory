@@ -44,9 +44,9 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
           </div>
           <div>
             <h1 className="font-bold tracking-widest text-white text-base flex items-center gap-1.5 uppercase">
-              <span>DC VISION</span>
+              <span>POP</span>
             </h1>
-            <p className="text-[11px] text-zinc-500 font-mono tracking-wider">TESLA DARK DCIM</p>
+            <p className="text-[11px] text-zinc-500 font-mono tracking-wider">TESLA INVENTORY</p>
           </div>
         </div>
 
@@ -61,7 +61,7 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
                 key={item.id}
                 type="button"
                 onClick={() => onSelectTab(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all duration-150 relative ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all duration-150 relative cursor-pointer ${
                   isActive
                     ? 'bg-[#1a1a1a] text-white border border-[#2e2e2e] shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#141414]'
@@ -90,7 +90,7 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
 
       {/* Footer Info */}
       <div className="p-4 border-t border-[#1a1a1a] text-[11px] text-zinc-500 text-center font-mono">
-        <span>DC Vision • Zabbix 7.0 Active</span>
+        <span>POP • Zabbix 7.0 Active</span>
       </div>
     </aside>
   )

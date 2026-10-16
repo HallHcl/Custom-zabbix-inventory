@@ -12,7 +12,14 @@ interface ReportsViewProps {
 }
 
 export function ReportsView({ overview }: ReportsViewProps) {
-  if (!overview) return null
+  if (!overview) {
+    return (
+      <div className="max-w-[1600px] mx-auto p-12 text-center text-zinc-500 rounded-2xl bg-[#0f0f0f] border border-zinc-800">
+        <Server className="w-8 h-8 mx-auto mb-3 text-zinc-600 animate-pulse" />
+        <p className="text-sm">Loading Data Center analytics...</p>
+      </div>
+    )
+  }
 
   const totalCapacityU = overview.total_racks * 42
   const totalUsedU = overview.racks.reduce((acc, r) => acc + r.used_u, 0)
@@ -31,7 +38,7 @@ export function ReportsView({ overview }: ReportsViewProps) {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `DC_Vision_Report_${overview.room_name.replace(' ', '_')}.csv`
+    a.download = `POP_Report_${overview.room_name.replace(' ', '_')}.csv`
     a.click()
   }
 

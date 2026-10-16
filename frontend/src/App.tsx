@@ -87,6 +87,13 @@ export function App() {
     return () => clearInterval(timer)
   }, [loadOverview, loadRackElevation, currentView, activeRackId])
 
+  // Top-level Navigation Switcher
+  const handleSelectTab = (tab: NavTab) => {
+    setActiveNav(tab)
+    // Reset to base view so no previous rack elevation locks the UI
+    setCurrentView('floor_plan')
+  }
+
   // Navigate to Rack Elevation View
   const handleViewRackElevation = (rack: RackSummary) => {
     setActiveRackId(rack.id)
@@ -94,7 +101,7 @@ export function App() {
     setCurrentView('rack_elevation')
   }
 
-  // Navigate back
+  // Navigate back to floor plan / racks
   const handleBack = () => {
     setCurrentView('floor_plan')
     loadOverview()
@@ -104,6 +111,7 @@ export function App() {
   const handleOpenDeviceInRack = (rackId: number, deviceId: number) => {
     setActiveRackId(rackId)
     loadRackElevation(rackId, deviceId)
+    setActiveNav('racks')
     setCurrentView('rack_elevation')
   }
 
@@ -151,7 +159,10 @@ export function App() {
       })
       list.push({ label: rackElevation.name })
     } else {
-      list.push({ label: overview?.room_name || 'Room A' })
+      list.push({
+        label: overview?.room_name || 'Room A',
+        onClick: activeNav !== 'overview' && activeNav !== 'floor_plan' ? () => handleSelectTab('overview') : undefined,
+      })
       if (activeNav === 'racks') {
         list.push({ label: 'Racks (12)' })
       } else if (activeNav === 'devices') {
@@ -170,15 +181,7 @@ export function App() {
       {/* Left Sidebar */}
       <Sidebar
         activeTab={activeNav}
-        onSelectTab={(tab) => {
-          setActiveNav(tab)
-          if (tab === 'floor_plan' || tab === 'overview') {
-            setCurrentView('floor_plan')
-          } else if (tab === 'racks') {
-            // Switch to rack list view
-            setCurrentView('floor_plan')
-          }
-        }}
+        onSelectTab={handleSelectTab}
         alertCount={overview?.total_alerts || 0}
       />
 
@@ -194,8 +197,20 @@ export function App() {
 
         {/* Scrollable View Content */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* VIEW: 42U Rack Elevation View (when a rack is open) */}
-          {currentView === 'rack_elevation' && rackElevation ? (
+          {/* TAB 1: Devices Inventory View */}
+          {activeNav === 'devices' ? (
+            <DevicesView
+              racks={overview?.racks || []}
+              onOpenDeviceInRack={handleOpenDeviceInRack}
+            />
+          ) : activeNav === 'alerts' ? (
+            /* TAB 2: Live Zabbix Alerts View */
+            <AlertsView alerts={overview?.recent_alerts || []} />
+          ) : activeNav === 'reports' ? (
+            /* TAB 3: Reports & Datacenter Analytics */
+            <ReportsView overview={overview} />
+          ) : currentView === 'rack_elevation' && rackElevation ? (
+            /* 42U Rack Elevation View (when inspecting a rack) */
             <div className="max-w-[1600px] mx-auto space-y-5">
               {/* Rack Header Sub-bar */}
               <div className="flex items-center justify-between pb-3 border-b border-[#222222]">
@@ -278,25 +293,13 @@ export function App() {
               </div>
             </div>
           ) : activeNav === 'racks' ? (
-            /* VIEW: All Racks Grid View */
+            /* TAB 4: All Racks 12-Grid View */
             <RacksView
               racks={filteredRacks}
               onSelectRack={handleViewRackElevation}
             />
-          ) : activeNav === 'devices' ? (
-            /* VIEW: Device Inventory Table */
-            <DevicesView
-              racks={overview?.racks || []}
-              onOpenDeviceInRack={handleOpenDeviceInRack}
-            />
-          ) : activeNav === 'alerts' ? (
-            /* VIEW: Live Alerts / Triggers */
-            <AlertsView alerts={overview?.recent_alerts || []} />
-          ) : activeNav === 'reports' ? (
-            /* VIEW: Reports & Analytics */
-            <ReportsView overview={overview} />
           ) : (
-            /* VIEW: Default 2.5D Isometric Floor Plan Overview */
+            /* TAB 5: Default 2.5D Isometric Floor Plan Overview */
             <div className="max-w-[1600px] mx-auto space-y-6">
               {/* Top Stats 4 Cards */}
               <RoomStatsCards
@@ -333,8 +336,8 @@ export function App() {
                   />
                   <RecentAlerts
                     alerts={overview?.recent_alerts || []}
-                    onViewAll={() => setActiveNav('alerts')}
-                    onSelectAlert={() => setActiveNav('alerts')}
+                    onViewAll={() => handleSelectTab('alerts')}
+                    onSelectAlert={() => handleSelectTab('alerts')}
                   />
                 </div>
               </div>
