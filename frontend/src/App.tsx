@@ -21,6 +21,7 @@ import { ReportsView } from './components/views/ReportsView'
 
 export function App() {
   const [activeNav, setActiveNav] = useState<NavTab>('overview')
+  const [returnNav, setReturnNav] = useState<NavTab>('overview')
   const [currentView, setCurrentView] = useState<'floor_plan' | 'rack_elevation'>('floor_plan')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -90,28 +91,30 @@ export function App() {
   // Top-level Navigation Switcher
   const handleSelectTab = (tab: NavTab) => {
     setActiveNav(tab)
-    // Reset to base view so no previous rack elevation locks the UI
+    // Clear rack elevation so views are never blocked
     setCurrentView('floor_plan')
   }
 
   // Navigate to Rack Elevation View
   const handleViewRackElevation = (rack: RackSummary) => {
+    setReturnNav(activeNav)
     setActiveRackId(rack.id)
     loadRackElevation(rack.id)
     setCurrentView('rack_elevation')
   }
 
-  // Navigate back to floor plan / racks
-  const handleBack = () => {
+  // Navigate back to floor plan / racks / overview
+  const handleBack = useCallback(() => {
     setCurrentView('floor_plan')
+    setActiveNav(returnNav)
     loadOverview()
-  }
+  }, [returnNav, loadOverview])
 
   // Handle open device in rack from Devices inventory view
   const handleOpenDeviceInRack = (rackId: number, deviceId: number) => {
+    setReturnNav('devices')
     setActiveRackId(rackId)
     loadRackElevation(rackId, deviceId)
-    setActiveNav('racks')
     setCurrentView('rack_elevation')
   }
 
@@ -178,7 +181,7 @@ export function App() {
       }
     }
     return list
-  }, [overview, currentView, rackElevation, activeNav])
+  }, [overview, currentView, rackElevation, activeNav, handleBack])
 
   return (
     <div className="flex h-screen w-screen bg-[#050505] text-zinc-100 font-sans overflow-hidden">
@@ -201,36 +204,8 @@ export function App() {
 
         {/* Scrollable View Content */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* TAB 1: Executive Overview Dashboard */}
-          {activeNav === 'overview' ? (
-            <OverviewView
-              overview={overview}
-              onNavigateToFloorPlan={(rackId) => {
-                if (rackId && overview?.racks) {
-                  const match = overview.racks.find((r) => r.id === rackId)
-                  if (match) setSelectedRackSummary(match)
-                }
-                setActiveNav('floor_plan')
-                setCurrentView('floor_plan')
-              }}
-              onNavigateToRackElevation={handleViewRackElevation}
-              onNavigateToAlerts={() => handleSelectTab('alerts')}
-              onNavigateToDevices={() => handleSelectTab('devices')}
-            />
-          ) : activeNav === 'devices' ? (
-            /* TAB 2: Devices Inventory View */
-            <DevicesView
-              racks={overview?.racks || []}
-              onOpenDeviceInRack={handleOpenDeviceInRack}
-            />
-          ) : activeNav === 'alerts' ? (
-            /* TAB 3: Live Zabbix Alerts View */
-            <AlertsView alerts={overview?.recent_alerts || []} />
-          ) : activeNav === 'reports' ? (
-            /* TAB 4: Reports & Datacenter Analytics */
-            <ReportsView overview={overview} />
-          ) : currentView === 'rack_elevation' && rackElevation ? (
-            /* 42U Rack Elevation View (when inspecting a rack from Floor Plan or Racks) */
+          {/* 42U Rack Elevation View (displayed when any rack is inspected) */}
+          {currentView === 'rack_elevation' && rackElevation ? (
             <div className="max-w-[1600px] mx-auto space-y-5">
               {/* Rack Header Sub-bar */}
               <div className="flex items-center justify-between pb-3 border-b border-[#222222]">
@@ -312,14 +287,24 @@ export function App() {
                 />
               </div>
             </div>
-          ) : activeNav === 'racks' ? (
-            /* TAB 5: All Racks 12-Grid View */
-            <RacksView
-              racks={filteredRacks}
-              onSelectRack={handleViewRackElevation}
+          ) : activeNav === 'overview' ? (
+            /* TAB 1: Executive Overview Dashboard */
+            <OverviewView
+              overview={overview}
+              onNavigateToFloorPlan={(rackId) => {
+                if (rackId && overview?.racks) {
+                  const match = overview.racks.find((r) => r.id === rackId)
+                  if (match) setSelectedRackSummary(match)
+                }
+                setActiveNav('floor_plan')
+                setCurrentView('floor_plan')
+              }}
+              onNavigateToRackElevation={handleViewRackElevation}
+              onNavigateToAlerts={() => handleSelectTab('alerts')}
+              onNavigateToDevices={() => handleSelectTab('devices')}
             />
-          ) : (
-            /* TAB 6: Dedicated 2.5D Isometric Floor Plan View */
+          ) : activeNav === 'floor_plan' ? (
+            /* TAB 2: Dedicated 2.5D Isometric Floor Plan View */
             <div className="max-w-[1600px] mx-auto space-y-5">
               {/* Floor Plan Sub-header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800">
@@ -384,7 +369,25 @@ export function App() {
                 </div>
               </div>
             </div>
-          )}
+          ) : activeNav === 'racks' ? (
+            /* TAB 3: All Racks 12-Grid View */
+            <RacksView
+              racks={filteredRacks}
+              onSelectRack={handleViewRackElevation}
+            />
+          ) : activeNav === 'devices' ? (
+            /* TAB 4: Devices Inventory View */
+            <DevicesView
+              racks={overview?.racks || []}
+              onOpenDeviceInRack={handleOpenDeviceInRack}
+            />
+          ) : activeNav === 'alerts' ? (
+            /* TAB 5: Live Zabbix Alerts View */
+            <AlertsView alerts={overview?.recent_alerts || []} />
+          ) : activeNav === 'reports' ? (
+            /* TAB 6: Reports & Datacenter Analytics */
+            <ReportsView overview={overview} />
+          ) : null}
         </main>
       </div>
 
