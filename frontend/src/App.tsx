@@ -4,7 +4,6 @@ import type { RoomOverview, RackSummary, RackElevation as RackElevationType, Dev
 import { fetchRoomOverview, fetchRackElevation, unmountDevice } from './api/client'
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
 import { Header } from './components/layout/Header'
-import { RoomStatsCards } from './components/floorplan/RoomStatsCards'
 import { IsometricRoom } from './components/floorplan/IsometricRoom'
 import { RackDetailCard } from './components/floorplan/RackDetailCard'
 import { RecentAlerts } from './components/floorplan/RecentAlerts'
@@ -14,6 +13,7 @@ import { DeviceDetailPanel } from './components/rack/DeviceDetailPanel'
 import { MountDeviceModal } from './components/rack/MountDeviceModal'
 
 // Dedicated Tab Views
+import { OverviewView } from './components/views/OverviewView'
 import { RacksView } from './components/views/RacksView'
 import { DevicesView } from './components/views/DevicesView'
 import { AlertsView } from './components/views/AlertsView'
@@ -163,7 +163,11 @@ export function App() {
         label: overview?.room_name || 'Room A',
         onClick: activeNav !== 'overview' && activeNav !== 'floor_plan' ? () => handleSelectTab('overview') : undefined,
       })
-      if (activeNav === 'racks') {
+      if (activeNav === 'overview') {
+        list.push({ label: 'Overview' })
+      } else if (activeNav === 'floor_plan') {
+        list.push({ label: 'Floor Plan' })
+      } else if (activeNav === 'racks') {
         list.push({ label: 'Racks (12)' })
       } else if (activeNav === 'devices') {
         list.push({ label: 'Devices' })
@@ -197,20 +201,36 @@ export function App() {
 
         {/* Scrollable View Content */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* TAB 1: Devices Inventory View */}
-          {activeNav === 'devices' ? (
+          {/* TAB 1: Executive Overview Dashboard */}
+          {activeNav === 'overview' ? (
+            <OverviewView
+              overview={overview}
+              onNavigateToFloorPlan={(rackId) => {
+                if (rackId && overview?.racks) {
+                  const match = overview.racks.find((r) => r.id === rackId)
+                  if (match) setSelectedRackSummary(match)
+                }
+                setActiveNav('floor_plan')
+                setCurrentView('floor_plan')
+              }}
+              onNavigateToRackElevation={handleViewRackElevation}
+              onNavigateToAlerts={() => handleSelectTab('alerts')}
+              onNavigateToDevices={() => handleSelectTab('devices')}
+            />
+          ) : activeNav === 'devices' ? (
+            /* TAB 2: Devices Inventory View */
             <DevicesView
               racks={overview?.racks || []}
               onOpenDeviceInRack={handleOpenDeviceInRack}
             />
           ) : activeNav === 'alerts' ? (
-            /* TAB 2: Live Zabbix Alerts View */
+            /* TAB 3: Live Zabbix Alerts View */
             <AlertsView alerts={overview?.recent_alerts || []} />
           ) : activeNav === 'reports' ? (
-            /* TAB 3: Reports & Datacenter Analytics */
+            /* TAB 4: Reports & Datacenter Analytics */
             <ReportsView overview={overview} />
           ) : currentView === 'rack_elevation' && rackElevation ? (
-            /* 42U Rack Elevation View (when inspecting a rack) */
+            /* 42U Rack Elevation View (when inspecting a rack from Floor Plan or Racks) */
             <div className="max-w-[1600px] mx-auto space-y-5">
               {/* Rack Header Sub-bar */}
               <div className="flex items-center justify-between pb-3 border-b border-[#222222]">
@@ -293,23 +313,45 @@ export function App() {
               </div>
             </div>
           ) : activeNav === 'racks' ? (
-            /* TAB 4: All Racks 12-Grid View */
+            /* TAB 5: All Racks 12-Grid View */
             <RacksView
               racks={filteredRacks}
               onSelectRack={handleViewRackElevation}
             />
           ) : (
-            /* TAB 5: Default 2.5D Isometric Floor Plan Overview */
-            <div className="max-w-[1600px] mx-auto space-y-6">
-              {/* Top Stats 4 Cards */}
-              <RoomStatsCards
-                totalRacks={overview?.total_racks || 12}
-                totalDevices={overview?.total_devices || 186}
-                totalAlerts={overview?.total_alerts || 2}
-                roomTemp={overview?.room_temp_c || 24.5}
-              />
+            /* TAB 6: Dedicated 2.5D Isometric Floor Plan View */
+            <div className="max-w-[1600px] mx-auto space-y-5">
+              {/* Floor Plan Sub-header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800">
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                    <span>Data Center Floor Plan</span>
+                    <span className="text-xs font-mono font-semibold text-zinc-400 bg-zinc-900 px-2.5 py-0.5 rounded-full border border-zinc-800">
+                      ROOM A • 12 RACKS
+                    </span>
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    2.5D spatial layout • Click any rack box to inspect telemetry and slot capacity
+                  </p>
+                </div>
 
-              {/* Main Grid: 2.5D Isometric Room (Left) + Detail Card & Alerts (Right) */}
+                <div className="flex items-center gap-4 text-xs font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <span className="text-zinc-400">Healthy ({overview?.status_counts.healthy || 0})</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    <span className="text-zinc-400">Warning ({overview?.status_counts.warning || 0})</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                    <span className="text-zinc-400">Critical ({overview?.status_counts.critical || 0})</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Grid: 2.5D Isometric Room (Left 2 cols) + Detail Card & Alerts (Right) */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
                 {/* 2.5D Isometric Room Canvas (2 cols) */}
                 <div className="xl:col-span-2">

@@ -103,8 +103,32 @@ async def get_room_overview(
             )
         )
 
-    # 5. Build recent alerts list
+    # 5. Build recent alerts list and severity counts
     recent_alerts = []
+    severity_counts = {
+        "disaster": 0,
+        "high": 0,
+        "average": 0,
+        "warning": 0,
+        "info": 0,
+        "unclassified": 0,
+    }
+
+    for p in active_problems:
+        pri = int(p.get("priority", 0))
+        if pri == 5:
+            severity_counts["disaster"] += 1
+        elif pri == 4:
+            severity_counts["high"] += 1
+        elif pri == 3:
+            severity_counts["average"] += 1
+        elif pri == 2:
+            severity_counts["warning"] += 1
+        elif pri == 1:
+            severity_counts["info"] += 1
+        else:
+            severity_counts["unclassified"] += 1
+
     for p in active_problems[:250]:
         recent_alerts.append({
             "triggerid": p.get("triggerid"),
@@ -114,6 +138,10 @@ async def get_room_overview(
             "lastchange": p.get("lastchange"),
         })
 
+    total_power = round(sum(r.power_kw for r in racks_summary), 1)
+    total_used_u = sum(r.used_u for r in racks_summary)
+    total_cap_u = sum(r.total_u for r in racks_summary)
+
     return RoomOverviewResponse(
         site_name=room.site.name if room.site else "Data Center",
         room_name=room.name,
@@ -121,7 +149,11 @@ async def get_room_overview(
         total_racks=len(room.racks),
         total_devices=total_devices_count,
         total_alerts=len(active_problems),
+        total_power_kw=total_power,
+        total_used_u=total_used_u,
+        total_capacity_u=total_cap_u,
         status_counts=status_counts,
+        severity_counts=severity_counts,
         racks=racks_summary,
         recent_alerts=recent_alerts,
     )

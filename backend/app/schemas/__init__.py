@@ -80,7 +80,11 @@ class RoomOverviewResponse(BaseModel):
     total_racks: int
     total_devices: int
     total_alerts: int
+    total_power_kw: float = 0.0
+    total_used_u: int = 0
+    total_capacity_u: int = 0
     status_counts: Dict[str, int]
+    severity_counts: Dict[str, int] = {}
     racks: List[RackSummary]
     recent_alerts: List[Dict[str, Any]]
 

@@ -75,11 +75,22 @@ export interface RoomOverview {
   total_racks: number
   total_devices: number
   total_alerts: number
+  total_power_kw?: number
+  total_used_u?: number
+  total_capacity_u?: number
   status_counts: {
     healthy: number
     warning: number
     critical: number
     offline: number
+  }
+  severity_counts?: {
+    disaster: number
+    high: number
+    average: number
+    warning: number
+    info: number
+    unclassified: number
   }
   racks: RackSummary[]
   recent_alerts: RecentAlert[]
