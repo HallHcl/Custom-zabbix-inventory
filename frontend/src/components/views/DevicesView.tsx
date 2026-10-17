@@ -15,9 +15,10 @@ import { fetchDevices } from '../../api/client'
 interface DevicesViewProps {
   racks: RackSummary[]
   onOpenDeviceInRack: (rackId: number, deviceId: number) => void
+  onOpenDevicePage?: (deviceId: number) => void
 }
 
-export function DevicesView({ racks, onOpenDeviceInRack }: DevicesViewProps) {
+export function DevicesView({ racks, onOpenDeviceInRack, onOpenDevicePage }: DevicesViewProps) {
   const [devices, setDevices] = useState<Device[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -195,21 +196,30 @@ export function DevicesView({ racks, onOpenDeviceInRack }: DevicesViewProps) {
                     {/* Actions */}
                     <td className="py-3.5 px-5 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {onOpenDevicePage && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenDevicePage(d.id)}
+                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-blue-600/20"
+                          >
+                            <span>Device Page</span>
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => onOpenDeviceInRack(d.rack_id, d.id)}
                           className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
-                          <span>View in Rack</span>
+                          <span>Rack</span>
                           <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                         {d.zabbix_host_id && (
                           <a
-                            href="http://192.168.1.190"
+                            href={`http://192.168.1.85:8080/zabbix.php?action=latest.view&hostids%5B%5D=${d.zabbix_host_id}`}
                             target="_blank"
                             rel="noreferrer"
                             className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
-                            title="Open in Zabbix Console"
+                            title="Open in Zabbix Latest Data"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>

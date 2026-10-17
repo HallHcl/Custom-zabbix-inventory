@@ -1,10 +1,12 @@
-import { Search, User, Home, ChevronRight } from 'lucide-react'
+import { Search, User, Home, ChevronRight, Sun, Moon } from 'lucide-react'
 
 interface HeaderProps {
   breadcrumbs: { label: string; onClick?: () => void }[]
   searchQuery: string
   onSearchChange: (query: string) => void
   isLive?: boolean
+  theme?: 'dark' | 'light'
+  onToggleTheme?: () => void
 }
 
 export function Header({
@@ -12,6 +14,8 @@ export function Header({
   searchQuery,
   onSearchChange,
   isLive = true,
+  theme = 'dark',
+  onToggleTheme,
 }: HeaderProps) {
   return (
     <header className="h-16 border-b border-[#1f1f1f] bg-[#090909]/95 backdrop-blur px-6 flex items-center justify-between z-10 select-none">
@@ -37,7 +41,7 @@ export function Header({
       </nav>
 
       {/* Center Search & Right Controls */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4">
         {/* Search Bar */}
         <div className="relative w-72 sm:w-80">
           <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -49,6 +53,28 @@ export function Header({
             className="w-full bg-[#121212] text-xs text-white placeholder:text-zinc-500 pl-9 pr-4 py-2 rounded-xl border border-[#262626] focus:outline-none focus:border-zinc-500 transition-all font-sans"
           />
         </div>
+
+        {/* Theme Switcher Button */}
+        {onToggleTheme && (
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#141414] hover:bg-[#1f1f1f] border border-[#262626] text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer shadow-sm"
+            title={theme === 'dark' ? 'Switch to Clean Light Theme' : 'Switch to High-Contrast Dark Theme'}
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-4 h-4 text-amber-400" />
+                <span className="text-[11px] hidden sm:inline">Light Theme</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 text-blue-400" />
+                <span className="text-[11px] hidden sm:inline">Dark Theme</span>
+              </>
+            )}
+          </button>
+        )}
 
         {/* Live Status Indicator */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141414] border border-[#262626] text-xs">

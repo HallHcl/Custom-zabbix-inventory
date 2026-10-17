@@ -17,6 +17,7 @@ interface DeviceDetailPanelProps {
   rackDevices: Device[]
   onSelectDevice: (device: Device) => void
   onUnmountDevice: (deviceId: number) => void
+  onOpenDevicePage?: (deviceId: number) => void
 }
 
 export function DeviceDetailPanel({
@@ -24,6 +25,7 @@ export function DeviceDetailPanel({
   rackDevices,
   onSelectDevice,
   onUnmountDevice,
+  onOpenDevicePage,
 }: DeviceDetailPanelProps) {
   const [metrics, setMetrics] = useState<DeviceMetrics | null>(null)
 
@@ -100,6 +102,53 @@ export function DeviceDetailPanel({
             </span>
           </div>
         </div>
+
+        {/* Button to open Full Device Page (Latest Data + Custom Inventory) */}
+        {onOpenDevicePage && (
+          <button
+            type="button"
+            onClick={() => onOpenDevicePage(device.id)}
+            className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-600/25 cursor-pointer"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Open Device Page (Latest Data)</span>
+          </button>
+        )}
+
+        {/* Dynamic Custom Inventory Fields */}
+        {device.custom_fields && Object.keys(device.custom_fields).length > 0 && (
+          <div className="p-3 rounded-xl bg-[#141414] border border-[#262626] space-y-1.5 text-xs">
+            <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider block">
+              Custom Dynamic Inventory
+            </span>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              {device.custom_fields.brand && (
+                <div>
+                  <span className="text-zinc-500">Brand: </span>
+                  <span className="text-zinc-200 font-medium">{device.custom_fields.brand}</span>
+                </div>
+              )}
+              {device.custom_fields.vendor && (
+                <div>
+                  <span className="text-zinc-500">Vendor: </span>
+                  <span className="text-zinc-200 font-medium">{device.custom_fields.vendor}</span>
+                </div>
+              )}
+              {device.custom_fields.version && (
+                <div>
+                  <span className="text-zinc-500">Version: </span>
+                  <span className="text-zinc-200 font-medium">{device.custom_fields.version}</span>
+                </div>
+              )}
+              {device.custom_fields.user && (
+                <div>
+                  <span className="text-zinc-500">User: </span>
+                  <span className="text-zinc-200 font-medium">{device.custom_fields.user}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 3 Metric Progress Bars (CPU, Memory, Temp) */}
         <div className="space-y-3 pt-1">

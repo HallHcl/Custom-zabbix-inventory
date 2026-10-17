@@ -31,6 +31,7 @@ class DeviceBase(BaseModel):
     serial_number: Optional[str] = None
     zabbix_host_id: Optional[str] = None
     tags: Optional[Dict[str, Any]] = None
+    custom_fields: Optional[Dict[str, Any]] = None
 
 
 class DeviceCreate(DeviceBase):
@@ -103,3 +104,39 @@ class DeviceMetricsResponse(BaseModel):
     temperature_c: Optional[float] = None
     cpu_history: List[DeviceMetricHistoryPoint] = []
     active_alerts: List[Dict[str, Any]] = []
+
+
+class ZabbixLatestItem(BaseModel):
+    itemid: str
+    name: str
+    key_: str
+    lastvalue: Optional[str] = None
+    units: Optional[str] = None
+    lastclock: Optional[str] = None
+
+
+class DeviceOverviewResponse(BaseModel):
+    device_id: int
+    device_name: str
+    device_type: str
+    model: Optional[str] = None
+    manufacturer: Optional[str] = None
+    rack_id: int
+    rack_name: str
+    room_name: str
+    start_u: int
+    height_u: int
+    position_face: str
+    ip_address: Optional[str] = None
+    serial_number: Optional[str] = None
+    zabbix_host_id: Optional[str] = None
+    tags: Optional[Dict[str, Any]] = None
+    custom_fields: Optional[Dict[str, Any]] = None
+    # Live Telemetry
+    cpu_utilization: Optional[float] = None
+    memory_utilization: Optional[float] = None
+    temperature_c: Optional[float] = None
+    cpu_history: List[DeviceMetricHistoryPoint] = []
+    active_alerts: List[Dict[str, Any]] = []
+    # Zabbix Latest Data Items (Full Metric List)
+    latest_data_items: List[ZabbixLatestItem] = []

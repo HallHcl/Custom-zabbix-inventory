@@ -97,6 +97,7 @@ class Device(Base):
     zabbix_host_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
     
     tags: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
+    custom_fields: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     # Relationships

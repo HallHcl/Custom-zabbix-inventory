@@ -101,4 +101,16 @@ class ZabbixService:
         return history
 
 
+    async def get_host_all_items(self, host_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+        """Fetch all latest items for a host (Latest Data page)"""
+        params = {
+            "output": ["itemid", "name", "key_", "lastvalue", "units", "lastclock", "value_type"],
+            "hostids": [host_id],
+            "monitored": True,
+            "sortfield": "name",
+            "limit": limit,
+        }
+        return await self._call("item.get", params)
+
+
 zabbix_service = ZabbixService()

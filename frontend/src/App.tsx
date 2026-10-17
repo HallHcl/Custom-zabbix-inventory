@@ -11,6 +11,7 @@ import { RackInventoryNav } from './components/rack/RackInventoryNav'
 import { RackElevation } from './components/rack/RackElevation'
 import { DeviceDetailPanel } from './components/rack/DeviceDetailPanel'
 import { MountDeviceModal } from './components/rack/MountDeviceModal'
+import { DevicePageModal } from './components/rack/DevicePageModal'
 
 // Dedicated Tab Views
 import { OverviewView } from './components/views/OverviewView'
@@ -39,6 +40,19 @@ export function App() {
   // Mount modal state
   const [isMountModalOpen, setIsMountModalOpen] = useState(false)
   const [mountTargetU, setMountTargetU] = useState(1)
+
+  // Full Device Page Modal State (Latest Data + Custom Inventory)
+  const [devicePageId, setDevicePageId] = useState<number | null>(null)
+
+  // Theme State (High-Contrast Dark vs Clean Light Theme)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('dc_vision_theme') as 'dark' | 'light') || 'dark'
+  })
+  const handleToggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    localStorage.setItem('dc_vision_theme', next)
+  }
 
   // Load Room Overview
   const loadOverview = useCallback(() => {
@@ -184,7 +198,7 @@ export function App() {
   }, [overview, currentView, rackElevation, activeNav, handleBack])
 
   return (
-    <div className="flex h-screen w-screen bg-[#050505] text-zinc-100 font-sans overflow-hidden">
+    <div className={`flex h-screen w-screen bg-[#050505] text-zinc-100 font-sans overflow-hidden ${theme === 'light' ? 'light-theme' : ''}`}>
       {/* Left Sidebar */}
       <Sidebar
         activeTab={activeNav}
@@ -200,6 +214,8 @@ export function App() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           isLive={true}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
         />
 
         {/* Scrollable View Content */}
@@ -284,6 +300,7 @@ export function App() {
                   rackDevices={rackElevation.devices}
                   onSelectDevice={(dev) => setSelectedDevice(dev)}
                   onUnmountDevice={handleUnmountDevice}
+                  onOpenDevicePage={(devId) => setDevicePageId(devId)}
                 />
               </div>
             </div>
@@ -380,6 +397,7 @@ export function App() {
             <DevicesView
               racks={overview?.racks || []}
               onOpenDeviceInRack={handleOpenDeviceInRack}
+              onOpenDevicePage={(devId) => setDevicePageId(devId)}
             />
           ) : activeNav === 'alerts' ? (
             /* TAB 5: Live Zabbix Alerts View */
@@ -399,6 +417,18 @@ export function App() {
           isOpen={isMountModalOpen}
           onClose={() => setIsMountModalOpen(false)}
           onSuccess={() => {
+            if (activeRackId) loadRackElevation(activeRackId)
+          }}
+        />
+      )}
+
+      {/* Full Device Page Modal (Latest Data + Dynamic Inventory) */}
+      {devicePageId && (
+        <DevicePageModal
+          deviceId={devicePageId}
+          onClose={() => setDevicePageId(null)}
+          onDeviceUpdated={() => {
+            loadOverview()
             if (activeRackId) loadRackElevation(activeRackId)
           }}
         />

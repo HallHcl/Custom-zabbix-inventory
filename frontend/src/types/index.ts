@@ -29,6 +29,7 @@ export interface Device {
   serial_number?: string
   zabbix_host_id?: string
   tags?: Record<string, any>
+  custom_fields?: Record<string, any>
   zabbix_status?: ZabbixStatusSummary | null
 }
 
@@ -118,3 +119,38 @@ export interface ZabbixHostOption {
   technical_name: string
   ip: string
 }
+
+export interface ZabbixLatestItem {
+  itemid: string
+  name: string
+  key_: string
+  lastvalue?: string | null
+  units?: string | null
+  lastclock?: string | null
+}
+
+export interface DeviceOverview {
+  device_id: number
+  device_name: string
+  device_type: string
+  model?: string
+  manufacturer?: string
+  rack_id: number
+  rack_name: string
+  room_name: string
+  start_u: number
+  height_u: number
+  position_face: string
+  ip_address?: string
+  serial_number?: string
+  zabbix_host_id?: string
+  tags?: Record<string, any>
+  custom_fields?: Record<string, any>
+  cpu_utilization?: number
+  memory_utilization?: number
+  temperature_c?: number
+  cpu_history: MetricHistoryPoint[]
+  active_alerts: ZabbixProblem[]
+  latest_data_items: ZabbixLatestItem[]
+}
+
