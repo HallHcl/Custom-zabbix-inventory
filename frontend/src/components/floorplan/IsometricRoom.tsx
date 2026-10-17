@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Eye, Activity, Thermometer, Zap, RotateCcw, Plus, Minus } from 'lucide-react'
+import { useState, useRef, useMemo } from 'react'
+import { Eye, Activity, Thermometer, Zap, RotateCcw, RotateCw, Plus, Minus, Compass } from 'lucide-react'
 import type { RackSummary } from '../../types'
 
 interface IsometricRoomProps {
@@ -25,22 +25,26 @@ export function IsometricRoom({
   const [viewMode, setViewMode] = useState<ViewMode>('3d')
   const [zoom, setZoom] = useState<number>(1)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [rotationAngle, setRotationAngle] = useState<number>(0) // 0 to 360 degrees
 
-  // Isometric projection coordinates
-  const getRackCoordinates = (rowLetter: string, colNum: number) => {
-    const rowIdx = rowLetter.includes('C') ? 0 : rowLetter.includes('B') ? 1 : 2
-    const colIdx = colNum - 1
+  // Drag-to-rotate state
+  const isDraggingRef = useRef(false)
+  const dragStartXRef = useRef(0)
+  const startAngleRef = useRef(0)
+  const hasMovedRef = useRef(false)
+  const [isDragging, setIsDragging] = useState(false)
 
-    const originX = 540
-    const originY = 240
-    const tileW = 110
-    const tileH = 55
+  // Center of the room grid in isometric screen space
+  const centerIso = useMemo(() => ({ x: 540, y: 360 }), [])
+  const tileW = 110
+  const tileH = 55
 
-    const isoX = originX + (colIdx - rowIdx) * tileW
-    const isoY = originY + (colIdx + rowIdx) * tileH
-    return { x: isoX, y: isoY }
-  }
+  // Rotation in radians
+  const rad = useMemo(() => (rotationAngle * Math.PI) / 180, [rotationAngle])
+  const cos = useMemo(() => Math.cos(rad), [rad])
+  const sin = useMemo(() => Math.sin(rad), [rad])
 
+  // Status color mapper
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'critical':
@@ -55,12 +59,221 @@ export function IsometricRoom({
     }
   }
 
+  // Zoom and rotation handlers
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.15, 1.4))
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.15, 0.7))
+  const handleRotateLeft = () => setRotationAngle((prev) => (prev - 45 + 360) % 360)
+  const handleRotateRight = () => setRotationAngle((prev) => (prev + 45) % 360)
   const handleReset = () => {
     setZoom(1)
+    setRotationAngle(0)
     setStatusFilter(null)
   }
+
+  // Mouse drag handlers for 360° free rotation
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true
+    setIsDragging(true)
+    dragStartXRef.current = e.clientX
+    startAngleRef.current = rotationAngle
+    hasMovedRef.current = false
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current) return
+    const deltaX = e.clientX - dragStartXRef.current
+    if (Math.abs(deltaX) > 4) {
+      hasMovedRef.current = true
+    }
+    // Inverted so dragging left rotates the view to the right (natural orbital trackball motion)
+    const nextAngle = (startAngleRef.current - deltaX * 0.45) % 360
+    setRotationAngle(nextAngle < 0 ? nextAngle + 360 : nextAngle)
+  }
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false
+    setIsDragging(false)
+  }
+
+  // Touch handlers for mobile/tablet free rotation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      isDraggingRef.current = true
+      setIsDragging(true)
+      dragStartXRef.current = e.touches[0].clientX
+      startAngleRef.current = rotationAngle
+      hasMovedRef.current = false
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDraggingRef.current || e.touches.length !== 1) return
+    const deltaX = e.touches[0].clientX - dragStartXRef.current
+    if (Math.abs(deltaX) > 4) {
+      hasMovedRef.current = true
+    }
+    const nextAngle = (startAngleRef.current - deltaX * 0.45) % 360
+    setRotationAngle(nextAngle < 0 ? nextAngle + 360 : nextAngle)
+  }
+
+  const handleTouchEnd = () => {
+    isDraggingRef.current = false
+    setIsDragging(false)
+  }
+
+  // Calculate rotated floor, cold aisle, and back walls
+  const roomGeometry = useMemo(() => {
+    // 4 corners of the floor in isometric (u, v) space relative to center (540, 420)
+    const floorCornersUV = [
+      { u: -120, v: -120 }, // Top
+      { u: 210, v: -210 },  // Right
+      { u: 120, v: 120 },   // Bottom
+      { u: -210, v: 210 },  // Left
+    ]
+
+    const floorPts = floorCornersUV.map((c) => {
+      const ur = c.u * cos - c.v * sin
+      const vr = c.u * sin + c.v * cos
+      return {
+        x: 540 + (ur - vr),
+        y: 420 + (ur + vr) * 0.5,
+      }
+    })
+
+    // Cold Aisle mat in (u, v) space
+    const aisleUV = [
+      { u: -90, v: -90 },
+      { u: 130, v: -130 },
+      { u: 90, v: 90 },
+      { u: -130, v: 130 },
+    ]
+    const aislePts = aisleUV.map((c) => {
+      const ur = c.u * cos - c.v * sin
+      const vr = c.u * sin + c.v * cos
+      return {
+        x: 540 + (ur - vr),
+        y: 380 + (ur + vr) * 0.5,
+      }
+    })
+
+    // Determine back walls vs front curbs
+    const wallHeight = 240
+    const backWalls: string[] = []
+    const frontCurbs: string[] = []
+
+    for (let i = 0; i < 4; i++) {
+      const j = (i + 1) % 4
+      const p1 = floorPts[i]
+      const p2 = floorPts[j]
+      const midY = (p1.y + p2.y) / 2
+
+      if (midY < 420) {
+        // Back Wall
+        backWalls.push(
+          `${p1.x},${p1.y - wallHeight} ${p2.x},${p2.y - wallHeight} ${p2.x},${p2.y} ${p1.x},${p1.y}`
+        )
+      } else {
+        // Front Glass Curb
+        frontCurbs.push(
+          `${p1.x},${p1.y} ${p2.x},${p2.y} ${p2.x},${p2.y + 14} ${p1.x},${p1.y + 14}`
+        )
+      }
+    }
+
+    return {
+      floorPoints: floorPts.map((p) => `${p.x},${p.y}`).join(' '),
+      aislePoints: aislePts.map((p) => `${p.x},${p.y}`).join(' '),
+      backWalls,
+      frontCurbs,
+    }
+  }, [cos, sin])
+
+  // Compute position and 3D mesh vertices for all 12 racks with painter's depth sorting
+  const sortedRacks = useMemo(() => {
+    const rackHeight = 85
+
+    return racks.map((rack) => {
+      const rowIdx = rack.row.includes('C') ? 0 : rack.row.includes('B') ? 1 : 2
+      const colIdx = rack.col - 1
+
+      // Relative grid offset from room center (row: 1.0, col: 1.5)
+      const dc = colIdx - 1.5
+      const dr = rowIdx - 1.0
+
+      // Rotate coordinates around center
+      const rc = dc * cos - dr * sin
+      const rr = dc * sin + dr * cos
+
+      const x = centerIso.x + (rc - rr) * tileW
+      const y = centerIso.y + (rc + rr) * tileH
+      const depth = rc + rr // Camera depth value for painter's order
+
+      // 4 Base corners relative to anchor (u, v) rotated
+      const u_front = 12
+      const v_front = 12
+      const u_w = -23
+      const v_w = -1
+      const u_d = 1
+      const v_d = -29
+
+      const cornersUV = [
+        { u: u_front, v: v_front },                       // 0: Front
+        { u: u_front + u_d, v: v_front + v_d },           // 1: Right
+        { u: u_front + u_w + u_d, v: v_front + v_w + v_d }, // 2: Back
+        { u: u_front + u_w, v: v_front + v_w },           // 3: Left
+      ]
+
+      const baseCorners = cornersUV.map((c) => {
+        const ur = c.u * cos - c.v * sin
+        const vr = c.u * sin + c.v * cos
+        return {
+          x: x + (ur - vr),
+          y: y + (ur + vr) * 0.5,
+        }
+      })
+
+      const topCorners = baseCorners.map((p) => ({
+        x: p.x,
+        y: p.y - rackHeight,
+      }))
+
+      // Top face polygon
+      const topPolygon = topCorners.map((p) => `${p.x},${p.y}`).join(' ')
+
+      // 4 side faces, back-face culled (visible if edge dx > 0 in screen space)
+      const visibleSideFaces: { points: string; shade: string }[] = []
+      const shades = ['#1c1c1c', '#141414', '#181818', '#222222']
+
+      for (let i = 0; i < 4; i++) {
+        const j = (i + 1) % 4
+        const dx = baseCorners[j].x - baseCorners[i].x
+        if (dx > 0) {
+          const facePts = [
+            `${baseCorners[i].x},${baseCorners[i].y}`,
+            `${baseCorners[j].x},${baseCorners[j].y}`,
+            `${topCorners[j].x},${topCorners[j].y}`,
+            `${topCorners[i].x},${topCorners[i].y}`,
+          ].join(' ')
+
+          visibleSideFaces.push({
+            points: facePts,
+            shade: shades[i % shades.length],
+          })
+        }
+      }
+
+      return {
+        rack,
+        x,
+        y,
+        depth,
+        baseCorners,
+        topCorners,
+        topPolygon,
+        visibleSideFaces,
+      }
+    }).sort((a, b) => a.depth - b.depth) // Sort back-to-front
+  }, [racks, cos, sin, centerIso])
 
   return (
     <div className="relative rounded-2xl bg-[#090909] border border-[#1f1f1f] shadow-2xl overflow-hidden flex flex-col h-[520px]">
@@ -116,11 +329,52 @@ export function IsometricRoom({
         </button>
       </div>
 
-      {/* Main Isometric SVG Room Canvas */}
-      <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing">
+      {/* Top Right: Rotation Controls & Angle Indicator */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
+        <button
+          type="button"
+          onClick={handleRotateLeft}
+          className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+          title="Rotate Left 45° (⟲)"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+
+        <div
+          className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-medium text-zinc-300 bg-[#1c1c1c] rounded-lg border border-[#2b2b2b] select-none cursor-pointer hover:border-zinc-500 transition-colors"
+          onClick={() => setRotationAngle(0)}
+          title="Click to reset rotation to 0°"
+        >
+          <Compass className="w-3.5 h-3.5 text-zinc-400" />
+          <span>{Math.round(rotationAngle)}°</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleRotateRight}
+          className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+          title="Rotate Right 45° (⟳)"
+        >
+          <RotateCw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Main Isometric SVG Room Canvas with Free Drag-to-Rotate */}
+      <div
+        className={`flex-1 w-full h-full flex items-center justify-center overflow-hidden select-none ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <svg
           viewBox="0 0 1080 580"
-          className="w-full h-full transition-transform duration-300"
+          className="w-full h-full transition-transform duration-150"
           style={{ transform: `scale(${zoom})` }}
         >
           <defs>
@@ -153,48 +407,36 @@ export function IsometricRoom({
             </filter>
           </defs>
 
-          {/* Back Walls */}
-          <polygon points="120,180 540,60 540,300 120,420" fill="#141414" stroke="#222222" />
-          <polygon points="540,60 960,180 960,420 540,300" fill="#0f0f0f" stroke="#222222" />
+          {/* Dynamic Back Walls (Stay behind racks at any angle) */}
+          {roomGeometry.backWalls.map((pts, idx) => (
+            <polygon
+              key={`back-wall-${idx}`}
+              points={pts}
+              fill={idx % 2 === 0 ? '#141414' : '#0f0f0f'}
+              stroke="#222222"
+              strokeWidth="1"
+            />
+          ))}
 
-          {/* Double Doors */}
-          <polygon points="500,105 580,80 580,240 500,265" fill="#1c1c1c" stroke="#2c2c2c" />
-          <line x1="540" y1="92" x2="540" y2="252" stroke="#3f3f46" strokeWidth="2" />
-
-          {/* Overhead Cable Trays */}
-          <line x1="180" y1="200" x2="540" y2="100" stroke="#52525b" strokeWidth="2.5" opacity="0.4" />
-          <line x1="540" y1="100" x2="900" y2="200" stroke="#52525b" strokeWidth="2.5" opacity="0.4" />
-
-          {/* Floor */}
-          <polygon points="120,420 540,300 960,420 540,540" fill="url(#floorTilesTesla)" />
-
-          {/* Cold Aisle Mat */}
+          {/* Rotated Floor Base */}
           <polygon
-            points="280,380 540,290 800,380 540,470"
-            fill="url(#aisleTiles)"
-            opacity="0.9"
+            points={roomGeometry.floorPoints}
+            fill="url(#floorTilesTesla)"
+            stroke="#222222"
+            strokeWidth="1"
           />
 
-          {/* CRAC Cooling Units */}
-          <g transform="translate(180, 260)">
-            <polygon points="0,40 40,25 40,110 0,125" fill="#181818" stroke="#2a2a2a" />
-            <polygon points="40,25 90,45 90,130 40,110" fill="#111111" stroke="#2a2a2a" />
-            <polygon points="0,40 40,25 90,45 50,60" fill="#242424" stroke="#333333" />
-            <circle cx="65" cy="80" r="11" fill="#3f3f46" opacity="0.8" />
-            <circle cx="65" cy="110" r="11" fill="#3f3f46" opacity="0.8" />
-          </g>
+          {/* Rotated Cold Aisle Mat */}
+          <polygon
+            points={roomGeometry.aislePoints}
+            fill="url(#aisleTiles)"
+            opacity="0.9"
+            stroke="#2b2b2b"
+            strokeWidth="0.8"
+          />
 
-          <g transform="translate(810, 260)">
-            <polygon points="0,45 50,25 50,110 0,130" fill="#111111" stroke="#2a2a2a" />
-            <polygon points="50,25 90,40 90,125 50,110" fill="#181818" stroke="#2a2a2a" />
-            <polygon points="0,45 50,25 90,40 40,60" fill="#242424" stroke="#333333" />
-            <circle cx="25" cy="80" r="11" fill="#3f3f46" opacity="0.8" />
-            <circle cx="25" cy="110" r="11" fill="#3f3f46" opacity="0.8" />
-          </g>
-
-          {/* 12 Racks */}
-          {racks.map((rack) => {
-            const { x, y } = getRackCoordinates(rack.row, rack.col)
+          {/* 12 Racks Drawn in Dynamic Painter's Depth Order */}
+          {sortedRacks.map(({ rack, x, y, topPolygon, visibleSideFaces }) => {
             const isSelected = selectedRackId === rack.id
             const isDimmed = statusFilter !== null && rack.status !== statusFilter
             const statusColor = getStatusColor(rack.status)
@@ -205,18 +447,19 @@ export function IsometricRoom({
             if (viewMode === 'status') badgeText = rack.status.toUpperCase()
 
             const rackHeight = 85
-            const rackWidth = 44
-            const rackDepth = 30
 
             return (
               <g
                 key={rack.id}
-                onClick={() => onSelectRack(rack)}
+                onClick={() => {
+                  if (hasMovedRef.current) return
+                  onSelectRack(rack)
+                }}
                 className={`cursor-pointer transition-opacity duration-200 ${
                   isDimmed ? 'opacity-30' : 'opacity-100'
                 }`}
               >
-                {/* Selection Ring */}
+                {/* Selection Halo Ring */}
                 {isSelected && (
                   <ellipse
                     cx={x}
@@ -234,31 +477,26 @@ export function IsometricRoom({
                 {/* Base Shadow */}
                 <ellipse cx={x} cy={y + 10} rx="26" ry="12" fill="#000000" fillOpacity="0.8" />
 
-                {/* Front Left Face */}
-                <polygon
-                  points={`${x - rackWidth / 2},${y - rackHeight + 8} ${x},${y - rackHeight + 20} ${x},${y + 12} ${x - rackWidth / 2},${y}`}
-                  fill={isSelected ? '#2e2e2e' : '#1c1c1c'}
-                  stroke={isSelected ? '#ffffff' : '#333333'}
-                  strokeWidth={isSelected ? '2' : '1'}
-                />
-
-                {/* Front Right Face */}
-                <polygon
-                  points={`${x},${y - rackHeight + 20} ${x + rackDepth},${y - rackHeight + 6} ${x + rackDepth},${y - 2} ${x},${y + 12}`}
-                  fill={isSelected ? '#222222' : '#141414'}
-                  stroke={isSelected ? '#ffffff' : '#333333'}
-                  strokeWidth={isSelected ? '2' : '1'}
-                />
+                {/* Visible 3D Side Faces */}
+                {visibleSideFaces.map((face, fIdx) => (
+                  <polygon
+                    key={`face-${fIdx}`}
+                    points={face.points}
+                    fill={isSelected ? (fIdx === 0 ? '#2e2e2e' : '#222222') : face.shade}
+                    stroke={isSelected ? '#ffffff' : '#333333'}
+                    strokeWidth={isSelected ? '2' : '1'}
+                  />
+                ))}
 
                 {/* Top Face */}
                 <polygon
-                  points={`${x - rackWidth / 2},${y - rackHeight + 8} ${x},${y - rackHeight - 4} ${x + rackDepth},${y - rackHeight + 6} ${x},${y - rackHeight + 20}`}
+                  points={topPolygon}
                   fill={isSelected ? '#3f3f46' : '#262626'}
                   stroke={isSelected ? '#ffffff' : '#404040'}
                   strokeWidth={isSelected ? '2' : '1'}
                 />
 
-                {/* Status LED */}
+                {/* Status LED Beacon */}
                 <circle
                   cx={x + 5}
                   cy={y - rackHeight + 8}
@@ -268,7 +506,7 @@ export function IsometricRoom({
                   className="animate-pulse"
                 />
 
-                {/* Label Floating above Rack */}
+                {/* Floating Billboard Label (Facing Viewer At All Angles) */}
                 <g transform={`translate(${x - 30}, ${y - rackHeight - 26})`}>
                   <rect
                     width="60"
@@ -295,14 +533,17 @@ export function IsometricRoom({
             )
           })}
 
-          {/* Front Wall */}
-          <polygon
-            points="120,420 540,540 960,420 960,435 540,555 120,435"
-            fill="#27272a"
-            fillOpacity="0.2"
-            stroke="#3f3f46"
-            strokeWidth="1.5"
-          />
+          {/* Front Perimeter Curbs (Stay in front of racks) */}
+          {roomGeometry.frontCurbs.map((pts, idx) => (
+            <polygon
+              key={`front-curb-${idx}`}
+              points={pts}
+              fill="#27272a"
+              fillOpacity="0.25"
+              stroke="#3f3f46"
+              strokeWidth="1.5"
+            />
+          ))}
         </svg>
       </div>
 
@@ -355,8 +596,11 @@ export function IsometricRoom({
           </button>
         </div>
 
-        {/* Zoom & Reset Controls */}
+        {/* Zoom, Drag Hint & Reset Controls */}
         <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
+          <span className="text-[11px] text-zinc-500 px-2 select-none hidden md:inline">
+            Drag to rotate 360°
+          </span>
           <button
             type="button"
             onClick={handleZoomIn}
@@ -377,7 +621,7 @@ export function IsometricRoom({
             type="button"
             onClick={handleReset}
             className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
-            title="Reset View"
+            title="Reset View (Zoom 1.0, Angle 0°)"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
