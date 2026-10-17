@@ -4,7 +4,7 @@
   :root {
     --bg-main: #000000;
     --text-main: #ffffff;
-    --color-tesla-red: #e82127;
+    --color-brand-red: #e82127;
     --color-carbon-900: #0a0a0a;
     --color-carbon-800: #141414;
     --color-carbon-700: #1f1f1f;
@@ -24,7 +24,7 @@ html, body, #root {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Tesla Sleek Scrollbar */
+/* Sleek Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

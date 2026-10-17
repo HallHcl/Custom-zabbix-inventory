@@ -46,7 +46,7 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
             <h1 className="font-bold tracking-widest text-white text-base flex items-center gap-1.5 uppercase">
               <span>POP</span>
             </h1>
-            <p className="text-[11px] text-zinc-500 font-mono tracking-wider">TESLA INVENTORY</p>
+            <p className="text-[11px] text-zinc-500 font-mono tracking-wider">ZABBIX INVENTORY</p>
           </div>
         </div>
 
@@ -67,7 +67,7 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#141414]'
                 }`}
               >
-                {/* Tesla Red Left Pip for Active Tab */}
+                {/* Red Left Pip for Active Tab */}
                 {isActive && (
                   <span className="absolute left-0 top-2 bottom-2 w-1 bg-[#e82127] rounded-r-full" />
                 )}

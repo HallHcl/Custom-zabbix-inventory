@@ -164,7 +164,7 @@ export function DeviceDetailPanel({
           <div className="h-20 w-full bg-[#121212] rounded-xl border border-[#222222] p-2 flex items-end">
             <svg viewBox="0 0 240 60" className="w-full h-full overflow-visible">
               <defs>
-                <linearGradient id="teslaSparkGrad" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="cpuSparkGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
                   <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
                 </linearGradient>
@@ -177,7 +177,7 @@ export function DeviceDetailPanel({
                 points="0,35 20,40 40,30 60,38 80,25 100,28 120,20 140,24 160,18 180,22 200,15 220,18 240,14"
               />
               <polygon
-                fill="url(#teslaSparkGrad)"
+                fill="url(#cpuSparkGrad)"
                 points="0,35 20,40 40,30 60,38 80,25 100,28 120,20 140,24 160,18 180,22 200,15 220,18 240,14 240,60 0,60"
               />
             </svg>

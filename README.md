@@ -66,3 +66,21 @@ $env:PYTHONPATH="."
 cd frontend
 npm run build
 ```
+
+---
+
+## 🐳 Production Deployment (Server / Docker Compose)
+
+The production configuration runs containerized with zero port collisions on busy servers by exposing only a single port (`8090`) to the host, while PostgreSQL, Redis, and FastAPI communicate securely via the internal `dc_vision_net` bridge network:
+
+- **Frontend & Reverse Proxy:** `http://<SERVER_IP>:8090` (Nginx serving SPA and proxying `/api/` to Backend)
+- **FastAPI Backend:** Internal `backend:8000`
+- **PostgreSQL:** Internal `postgres:5432` (named volume: `dc_vision_postgres_data`)
+- **Redis:** Internal `redis:6379` (named volume: `dc_vision_redis_data`)
+
+### Deploy Commands on Server
+```bash
+cd /opt/dc-vision
+docker compose -f docker-compose.prod.yml up -d --build
+```
+

@@ -48,7 +48,7 @@ export function IsometricRoom({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'critical':
-        return '#e82127' // Tesla Red
+        return '#e82127' // Critical Red
       case 'warning':
         return '#f59e0b' // Amber yellow
       case 'offline':
@@ -378,8 +378,8 @@ export function IsometricRoom({
           style={{ transform: `scale(${zoom})` }}
         >
           <defs>
-            {/* Tesla Floor Tiles Pattern */}
-            <pattern id="floorTilesTesla" width="40" height="20" patternUnits="userSpaceOnUse">
+            {/* Room Floor Tiles Pattern */}
+            <pattern id="floorTilesGrid" width="40" height="20" patternUnits="userSpaceOnUse">
               <path
                 d="M 20 0 L 40 10 L 20 20 L 0 10 Z"
                 fill="#0d0d0d"
@@ -398,7 +398,7 @@ export function IsometricRoom({
               />
             </pattern>
 
-            <filter id="teslaGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id="beaconGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -421,7 +421,7 @@ export function IsometricRoom({
           {/* Rotated Floor Base */}
           <polygon
             points={roomGeometry.floorPoints}
-            fill="url(#floorTilesTesla)"
+            fill="url(#floorTilesGrid)"
             stroke="#222222"
             strokeWidth="1"
           />
@@ -470,7 +470,7 @@ export function IsometricRoom({
                     fillOpacity="0.1"
                     stroke="#ffffff"
                     strokeWidth="2"
-                    filter="url(#teslaGlow)"
+                    filter="url(#beaconGlow)"
                   />
                 )}
 
@@ -502,7 +502,7 @@ export function IsometricRoom({
                   cy={y - rackHeight + 8}
                   r={isSelected ? '5.5' : '4'}
                   fill={statusColor}
-                  filter="url(#teslaGlow)"
+                  filter="url(#beaconGlow)"
                   className="animate-pulse"
                 />
 
