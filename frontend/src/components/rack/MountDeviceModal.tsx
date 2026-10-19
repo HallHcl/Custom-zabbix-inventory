@@ -85,192 +85,191 @@ export function MountDeviceModal({
   )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-lg p-6 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-2xl relative">
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-5 right-5 text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Modal Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white">
-            <Server className="w-5 h-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs select-none">
+      <div className="w-full max-w-lg noc-panel shadow-2xl relative overflow-hidden">
+        {/* Header Ribbon */}
+        <div className="noc-panel-header">
+          <div className="flex items-center gap-2">
+            <Server className="w-4 h-4 text-[#8bd7d1]" />
+            <span className="font-mono uppercase tracking-wider text-xs text-white">
+              Mount Hardware Unit (Slot U{startU})
+            </span>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-white tracking-tight">Mount Device to Rack</h3>
-            <p className="text-xs text-zinc-400">Positioning at Unit U{startU}</p>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-[#85a6b1] hover:text-white p-0.5 rounded-[2px] transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 flex items-center gap-2.5 text-xs text-rose-300">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        <div className="p-4">
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-3 p-2 rounded-[2px] bg-rose-950/40 border border-rose-800 flex items-center gap-2 text-xs font-mono text-rose-300">
+              <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-          {/* Device Name & Type */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-3 text-xs font-mono">
+            {/* Device Name & Type */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[#caedde] mb-1">Equipment Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. SRV-APP-05"
+                  className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1]"
+                />
+              </div>
+              <div>
+                <label className="block text-[#caedde] mb-1">Hardware Category</label>
+                <select
+                  value={deviceType}
+                  onChange={(e) => setDeviceType(e.target.value)}
+                  className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white focus:outline-none focus:border-[#8bd7d1]"
+                >
+                  <option value="Server">Server</option>
+                  <option value="Switch">Switch</option>
+                  <option value="Firewall">Firewall</option>
+                  <option value="Storage">Storage</option>
+                  <option value="UPS">UPS</option>
+                  <option value="Patch Panel">Patch Panel</option>
+                  <option value="Blank Panel">Blank Panel</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Model & Manufacturer */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[#caedde] mb-1">Model / Chassis</label>
+                <input
+                  type="text"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  placeholder="e.g. PowerEdge R750"
+                  className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1]"
+                />
+              </div>
+              <div>
+                <label className="block text-[#caedde] mb-1">Vendor / OEM</label>
+                <input
+                  type="text"
+                  value={manufacturer}
+                  onChange={(e) => setManufacturer(e.target.value)}
+                  placeholder="e.g. Dell EMC"
+                  className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1]"
+                />
+              </div>
+            </div>
+
+            {/* Start U & Height U */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-[#caedde] mb-1">Start Position (U)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="42"
+                  value={startU}
+                  onChange={(e) => setStartU(Number(e.target.value))}
+                  className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white focus:outline-none focus:border-[#8bd7d1]"
+                />
+              </div>
+              <div>
+                <label className="block text-[#caedde] mb-1">Form Factor Height (U)</label>
+                <select
+                  value={heightU}
+                  onChange={(e) => setHeightU(Number(e.target.value))}
+                  className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white focus:outline-none focus:border-[#8bd7d1]"
+                >
+                  <option value={1}>1U</option>
+                  <option value={2}>2U</option>
+                  <option value={3}>3U</option>
+                  <option value={4}>4U</option>
+                </select>
+              </div>
+            </div>
+
+            {/* IP Address */}
             <div>
-              <label className="block text-zinc-300 font-medium mb-1.5">Device Name *</label>
+              <label className="block text-[#caedde] mb-1">Management IP Address</label>
               <input
                 type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. SRV-APP-05"
-                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors"
+                value={ipAddress}
+                onChange={(e) => setIpAddress(e.target.value)}
+                placeholder="e.g. 10.10.20.45"
+                className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 font-mono text-white placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1]"
               />
             </div>
-            <div>
-              <label className="block text-zinc-300 font-medium mb-1.5">Device Type</label>
-              <select
-                value={deviceType}
-                onChange={(e) => setDeviceType(e.target.value)}
-                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-zinc-400 transition-colors"
-              >
-                <option value="Server">Server</option>
-                <option value="Switch">Switch</option>
-                <option value="Firewall">Firewall</option>
-                <option value="Storage">Storage</option>
-                <option value="UPS">UPS</option>
-                <option value="Patch Panel">Patch Panel</option>
-                <option value="Blank Panel">Blank Panel</option>
-              </select>
-            </div>
-          </div>
 
-          {/* Model & Manufacturer */}
-          <div className="grid grid-cols-2 gap-3">
+            {/* Link Zabbix Host Picker */}
             <div>
-              <label className="block text-zinc-300 font-medium mb-1.5">Model</label>
+              <label className="block text-[#caedde] mb-1">
+                Link to Zabbix 7.0 Host (Optional)
+              </label>
               <input
                 type="text"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                placeholder="e.g. PowerEdge R750"
-                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors"
+                value={searchHostQuery}
+                onChange={(e) => setSearchHostQuery(e.target.value)}
+                placeholder="Search live hosts in Zabbix..."
+                className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1] mb-1.5"
               />
-            </div>
-            <div>
-              <label className="block text-zinc-300 font-medium mb-1.5">Manufacturer</label>
-              <input
-                type="text"
-                value={manufacturer}
-                onChange={(e) => setManufacturer(e.target.value)}
-                placeholder="e.g. Dell EMC"
-                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* Start U & Height U */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-zinc-300 font-medium mb-1.5">Starting Position (U)</label>
-              <input
-                type="number"
-                min="1"
-                max="42"
-                value={startU}
-                onChange={(e) => setStartU(Number(e.target.value))}
-                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-zinc-400 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-zinc-300 font-medium mb-1.5">Unit Height (U)</label>
-              <select
-                value={heightU}
-                onChange={(e) => setHeightU(Number(e.target.value))}
-                className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white focus:outline-none focus:border-zinc-400 transition-colors"
-              >
-                <option value={1}>1U</option>
-                <option value={2}>2U</option>
-                <option value={3}>3U</option>
-                <option value={4}>4U</option>
-              </select>
-            </div>
-          </div>
-
-          {/* IP Address */}
-          <div>
-            <label className="block text-zinc-300 font-medium mb-1.5">IP Address</label>
-            <input
-              type="text"
-              value={ipAddress}
-              onChange={(e) => setIpAddress(e.target.value)}
-              placeholder="e.g. 10.10.20.45"
-              className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 font-mono text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors"
-            />
-          </div>
-
-          {/* Link Zabbix Host Picker */}
-          <div>
-            <label className="block text-zinc-300 font-medium mb-1.5">
-              Link to Zabbix Host (Optional)
-            </label>
-            <input
-              type="text"
-              value={searchHostQuery}
-              onChange={(e) => setSearchHostQuery(e.target.value)}
-              placeholder="Search live Zabbix hosts..."
-              className="w-full bg-[#161616] border border-[#262626] rounded-xl px-3 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 transition-colors mb-2"
-            />
-            {/* Scrollable Host Options */}
-            <div className="max-h-32 overflow-y-auto space-y-1 rounded-xl border border-[#262626] bg-[#0c0c0c] p-1.5">
-              {filteredHosts.length === 0 ? (
-                <div className="text-zinc-500 py-2 text-center">No matching hosts found</div>
-              ) : (
-                filteredHosts.map((h) => {
-                  const isSelected = zabbixHostId === h.hostid
-                  return (
-                    <div
-                      key={h.hostid}
-                      onClick={() => handleSelectZabbixHost(h)}
-                      className={`p-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${
-                        isSelected
-                          ? 'bg-zinc-800 text-white border border-zinc-600'
-                          : 'text-zinc-300 hover:bg-[#1a1a1a]'
-                      }`}
-                    >
-                      <div>
-                        <div className="font-semibold text-xs">{h.name}</div>
-                        <div className="text-[10px] text-zinc-500 font-mono">{h.ip || 'No IP'}</div>
+              {/* Scrollable Host Options */}
+              <div className="max-h-28 overflow-y-auto space-y-1 rounded-[2px] border border-[#394650] bg-[#161c20] p-1">
+                {filteredHosts.length === 0 ? (
+                  <div className="text-[#85a6b1] py-2 text-center text-[10px]">No matching hosts found in Zabbix</div>
+                ) : (
+                  filteredHosts.map((h) => {
+                    const isSelected = zabbixHostId === h.hostid
+                    return (
+                      <div
+                        key={h.hostid}
+                        onClick={() => handleSelectZabbixHost(h)}
+                        className={`p-1.5 rounded-[2px] flex items-center justify-between cursor-pointer transition-colors ${
+                          isSelected
+                            ? 'bg-[#34424b] text-white border border-[#50626f]'
+                            : 'text-[#85a6b1] hover:bg-[#273139]'
+                        }`}
+                      >
+                        <div>
+                          <div className="font-bold text-[11px]">{h.name}</div>
+                          <div className="text-[9px] text-[#85a6b1] font-mono">{h.ip || 'No IP'}</div>
+                        </div>
+                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[#8bd7d1]" />}
                       </div>
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
-                    </div>
-                  )
-                })
-              )}
+                    )
+                  })
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Submit & Cancel */}
-          <div className="flex gap-3 pt-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-[#2e2e2e] text-zinc-300 hover:bg-[#1c1c1c] hover:text-white font-medium transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-semibold shadow-lg shadow-white/5 transition-all disabled:opacity-50"
-            >
-              {loading ? 'Mounting...' : 'Mount Device'}
-            </button>
-          </div>
-        </form>
+            {/* Submit & Cancel */}
+            <div className="flex gap-2 pt-2 border-t border-[#394650]">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-1.5 rounded-[2px] border border-[#394650] bg-[#273139] text-[#caedde] hover:text-white transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 py-1.5 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] font-bold transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? 'Mounting...' : 'Confirm Mounting'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )

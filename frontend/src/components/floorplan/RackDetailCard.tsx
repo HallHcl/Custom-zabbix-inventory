@@ -18,9 +18,9 @@ interface RackDetailCardProps {
 export function RackDetailCard({ rack, onViewRackElevation }: RackDetailCardProps) {
   if (!rack) {
     return (
-      <div className="p-6 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-md flex flex-col items-center justify-center text-center text-zinc-500 h-full min-h-[340px]">
-        <Server className="w-12 h-12 mb-3 text-zinc-600" />
-        <p className="text-xs">Click a rack in the floor plan to view details</p>
+      <div className="p-6 noc-panel flex flex-col items-center justify-center text-center text-[#85a6b1] h-full min-h-[340px] select-none">
+        <Server className="w-10 h-10 mb-2 text-[#85a6b1]" />
+        <span className="text-xs font-mono">Select a cabinet on the 2.5D floor plan</span>
       </div>
     )
   }
@@ -29,93 +29,85 @@ export function RackDetailCard({ rack, onViewRackElevation }: RackDetailCardProp
     switch (rack.status) {
       case 'critical':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-950/60 text-rose-400 border border-rose-800">
-            <AlertOctagon className="w-3.5 h-3.5" />
-            Critical
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-700">
+            <AlertOctagon className="w-3 h-3" />
+            CRIT
           </span>
         )
       case 'warning':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-950/50 text-amber-400 border border-amber-800">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            Warning
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-700">
+            <AlertTriangle className="w-3 h-3" />
+            WARN
           </span>
         )
       case 'healthy':
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/50 text-emerald-400 border border-emerald-800">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Healthy
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-[#1a3835] text-[#8bd7d1] border border-[#2b5d58]">
+            <CheckCircle2 className="w-3 h-3" />
+            NOMINAL
           </span>
         )
     }
   }
 
   return (
-    <div className="p-6 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-xl flex flex-col justify-between">
+    <div className="p-4 noc-panel flex flex-col justify-between select-none">
       <div>
         {/* Header Title & Status */}
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-2xl font-bold tracking-tight text-white">{rack.name}</h2>
+        <div className="flex items-center justify-between mb-1 pb-2 border-b border-[#394650]">
+          <div>
+            <h2 className="text-base font-bold text-white font-mono tracking-tight">{rack.name}</h2>
+            <span className="text-[10px] text-[#85a6b1] font-mono">ROW {rack.row} / COL {rack.col}</span>
+          </div>
           {getStatusBadge()}
         </div>
-        <p className="text-xs text-zinc-400 mb-6">
-          Room A • {rack.row}
-        </p>
 
         {/* Space Usage Progress */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between text-xs mb-2">
-            <div className="flex items-center gap-2 text-zinc-300 font-medium">
-              <Server className="w-4 h-4 text-zinc-400" />
-              <span>
-                {rack.used_u} / {rack.total_u} U used
-              </span>
+        <div className="my-3 space-y-1">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <div className="flex items-center gap-1.5 text-[#85a6b1]">
+              <Server className="w-3.5 h-3.5 text-[#85a6b1]" />
+              <span>Space Occupancy</span>
             </div>
-            <span className="text-white font-bold">{rack.usage_percent}%</span>
+            <span className="text-[#caedde] font-bold">{rack.used_u}/{rack.total_u} U ({rack.usage_percent}%)</span>
           </div>
-          <div className="w-full h-1.5 rounded-full bg-[#1c1c1c] overflow-hidden">
+          <div className="w-full h-1.5 rounded-[1px] bg-[#273139] overflow-hidden">
             <div
-              className="h-full bg-white rounded-full transition-all duration-500"
+              className="h-full bg-[#8bd7d1] transition-all duration-300"
               style={{ width: `${Math.min(rack.usage_percent, 100)}%` }}
             />
           </div>
         </div>
 
         {/* Metric Details List */}
-        <div className="space-y-3 mb-6">
+        <div className="space-y-1.5 my-3 font-mono text-xs">
           {/* Power */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#141414] border border-[#242424]">
-            <div className="flex items-center gap-3 text-zinc-400 text-xs">
-              <div className="p-2 rounded-lg bg-[#1f1f1f] text-zinc-200">
-                <Zap className="w-4 h-4" />
-              </div>
-              <span>Power Draw</span>
+          <div className="flex items-center justify-between p-2 rounded-[2px] bg-[#273139] border border-[#394650]">
+            <div className="flex items-center gap-2 text-[#85a6b1]">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span>Power Circuit Draw</span>
             </div>
-            <span className="font-semibold text-white text-xs">{rack.power_kw} kW</span>
+            <span className="font-bold text-amber-400">{rack.power_kw} kW</span>
           </div>
 
           {/* Inlet Temperature */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#141414] border border-[#242424]">
-            <div className="flex items-center gap-3 text-zinc-400 text-xs">
-              <div className="p-2 rounded-lg bg-[#1f1f1f] text-zinc-200">
-                <Thermometer className="w-4 h-4" />
-              </div>
-              <span>Inlet Temperature</span>
+          <div className="flex items-center justify-between p-2 rounded-[2px] bg-[#273139] border border-[#394650]">
+            <div className="flex items-center gap-2 text-[#85a6b1]">
+              <Thermometer className="w-3.5 h-3.5 text-[#8bd7d1]" />
+              <span>Inlet Sensor</span>
             </div>
-            <span className="font-semibold text-white text-xs">{rack.inlet_temp_c}°C</span>
+            <span className="font-bold text-[#8bd7d1]">{rack.inlet_temp_c}°C</span>
           </div>
 
           {/* Devices Count */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-[#141414] border border-[#242424]">
-            <div className="flex items-center gap-3 text-zinc-400 text-xs">
-              <div className="p-2 rounded-lg bg-[#1f1f1f] text-zinc-200">
-                <Database className="w-4 h-4" />
-              </div>
-              <span>Installed Devices</span>
+          <div className="flex items-center justify-between p-2 rounded-[2px] bg-[#273139] border border-[#394650]">
+            <div className="flex items-center gap-2 text-[#85a6b1]">
+              <Database className="w-3.5 h-3.5 text-[#85a6b1]" />
+              <span>Mounted Hardware</span>
             </div>
-            <span className="font-semibold text-white text-xs">{rack.device_count} Units</span>
+            <span className="font-bold text-[#caedde]">{rack.device_count} Units</span>
           </div>
         </div>
       </div>
@@ -124,10 +116,10 @@ export function RackDetailCard({ rack, onViewRackElevation }: RackDetailCardProp
       <button
         type="button"
         onClick={() => onViewRackElevation(rack)}
-        className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider bg-white hover:bg-zinc-200 text-black flex items-center justify-center gap-2 shadow-lg transition-all duration-150 cursor-pointer active:scale-[0.98]"
+        className="w-full py-2 px-3 rounded-[2px] font-mono font-bold text-xs bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
       >
-        <span>View Rack Elevation</span>
-        <ChevronRight className="w-4 h-4" />
+        <span>Inspect 42U Elevation</span>
+        <ChevronRight className="w-3.5 h-3.5" />
       </button>
     </div>
   )

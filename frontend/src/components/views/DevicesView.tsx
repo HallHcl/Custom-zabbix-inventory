@@ -52,39 +52,46 @@ export function DevicesView({ racks, onOpenDeviceInRack, onOpenDevicePage }: Dev
   const deviceTypes = ['all', 'Server', 'Switch', 'Firewall', 'Storage', 'UPS', 'Patch Panel']
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+    <div className="max-w-[1600px] mx-auto space-y-3 select-none">
+      {/* Tactical Sub-Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#394650]">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">Device Inventory</h2>
-          <p className="text-xs text-zinc-400 mt-1">
-            Total {devices.length} Devices • Monitored via Zabbix 7.0 & Cached in Redis
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold tracking-tight text-white font-sans">
+              HARDWARE INVENTORY MATRIX
+            </h2>
+            <span className="px-1.5 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[10px] font-mono text-[#8bd7d1]">
+              {devices.length} UNITS
+            </span>
+          </div>
+          <p className="text-xs text-[#85a6b1] font-mono mt-0.5">
+            Synchronized with Zabbix 7.0 Hosts &amp; CMDB Rack Allocations
           </p>
         </div>
 
         {/* Search & Filter Controls */}
-        <div className="flex items-center gap-3">
-          <div className="relative w-64">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="flex items-center gap-2">
+          <div className="relative w-64 sm:w-72">
+            <Search className="w-3.5 h-3.5 text-[#85a6b1] absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, IP, model..."
-              className="w-full bg-[#111111] border border-zinc-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
+              placeholder="Search host, IP, model, vendor..."
+              className="w-full bg-[#273139] border border-[#394650] rounded-[3px] pl-8 pr-3 py-1.5 text-xs text-[#caedde] placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1] font-mono"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#111111] border border-zinc-800">
-            <Filter className="w-3.5 h-3.5 text-zinc-500 ml-2" />
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-[3px] bg-[#273139] border border-[#394650]">
+            <Filter className="w-3 h-3 text-[#85a6b1]" />
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="bg-transparent text-xs text-zinc-300 font-medium pr-3 py-1.5 focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs text-[#caedde] font-mono focus:outline-none cursor-pointer"
             >
               {deviceTypes.map((t) => (
-                <option key={t} value={t} className="bg-zinc-900 text-white">
-                  {t === 'all' ? 'All Types' : t}
+                <option key={t} value={t} className="bg-[#273139] text-[#caedde]">
+                  {t === 'all' ? 'All Hardware Types' : t}
                 </option>
               ))}
             </select>
@@ -92,30 +99,30 @@ export function DevicesView({ racks, onOpenDeviceInRack, onOpenDevicePage }: Dev
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-2xl bg-[#0f0f0f] border border-zinc-800 overflow-hidden shadow-xl">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-[#141414] border-b border-zinc-800 text-zinc-400 uppercase tracking-wider font-semibold">
+      {/* High-Density NOC Table */}
+      <div className="noc-panel overflow-hidden">
+        <table className="w-full text-left text-xs font-mono">
+          <thead className="bg-[#273139] border-b border-[#394650] text-[#85a6b1] uppercase tracking-wider text-[10px]">
             <tr>
-              <th className="py-3.5 px-5">Device</th>
-              <th className="py-3.5 px-4">Type</th>
-              <th className="py-3.5 px-4">Location</th>
-              <th className="py-3.5 px-4">IP Address</th>
-              <th className="py-3.5 px-4">Zabbix Status</th>
-              <th className="py-3.5 px-5 text-right">Actions</th>
+              <th className="py-2.5 px-3">Equipment / Host</th>
+              <th className="py-2.5 px-3">Category</th>
+              <th className="py-2.5 px-3">Cabinet &amp; Elevation</th>
+              <th className="py-2.5 px-3">Management IP</th>
+              <th className="py-2.5 px-3">Telemetry Posture</th>
+              <th className="py-2.5 px-3 text-right">Operations</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800/80">
+          <tbody className="divide-y divide-[#394650]">
             {loading ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-zinc-500">
-                  Loading devices from database...
+                <td colSpan={6} className="py-10 text-center text-[#85a6b1]">
+                  Polling hardware telemetry from database...
                 </td>
               </tr>
             ) : filteredDevices.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-zinc-500">
-                  No matching devices found
+                <td colSpan={6} className="py-10 text-center text-[#85a6b1]">
+                  No matching hardware records found
                 </td>
               </tr>
             ) : (
@@ -126,17 +133,15 @@ export function DevicesView({ racks, onOpenDeviceInRack, onOpenDevicePage }: Dev
                 return (
                   <tr
                     key={d.id}
-                    className="hover:bg-zinc-900/60 transition-colors group cursor-default"
+                    className="hover:bg-[#252f36] transition-colors group cursor-default"
                   >
                     {/* Device Name & Hardware */}
-                    <td className="py-3.5 px-5">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300">
-                          <Server className="w-4 h-4" />
-                        </div>
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-2">
+                        <Server className="w-3.5 h-3.5 text-[#8bd7d1] shrink-0" />
                         <div>
-                          <span className="font-bold text-white block text-sm">{d.name}</span>
-                          <span className="text-[11px] text-zinc-400">
+                          <span className="font-bold text-white block text-xs font-mono">{d.name}</span>
+                          <span className="text-[10px] text-[#85a6b1]">
                             {d.manufacturer} {d.model}
                           </span>
                         </div>
@@ -144,84 +149,83 @@ export function DevicesView({ racks, onOpenDeviceInRack, onOpenDevicePage }: Dev
                     </td>
 
                     {/* Type */}
-                    <td className="py-3.5 px-4">
-                      <span className="px-2.5 py-1 rounded-md bg-zinc-800/80 border border-zinc-700/60 text-zinc-300 font-medium">
+                    <td className="py-2 px-3">
+                      <span className="px-1.5 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[10px] text-[#caedde] font-mono">
                         {d.device_type}
                       </span>
                     </td>
 
                     {/* Location */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-2 px-3">
                       <div>
-                        <span className="font-semibold text-white block">{rackName}</span>
-                        <span className="text-[11px] text-zinc-400 font-mono">
-                          Slot U{d.start_u}
-                          {d.height_u > 1 ? ` - U${d.start_u + d.height_u - 1}` : ''} ({d.height_u}
-                          U)
+                        <span className="font-bold text-[#caedde] block text-xs">{rackName}</span>
+                        <span className="text-[10px] text-[#85a6b1] font-mono">
+                          U{d.start_u}
+                          {d.height_u > 1 ? `-U${d.start_u + d.height_u - 1}` : ''} ({d.height_u}U)
                         </span>
                       </div>
                     </td>
 
                     {/* IP Address */}
-                    <td className="py-3.5 px-4 font-mono text-zinc-300">
-                      {d.ip_address || <span className="text-zinc-600">—</span>}
+                    <td className="py-2 px-3 font-mono text-[#caedde] text-xs">
+                      {d.ip_address || <span className="text-[#85a6b1]/50">—</span>}
                     </td>
 
                     {/* Zabbix Status */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-2 px-3">
                       {d.zabbix_host_id ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           {status === 'critical' ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-950/50 text-rose-400 border border-rose-800">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-700">
                               <AlertOctagon className="w-3 h-3" />
-                              Critical ({d.zabbix_status?.problems_count})
+                              CRIT ({d.zabbix_status?.problems_count})
                             </span>
                           ) : status === 'warning' ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-950/50 text-amber-400 border border-amber-800">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-700">
                               <AlertTriangle className="w-3 h-3" />
-                              Warning ({d.zabbix_status?.problems_count})
+                              WARN ({d.zabbix_status?.problems_count})
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/50 text-emerald-400 border border-emerald-800">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-[#1a3835] text-[#8bd7d1] border border-[#2b5d58]">
                               <CheckCircle2 className="w-3 h-3" />
-                              Healthy
+                              NOMINAL
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-zinc-600 font-medium text-[11px]">Unlinked</span>
+                        <span className="text-[#85a6b1]/60 font-mono text-[10px]">UNLINKED</span>
                       )}
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3.5 px-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         {onOpenDevicePage && (
                           <button
                             type="button"
                             onClick={() => onOpenDevicePage(d.id)}
-                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-blue-600/20"
+                            className="px-2 py-1 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] text-xs font-mono transition-colors cursor-pointer"
                           >
-                            <span>Device Page</span>
+                            <span>Diag</span>
                           </button>
                         )}
                         <button
                           type="button"
                           onClick={() => onOpenDeviceInRack(d.rack_id, d.id)}
-                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                          className="px-2 py-1 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1"
                         >
                           <span>Rack</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
+                          <ChevronRight className="w-3 h-3" />
                         </button>
                         {d.zabbix_host_id && (
                           <a
                             href={`http://192.168.1.85:8080/zabbix.php?action=latest.view&hostids%5B%5D=${d.zabbix_host_id}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                            className="p-1 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#85a6b1] hover:text-white transition-colors"
                             title="Open in Zabbix Latest Data"
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
+                            <ExternalLink className="w-3 h-3" />
                           </a>
                         )}
                       </div>

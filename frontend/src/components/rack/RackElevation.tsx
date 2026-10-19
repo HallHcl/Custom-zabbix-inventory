@@ -55,33 +55,61 @@ export function RackElevation({
     if (dev) {
       uRows.push(
         <div key={`device-${dev.id}`} className="flex items-center w-full">
-          <div className="w-8 shrink-0 text-right pr-2 font-mono text-[10px] text-zinc-500 font-bold select-none">
+          {/* Left U Rail Number */}
+          <div className="w-7 shrink-0 text-right pr-1.5 font-mono text-[9px] text-[#85a6b1] font-bold select-none">
             {u}
           </div>
-          <div className="flex-1">
+          {/* Left Rack Ear Screw */}
+          <div className="w-2.5 h-full flex items-center justify-center bg-[#273139] border-r border-[#394650] select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#414a50] border border-[#50626f]" />
+          </div>
+          {/* Device Faceplate */}
+          <div className="flex-1 min-w-0">
             <DeviceBezel
               device={dev}
               isSelected={selectedDeviceId === dev.id}
               onClick={() => onSelectDevice(dev)}
             />
           </div>
+          {/* Right Rack Ear Screw */}
+          <div className="w-2.5 h-full flex items-center justify-center bg-[#273139] border-l border-[#394650] select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#414a50] border border-[#50626f]" />
+          </div>
+          {/* Right U Rail Number */}
+          <div className="w-7 shrink-0 text-left pl-1.5 font-mono text-[9px] text-[#85a6b1] font-bold select-none">
+            {u}
+          </div>
         </div>
       )
     } else {
       uRows.push(
         <div key={`slot-${u}`} className="flex items-center w-full group/slot">
-          <div className="w-8 shrink-0 text-right pr-2 font-mono text-[10px] text-zinc-600 font-medium select-none">
+          {/* Left U Rail Number */}
+          <div className="w-7 shrink-0 text-right pr-1.5 font-mono text-[9px] text-[#85a6b1] select-none">
             {u}
           </div>
+          {/* Left Rail Mounting Hole */}
+          <div className="w-2.5 h-7 flex items-center justify-center bg-[#222b32] border-r border-[#34424b] select-none">
+            <span className="w-1.5 h-1.5 rounded-xs bg-[#2c3841] border border-[#394650]" />
+          </div>
+          {/* Empty Slot Bay */}
           <div
             onClick={() => onEmptySlotClick(u)}
-            className="flex-1 h-7 border-y border-dashed border-[#222222] bg-[#0d0d0d] hover:bg-zinc-800/40 hover:border-zinc-500 transition-all cursor-pointer flex items-center justify-center text-transparent hover:text-white text-xs font-medium"
-            title={`Click to mount device at U${u}`}
+            className="flex-1 h-7 border-y border-dashed border-[#34424b] bg-[#1a2127] hover:bg-[#252f36] hover:border-[#8bd7d1]/50 transition-colors cursor-pointer flex items-center justify-center text-transparent hover:text-[#caedde] text-[10px] font-mono"
+            title={`Mount hardware unit at U${u}`}
           >
             <div className="flex items-center gap-1.5 opacity-0 group-hover/slot:opacity-100 transition-opacity">
-              <Plus className="w-3.5 h-3.5" />
-              <span>Mount at U{u}</span>
+              <Plus className="w-3 h-3 text-[#8bd7d1]" />
+              <span className="tracking-tight text-[#8bd7d1]">U{u} VACANT SLOT</span>
             </div>
+          </div>
+          {/* Right Rail Mounting Hole */}
+          <div className="w-2.5 h-7 flex items-center justify-center bg-[#222b32] border-l border-[#34424b] select-none">
+            <span className="w-1.5 h-1.5 rounded-xs bg-[#2c3841] border border-[#394650]" />
+          </div>
+          {/* Right U Rail Number */}
+          <div className="w-7 shrink-0 text-left pl-1.5 font-mono text-[9px] text-[#85a6b1] select-none">
+            {u}
           </div>
         </div>
       )
@@ -89,38 +117,58 @@ export function RackElevation({
   }
 
   return (
-    <div className="flex flex-col items-center">
-      {/* Front / Rear Toggle */}
-      <div className="flex items-center p-1 rounded-xl bg-[#141414] border border-[#262626] mb-4 shadow-md">
-        <button
-          type="button"
-          onClick={() => setFace('Front')}
-          className={`px-6 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            face === 'Front'
-              ? 'bg-white text-black shadow-md font-bold'
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          Front
-        </button>
-        <button
-          type="button"
-          onClick={() => setFace('Rear')}
-          className={`px-6 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            face === 'Rear'
-              ? 'bg-white text-black shadow-md font-bold'
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          Rear
-        </button>
+    <div className="flex flex-col items-center select-none">
+      {/* Front / Rear & Standard EIA-310 Header */}
+      <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-[#394650] max-w-[460px]">
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#85a6b1]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#8bd7d1]" />
+          <span>EIA-310-D 19&quot; SPEC</span>
+        </div>
+
+        {/* Front / Rear Hardware Selector */}
+        <div className="flex items-center p-0.5 rounded-[2px] bg-[#20282f] border border-[#394650]">
+          <button
+            type="button"
+            onClick={() => setFace('Front')}
+            className={`px-3 py-1 rounded-[2px] text-xs font-mono font-bold transition-colors cursor-pointer ${
+              face === 'Front'
+                ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f]'
+                : 'text-[#85a6b1] hover:text-[#caedde]'
+            }`}
+          >
+            FRONT
+          </button>
+          <button
+            type="button"
+            onClick={() => setFace('Rear')}
+            className={`px-3 py-1 rounded-[2px] text-xs font-mono font-bold transition-colors cursor-pointer ${
+              face === 'Rear'
+                ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f]'
+                : 'text-[#85a6b1] hover:text-[#caedde]'
+            }`}
+          >
+            REAR
+          </button>
+        </div>
       </div>
 
-      {/* 42U Cabinet Frame */}
-      <div className="w-[430px] p-3 rounded-2xl bg-[#0a0a0a] border-4 border-[#1f1f1f] shadow-2xl relative">
-        <div className="absolute top-3 bottom-3 left-10 w-1 bg-[#2b2b2b] rounded-full" />
-        <div className="absolute top-3 bottom-3 right-3 w-1 bg-[#2b2b2b] rounded-full" />
+      {/* 42U Heavy-Duty Equipment Rack Cabinet Frame */}
+      <div className="w-[460px] p-2.5 rounded-[3px] bg-[#1a2127] border-2 border-[#394650] shadow-2xl relative">
+        {/* Top Cabinet Extrusion Frame */}
+        <div className="h-4 bg-[#273139] border-b border-[#414a50] rounded-t-[2px] flex items-center justify-between px-3 text-[9px] font-mono text-[#85a6b1] mb-1">
+          <span>TOP EXTRUSION</span>
+          <span>42U STANDARD RACK</span>
+          <span>482.6 mm</span>
+        </div>
+
+        {/* Rack Slots Container */}
         <div className="space-y-0.5">{uRows}</div>
+
+        {/* Bottom Cabinet Plinth */}
+        <div className="h-4 bg-[#273139] border-t border-[#414a50] rounded-b-[2px] flex items-center justify-between px-3 text-[9px] font-mono text-[#85a6b1] mt-1">
+          <span>CABLE TRAY INLET</span>
+          <span>LEVELING FEET ENGAGED</span>
+        </div>
       </div>
     </div>
   )

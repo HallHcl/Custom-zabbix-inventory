@@ -8,6 +8,7 @@ import {
   Layers,
   Thermometer,
   ExternalLink,
+  Activity,
 } from 'lucide-react'
 import type { Device, DeviceMetrics } from '../../types'
 import { fetchDeviceMetrics } from '../../api/client'
@@ -42,9 +43,10 @@ export function DeviceDetailPanel({
 
   if (!device) {
     return (
-      <div className="w-80 lg:w-96 p-6 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-xl flex flex-col items-center justify-center text-center text-zinc-500 h-full min-h-[400px]">
-        <Layers className="w-12 h-12 mb-3 text-zinc-600" />
-        <p className="text-xs">Click any server on the rack to view live telemetry & alerts</p>
+      <div className="w-80 lg:w-96 p-6 noc-panel flex flex-col items-center justify-center text-center text-[#85a6b1] h-full min-h-[400px] select-none">
+        <Activity className="w-10 h-10 mb-3 text-[#85a6b1]" />
+        <span className="text-xs font-mono font-medium">Select a hardware unit in the 42U rack</span>
+        <span className="text-[10px] text-[#85a6b1] font-mono mt-1">Live telemetry and trigger details will display here</span>
       </div>
     )
   }
@@ -55,239 +57,258 @@ export function DeviceDetailPanel({
   const tempC = metrics?.temperature_c ?? 72.0
 
   return (
-    <div className="w-80 lg:w-96 flex flex-col gap-4">
-      {/* Selected Device Telemetry Card */}
-      <div className="p-5 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-xl flex flex-col gap-4">
-        {/* Device Header */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-xl font-bold text-white tracking-tight">{device.name}</h3>
-            {status === 'critical' ? (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-950/60 text-rose-400 border border-rose-800 flex items-center gap-1">
-                <AlertOctagon className="w-3 h-3" />
-                Critical
-              </span>
-            ) : status === 'warning' ? (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-950/50 text-amber-400 border border-amber-800 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                Warning
-              </span>
-            ) : (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/50 text-emerald-400 border border-emerald-800 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                Normal
-              </span>
-            )}
-          </div>
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span>{device.model || 'Server Hardware'}</span>
-            <span className="font-bold text-zinc-300 tracking-wider font-mono">
-              {device.manufacturer || 'DELLEMC'}
+    <div className="w-80 lg:w-96 flex flex-col gap-3 select-none">
+      {/* Selected Device Telemetry Panel */}
+      <div className="noc-panel flex flex-col justify-between">
+        <div className="noc-panel-header">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#8bd7d1]" />
+            <span className="font-mono uppercase tracking-wider text-[11px] text-[#caedde]">
+              Unit Telemetry Inspector
             </span>
           </div>
+          <span className="px-1.5 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[10px] font-mono text-[#caedde]">
+            {device.device_type}
+          </span>
         </div>
 
-        {/* Position & IP Badges */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="p-2.5 rounded-xl bg-[#141414] border border-[#262626]">
-            <span className="text-zinc-500 block mb-0.5 text-[10px]">Position</span>
-            <span className="font-semibold text-zinc-200">
-              U{device.start_u} - U{device.start_u + device.height_u - 1} ({device.height_u}U)
-            </span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-[#141414] border border-[#262626]">
-            <span className="text-zinc-500 block mb-0.5 text-[10px]">IP Address</span>
-            <span className="font-mono font-semibold text-zinc-200">
-              {device.ip_address || 'Unassigned'}
-            </span>
-          </div>
-        </div>
-
-        {/* Button to open Full Device Page (Latest Data + Custom Inventory) */}
-        {onOpenDevicePage && (
-          <button
-            type="button"
-            onClick={() => onOpenDevicePage(device.id)}
-            className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-600/25 cursor-pointer"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Open Device Page (Latest Data)</span>
-          </button>
-        )}
-
-        {/* Dynamic Custom Inventory Fields */}
-        {device.custom_fields && Object.keys(device.custom_fields).length > 0 && (
-          <div className="p-3 rounded-xl bg-[#141414] border border-[#262626] space-y-1.5 text-xs">
-            <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider block">
-              Custom Dynamic Inventory
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              {device.custom_fields.brand && (
-                <div>
-                  <span className="text-zinc-500">Brand: </span>
-                  <span className="text-zinc-200 font-medium">{device.custom_fields.brand}</span>
-                </div>
-              )}
-              {device.custom_fields.vendor && (
-                <div>
-                  <span className="text-zinc-500">Vendor: </span>
-                  <span className="text-zinc-200 font-medium">{device.custom_fields.vendor}</span>
-                </div>
-              )}
-              {device.custom_fields.version && (
-                <div>
-                  <span className="text-zinc-500">Version: </span>
-                  <span className="text-zinc-200 font-medium">{device.custom_fields.version}</span>
-                </div>
-              )}
-              {device.custom_fields.user && (
-                <div>
-                  <span className="text-zinc-500">User: </span>
-                  <span className="text-zinc-200 font-medium">{device.custom_fields.user}</span>
-                </div>
+        <div className="p-3.5 space-y-3">
+          {/* Device Name & Status */}
+          <div className="pb-2 border-b border-[#394650]">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-bold text-white font-mono truncate max-w-[200px]">
+                {device.name}
+              </h3>
+              {status === 'critical' ? (
+                <span className="px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-700 flex items-center gap-1">
+                  <AlertOctagon className="w-3 h-3" />
+                  CRITICAL
+                </span>
+              ) : status === 'warning' ? (
+                <span className="px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-700 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  WARNING
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-[#1a3835] text-[#8bd7d1] border border-[#2b5d58] flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  NOMINAL
+                </span>
               )}
             </div>
+            <div className="flex items-center justify-between text-[11px] text-[#85a6b1] font-mono">
+              <span>{device.model || 'Enterprise Chassis'}</span>
+              <span className="text-[#caedde] font-bold">{device.manufacturer || 'OEM'}</span>
+            </div>
           </div>
-        )}
 
-        {/* 3 Metric Progress Bars (CPU, Memory, Temp) */}
-        <div className="space-y-3 pt-1">
-          {/* CPU */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-zinc-400 flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5 text-zinc-400" />
-                CPU Utilization
+          {/* Position & IP Badges */}
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="p-2 rounded-[2px] bg-[#273139] border border-[#394650]">
+              <span className="text-[#85a6b1] block text-[9px] uppercase">Slot Elevation</span>
+              <span className="font-bold text-[#caedde] text-[11px]">
+                U{device.start_u} - U{device.start_u + device.height_u - 1} ({device.height_u}U)
               </span>
-              <span className="font-bold text-white">{cpuPercent}%</span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-[#1c1c1c] overflow-hidden">
-              <div
-                className="h-full bg-rose-500 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min(cpuPercent, 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Memory */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-zinc-400 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-zinc-400" />
-                Memory Utilization
+            <div className="p-2 rounded-[2px] bg-[#273139] border border-[#394650]">
+              <span className="text-[#85a6b1] block text-[9px] uppercase">Management IP</span>
+              <span className="font-bold text-[#caedde] text-[11px] truncate block">
+                {device.ip_address || 'Unassigned'}
               </span>
-              <span className="font-bold text-white">{memPercent}%</span>
-            </div>
-            <div className="w-full h-1.5 rounded-full bg-[#1c1c1c] overflow-hidden">
-              <div
-                className="h-full bg-zinc-300 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min(memPercent, 100)}%` }}
-              />
             </div>
           </div>
 
-          {/* Temperature */}
-          <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-zinc-400 flex items-center gap-1.5">
-                <Thermometer className="w-3.5 h-3.5 text-amber-400" />
-                Temperature
+          {/* Full Device Page Modal Trigger */}
+          {onOpenDevicePage && (
+            <button
+              type="button"
+              onClick={() => onOpenDevicePage(device.id)}
+              className="w-full py-1.5 px-3 rounded-[3px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] font-mono font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Open Hardware Diagnostics Page</span>
+            </button>
+          )}
+
+          {/* Dynamic Custom Inventory Fields */}
+          {device.custom_fields && Object.keys(device.custom_fields).length > 0 && (
+            <div className="p-2.5 rounded-[2px] bg-[#273139] border border-[#394650] space-y-1 text-xs font-mono">
+              <span className="text-[9px] text-[#85a6b1] uppercase tracking-wider block">
+                CMDB Extended Inventory
               </span>
-              <span className="font-bold text-white">{tempC}°C</span>
+              <div className="grid grid-cols-2 gap-1 text-[11px]">
+                {device.custom_fields.brand && (
+                  <div>
+                    <span className="text-[#85a6b1]">Brand: </span>
+                    <span className="text-[#caedde] font-medium">{device.custom_fields.brand}</span>
+                  </div>
+                )}
+                {device.custom_fields.vendor && (
+                  <div>
+                    <span className="text-[#85a6b1]">Vendor: </span>
+                    <span className="text-[#caedde] font-medium">{device.custom_fields.vendor}</span>
+                  </div>
+                )}
+                {device.custom_fields.version && (
+                  <div>
+                    <span className="text-[#85a6b1]">Firmware: </span>
+                    <span className="text-[#caedde] font-medium">{device.custom_fields.version}</span>
+                  </div>
+                )}
+                {device.custom_fields.user && (
+                  <div>
+                    <span className="text-[#85a6b1]">Custodian: </span>
+                    <span className="text-[#caedde] font-medium">{device.custom_fields.user}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-[#1c1c1c] overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-amber-400 to-rose-500 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min((tempC / 100) * 100, 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
+          )}
 
-        {/* 1-Hour CPU Sparkline */}
-        <div className="pt-2 border-t border-[#222222]">
-          <div className="flex items-center justify-between text-xs mb-2">
-            <span className="text-zinc-400 font-medium">CPU Usage (Last 1 Hour)</span>
-            <span className="text-[10px] text-zinc-500">100% Max</span>
-          </div>
-          <div className="h-20 w-full bg-[#121212] rounded-xl border border-[#222222] p-2 flex items-end">
-            <svg viewBox="0 0 240 60" className="w-full h-full overflow-visible">
-              <defs>
-                <linearGradient id="cpuSparkGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <polyline
-                fill="none"
-                stroke="#ffffff"
-                strokeWidth="2"
-                strokeLinecap="round"
-                points="0,35 20,40 40,30 60,38 80,25 100,28 120,20 140,24 160,18 180,22 200,15 220,18 240,14"
-              />
-              <polygon
-                fill="url(#cpuSparkGrad)"
-                points="0,35 20,40 40,30 60,38 80,25 100,28 120,20 140,24 160,18 180,22 200,15 220,18 240,14 240,60 0,60"
-              />
-            </svg>
-          </div>
-          <div className="flex justify-between text-[9px] text-zinc-500 font-mono mt-1">
-            <span>10:00</span>
-            <span>10:15</span>
-            <span>10:30</span>
-            <span>10:45</span>
-            <span>11:00</span>
-          </div>
-        </div>
-
-        {/* Active Alert Banner */}
-        {device.zabbix_status?.problems && device.zabbix_status.problems.length > 0 ? (
-          <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-800/60 flex items-start gap-2.5 text-xs text-amber-300">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+          {/* 3 Metric Progress Bars (CPU, Memory, Temp) */}
+          <div className="space-y-2.5 pt-1 font-mono">
+            {/* CPU */}
             <div>
-              <div className="font-semibold leading-snug">
-                {device.zabbix_status.problems[0].description}
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-[#85a6b1] flex items-center gap-1.5 text-[11px]">
+                  <Cpu className="w-3 h-3 text-[#8bd7d1]" />
+                  CPU Utilization
+                </span>
+                <span className="font-bold text-white">{cpuPercent}%</span>
               </div>
-              <div className="text-[10px] text-amber-500 font-mono mt-0.5">
-                Trigger #{device.zabbix_status.problems[0].triggerid}
+              <div className="w-full h-1.5 rounded-[1px] bg-[#273139] overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-300 ${
+                    cpuPercent > 85 ? 'bg-rose-500' : cpuPercent > 70 ? 'bg-amber-400' : 'bg-[#8bd7d1]'
+                  }`}
+                  style={{ width: `${Math.min(cpuPercent, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Memory */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-[#85a6b1] flex items-center gap-1.5 text-[11px]">
+                  <Layers className="w-3 h-3 text-[#85a6b1]" />
+                  Memory Utilization
+                </span>
+                <span className="font-bold text-white">{memPercent}%</span>
+              </div>
+              <div className="w-full h-1.5 rounded-[1px] bg-[#273139] overflow-hidden">
+                <div
+                  className="h-full bg-[#85a6b1] transition-all duration-300"
+                  style={{ width: `${Math.min(memPercent, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Temperature */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-[#85a6b1] flex items-center gap-1.5 text-[11px]">
+                  <Thermometer className="w-3 h-3 text-amber-400" />
+                  Chassis Temperature
+                </span>
+                <span className="font-bold text-white">{tempC}°C</span>
+              </div>
+              <div className="w-full h-1.5 rounded-[1px] bg-[#273139] overflow-hidden">
+                <div
+                  className="h-full bg-amber-400 transition-all duration-300"
+                  style={{ width: `${Math.min((tempC / 100) * 100, 100)}%` }}
+                />
               </div>
             </div>
           </div>
-        ) : (
-          <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/60 flex items-center gap-2 text-xs text-emerald-400">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>All systems nominal in Zabbix</span>
-          </div>
-        )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-1">
-          <button
-            type="button"
-            onClick={() => onUnmountDevice(device.id)}
-            className="flex-1 py-2 px-3 rounded-xl border border-rose-800/60 bg-rose-950/30 hover:bg-rose-900/40 text-rose-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Unmount</span>
-          </button>
-          <a
-            href="http://192.168.1.190"
-            target="_blank"
-            rel="noreferrer"
-            className="flex-1 py-2 px-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Open Zabbix</span>
-          </a>
+          {/* 1-Hour CPU Sparkline */}
+          <div className="pt-2 border-t border-[#394650]">
+            <div className="flex items-center justify-between text-[11px] mb-1.5 font-mono">
+              <span className="text-[#85a6b1]">CPU Trend (Last 1 Hour)</span>
+              <span className="text-[#85a6b1]">100% Max</span>
+            </div>
+            <div className="h-16 w-full bg-[#273139] rounded-[2px] border border-[#394650] p-1.5 flex items-end">
+              <svg viewBox="0 0 240 60" className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="cpuSparkGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#8bd7d1" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#8bd7d1" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+                <polyline
+                  fill="none"
+                  stroke="#8bd7d1"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  points="0,35 20,40 40,30 60,38 80,25 100,28 120,20 140,24 160,18 180,22 200,15 220,18 240,14"
+                />
+                <polygon
+                  fill="url(#cpuSparkGrad)"
+                  points="0,35 20,40 40,30 60,38 80,25 100,28 120,20 140,24 160,18 180,22 200,15 220,18 240,14 240,60 0,60"
+                />
+              </svg>
+            </div>
+            <div className="flex justify-between text-[9px] text-[#85a6b1] font-mono mt-1">
+              <span>-60m</span>
+              <span>-45m</span>
+              <span>-30m</span>
+              <span>-15m</span>
+              <span>Now</span>
+            </div>
+          </div>
+
+          {/* Active Alert Banner */}
+          {device.zabbix_status?.problems && device.zabbix_status.problems.length > 0 ? (
+            <div className="p-2.5 rounded-[2px] bg-amber-950/20 border border-amber-800/40 flex items-start gap-2 text-xs font-mono text-amber-300">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400 mt-0.5" />
+              <div>
+                <div className="font-semibold leading-tight text-[11px]">
+                  {device.zabbix_status.problems[0].description}
+                </div>
+                <div className="text-[10px] text-amber-400/80 mt-0.5">
+                  Zabbix Trigger #{device.zabbix_status.problems[0].triggerid}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-2 rounded-[2px] bg-[#1a3835] border border-[#2b5d58] flex items-center gap-2 text-xs font-mono text-[#8bd7d1]">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-[#8bd7d1]" />
+              <span className="text-[11px]">All Zabbix items &amp; triggers nominal</span>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => onUnmountDevice(device.id)}
+              className="flex-1 py-1.5 px-2 rounded-[2px] border border-rose-800/60 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Unmount Slot</span>
+            </button>
+            <a
+              href="http://192.168.1.190"
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 py-1.5 px-2 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-white text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <ExternalLink className="w-3 h-3 text-[#8bd7d1]" />
+              <span>Zabbix Host</span>
+            </a>
+          </div>
         </div>
       </div>
 
       {/* Devices in This Rack Table */}
-      <div className="p-5 rounded-2xl bg-[#0f0f0f] border border-[#222222] shadow-xl">
-        <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-3 text-zinc-400">
-          Devices in This Rack ({rackDevices.length})
-        </h4>
-        <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+      <div className="noc-panel">
+        <div className="noc-panel-header">
+          <span className="font-mono uppercase tracking-wider text-[11px] text-[#caedde]">
+            Cabinet Hardware ({rackDevices.length})
+          </span>
+          <span className="text-[10px] text-[#85a6b1] font-mono">Slot Position</span>
+        </div>
+        <div className="p-2 space-y-1 max-h-52 overflow-y-auto pr-1">
           {rackDevices.map((d) => {
             const isRowSelected = d.id === device.id
             const dStatus = d.zabbix_status?.status || 'ok'
@@ -296,28 +317,28 @@ export function DeviceDetailPanel({
               <div
                 key={d.id}
                 onClick={() => onSelectDevice(d)}
-                className={`p-2.5 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition-all ${
+                className={`p-1.5 rounded-[2px] border flex items-center justify-between text-xs font-mono cursor-pointer transition-colors ${
                   isRowSelected
-                    ? 'bg-[#1e1e1e] border-white text-white shadow-sm'
-                    : 'bg-[#141414] border-[#242424] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                    ? 'bg-[#34424b] border-[#8bd7d1] text-white'
+                    : 'bg-[#273139] border-[#394650] text-[#85a6b1] hover:text-[#caedde] hover:border-[#50626f]'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                       dStatus === 'critical'
                         ? 'bg-rose-500 animate-pulse'
                         : dStatus === 'warning'
                         ? 'bg-amber-400 animate-pulse'
-                        : 'bg-emerald-400'
+                        : 'bg-[#8bd7d1]'
                     }`}
                   />
                   <div>
-                    <span className="font-semibold block text-zinc-200">{d.name}</span>
-                    <span className="text-[10px] text-zinc-500">{d.device_type}</span>
+                    <span className="font-bold block text-[#caedde] text-[11px] truncate max-w-[170px]">{d.name}</span>
+                    <span className="text-[9px] text-[#85a6b1]">{d.device_type}</span>
                   </div>
                 </div>
-                <div className="text-right font-mono text-[11px] text-zinc-500">
+                <div className="text-right text-[10px] text-[#85a6b1] font-bold">
                   U{d.start_u + d.height_u - 1}
                   {d.height_u > 1 ? `-${d.start_u}` : ''}
                 </div>

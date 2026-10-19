@@ -676,20 +676,20 @@ export function IsometricRoom({
   const pickedUpRack = localRacks.find((r) => r.id === pickedUpRackId)
 
   return (
-    <div className={`relative rounded-2xl bg-[#090909] border border-[#1f1f1f] shadow-2xl overflow-hidden flex flex-col ${fullPage ? 'min-h-[720px] h-[750px]' : 'min-h-[580px] h-[600px]'}`}>
+    <div className={`relative rounded-[3px] bg-[#161c20] border border-[#394650] shadow-2xl overflow-hidden flex flex-col ${fullPage ? 'min-h-[720px] h-[750px]' : 'min-h-[580px] h-[600px]'}`}>
       {/* ─── Top Main Bar: View Modes & Edit Toggle ────────────────── */}
       <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
         {/* Left Side: View Mode Toggles (or Edit Mode Indicator) */}
         <div className="pointer-events-auto flex items-center gap-2">
           {!isEditMode ? (
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
+            <div className="flex items-center gap-1 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-lg">
               <button
                 type="button"
                 onClick={() => setViewMode('3d')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === '3d'
-                    ? 'bg-[#292929] text-white shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f] shadow-sm'
+                    : 'text-[#85a6b1] hover:text-[#caedde]'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -698,10 +698,10 @@ export function IsometricRoom({
               <button
                 type="button"
                 onClick={() => setViewMode('status')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === 'status'
-                    ? 'bg-[#292929] text-white shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f] shadow-sm'
+                    : 'text-[#85a6b1] hover:text-[#caedde]'
                 }`}
               >
                 <Activity className="w-3.5 h-3.5" />
@@ -710,10 +710,10 @@ export function IsometricRoom({
               <button
                 type="button"
                 onClick={() => setViewMode('temp')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === 'temp'
-                    ? 'bg-[#292929] text-white shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f] shadow-sm'
+                    : 'text-[#85a6b1] hover:text-[#caedde]'
                 }`}
               >
                 <Thermometer className="w-3.5 h-3.5" />
@@ -722,10 +722,10 @@ export function IsometricRoom({
               <button
                 type="button"
                 onClick={() => setViewMode('power')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === 'power'
-                    ? 'bg-[#292929] text-white shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f] shadow-sm'
+                    : 'text-[#85a6b1] hover:text-[#caedde]'
                 }`}
               >
                 <Zap className="w-3.5 h-3.5" />
@@ -734,17 +734,17 @@ export function IsometricRoom({
             </div>
           ) : (
             /* Edit Mode Scale Controls Toolbar */
-            <div className="flex items-center gap-2 p-1.5 rounded-xl bg-[#141414]/95 border border-cyan-500/40 backdrop-blur shadow-2xl">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs font-bold tracking-wide">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '4s' }} />
+            <div className="flex items-center gap-2 p-1.5 rounded-[3px] bg-[#20282f]/95 border border-[#8bd7d1]/50 backdrop-blur shadow-2xl">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] bg-[#273139] border border-[#8bd7d1]/40 text-[#8bd7d1] text-xs font-bold font-mono tracking-wide">
+                <Sparkles className="w-3.5 h-3.5 text-[#8bd7d1] animate-spin" style={{ animationDuration: '4s' }} />
                 <span>3D EDIT MODE</span>
               </div>
 
-              <div className="h-4 w-px bg-zinc-800" />
+              <div className="h-4 w-px bg-[#394650]" />
 
               {/* Scale Presets */}
               <div className="flex items-center gap-1 text-xs">
-                <span className="text-zinc-400 text-[11px] font-medium mr-1 hidden sm:inline">Scale:</span>
+                <span className="text-[#85a6b1] text-[11px] font-mono mr-1 hidden sm:inline">Scale:</span>
                 {[
                   { r: 3, c: 3, label: '3×3' },
                   { r: 3, c: 4, label: '3×4' },
@@ -757,10 +757,10 @@ export function IsometricRoom({
                       key={p.label}
                       type="button"
                       onClick={() => handleSetScale(p.r, p.c)}
-                      className={`px-2 py-1 rounded-md font-mono text-[11px] font-semibold transition-all cursor-pointer ${
+                      className={`px-2 py-1 rounded-[2px] font-mono text-[11px] font-semibold transition-all cursor-pointer ${
                         isActive
-                          ? 'bg-cyan-600 text-white shadow-sm shadow-cyan-600/50'
-                          : 'bg-[#1e1e1e] text-zinc-300 hover:text-white hover:bg-zinc-800'
+                          ? 'bg-[#34424b] text-[#8bd7d1] border border-[#8bd7d1]'
+                          : 'bg-[#273139] text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] border border-[#394650]'
                       }`}
                     >
                       {p.label}
@@ -769,25 +769,25 @@ export function IsometricRoom({
                 })}
               </div>
 
-              <div className="h-4 w-px bg-zinc-800" />
+              <div className="h-4 w-px bg-[#394650]" />
 
               {/* Custom Row / Col Adjuster */}
-              <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-300">
+              <div className="flex items-center gap-1 text-[11px] font-mono text-[#85a6b1]">
                 <span>R:</span>
                 <button
                   type="button"
                   onClick={() => handleSetScale(gridRows - 1, gridCols)}
                   disabled={gridRows <= 2}
-                  className="px-1.5 py-0.5 rounded bg-[#1e1e1e] hover:bg-zinc-800 disabled:opacity-40 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] disabled:opacity-40 cursor-pointer"
                 >
                   -
                 </button>
-                <span className="font-bold text-white px-0.5">{gridRows}</span>
+                <span className="font-bold text-[#caedde] px-0.5">{gridRows}</span>
                 <button
                   type="button"
                   onClick={() => handleSetScale(gridRows + 1, gridCols)}
                   disabled={gridRows >= 8}
-                  className="px-1.5 py-0.5 rounded bg-[#1e1e1e] hover:bg-zinc-800 disabled:opacity-40 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] disabled:opacity-40 cursor-pointer"
                 >
                   +
                 </button>
@@ -797,16 +797,16 @@ export function IsometricRoom({
                   type="button"
                   onClick={() => handleSetScale(gridRows, gridCols - 1)}
                   disabled={gridCols <= 2}
-                  className="px-1.5 py-0.5 rounded bg-[#1e1e1e] hover:bg-zinc-800 disabled:opacity-40 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] disabled:opacity-40 cursor-pointer"
                 >
                   -
                 </button>
-                <span className="font-bold text-white px-0.5">{gridCols}</span>
+                <span className="font-bold text-[#caedde] px-0.5">{gridCols}</span>
                 <button
                   type="button"
                   onClick={() => handleSetScale(gridRows, gridCols + 1)}
                   disabled={gridCols >= 8}
-                  className="px-1.5 py-0.5 rounded bg-[#1e1e1e] hover:bg-zinc-800 disabled:opacity-40 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] disabled:opacity-40 cursor-pointer"
                 >
                   +
                 </button>
@@ -819,12 +819,12 @@ export function IsometricRoom({
         <div className="pointer-events-auto flex items-center gap-2">
           {isEditMode && (
             /* Edit Actions: Save, Reset, Done */
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#141414]/95 border border-[#262626] backdrop-blur shadow-2xl">
+            <div className="flex items-center gap-1.5 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-2xl">
               {hasChanges && (
                 <button
                   type="button"
                   onClick={handleResetLayout}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white hover:bg-[#222222] transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-[2px] text-xs font-mono text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] transition-colors cursor-pointer"
                 >
                   Reset
                 </button>
@@ -834,10 +834,10 @@ export function IsometricRoom({
                 type="button"
                 onClick={handleSaveLayout}
                 disabled={saving || !hasChanges}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-[2px] text-xs font-mono font-bold transition-all cursor-pointer ${
                   hasChanges
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/40 animate-pulse'
-                    : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                    : 'bg-[#273139] text-[#85a6b1]/50 cursor-not-allowed'
                 }`}
               >
                 {saving ? (
@@ -854,36 +854,36 @@ export function IsometricRoom({
                   setIsEditMode(false)
                   setPickedUpRackId(null)
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-white transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] transition-colors cursor-pointer"
               >
-                <Check className="w-3.5 h-3.5 text-zinc-300" />
+                <Check className="w-3.5 h-3.5 text-[#8bd7d1]" />
                 <span>Done</span>
               </button>
             </div>
           )}
 
           {/* 360 Rotation Controls */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
+          <div className="flex items-center gap-1 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-lg">
             <button
               type="button"
               onClick={handleRotateLeft}
-              className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
               title="Rotate Left 45° (⟲)"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
             <div
-              className="flex items-center gap-1 px-2 py-1 text-xs font-mono font-medium text-zinc-300 bg-[#1c1c1c] rounded-lg border border-[#2b2b2b] select-none cursor-pointer hover:border-zinc-500"
+              className="flex items-center gap-1 px-2 py-1 text-xs font-mono font-medium text-[#caedde] bg-[#273139] rounded-[2px] border border-[#394650] select-none cursor-pointer hover:border-[#8bd7d1]"
               onClick={() => setRotationAngle(0)}
               title="Reset rotation to 0°"
             >
-              <Compass className="w-3 h-3 text-zinc-400" />
+              <Compass className="w-3 h-3 text-[#85a6b1]" />
               <span>{Math.round(rotationAngle)}°</span>
             </div>
             <button
               type="button"
               onClick={handleRotateRight}
-              className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
               title="Rotate Right 45° (⟳)"
             >
               <RotateCw className="w-3.5 h-3.5" />
@@ -1371,12 +1371,12 @@ export function IsometricRoom({
       {/* ─── Bottom Status Legend & Zoom Controls ────────────────── */}
       <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
         {/* Status Legend */}
-        <div className="pointer-events-auto flex items-center gap-3 px-3 py-1.5 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur text-xs">
+        <div className="pointer-events-auto flex items-center gap-3 px-3 py-1.5 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur text-xs font-mono">
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'healthy' ? null : 'healthy')}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
-              statusFilter === 'healthy' ? 'bg-[#262626] text-white' : 'text-zinc-400 hover:text-white'
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-[2px] transition-colors cursor-pointer ${
+              statusFilter === 'healthy' ? 'bg-[#34424b] text-[#caedde]' : 'text-[#85a6b1] hover:text-[#caedde]'
             }`}
           >
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
@@ -1386,8 +1386,8 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'warning' ? null : 'warning')}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
-              statusFilter === 'warning' ? 'bg-[#262626] text-white' : 'text-zinc-400 hover:text-white'
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-[2px] transition-colors cursor-pointer ${
+              statusFilter === 'warning' ? 'bg-[#34424b] text-[#caedde]' : 'text-[#85a6b1] hover:text-[#caedde]'
             }`}
           >
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" />
@@ -1397,35 +1397,35 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'critical' ? null : 'critical')}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
-              statusFilter === 'critical' ? 'bg-[#262626] text-white' : 'text-zinc-400 hover:text-white'
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-[2px] transition-colors cursor-pointer ${
+              statusFilter === 'critical' ? 'bg-[#34424b] text-[#caedde]' : 'text-[#85a6b1] hover:text-[#caedde]'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-[#e82127] shadow-sm" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#f43f5e] shadow-sm" />
             <span>Critical ({statusCounts.critical})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'offline' ? null : 'offline')}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors cursor-pointer ${
-              statusFilter === 'offline' ? 'bg-[#262626] text-white' : 'text-zinc-400 hover:text-white'
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-[2px] transition-colors cursor-pointer ${
+              statusFilter === 'offline' ? 'bg-[#34424b] text-[#caedde]' : 'text-[#85a6b1] hover:text-[#caedde]'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-600" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#50626f]" />
             <span>Offline ({statusCounts.offline})</span>
           </button>
         </div>
 
         {/* Zoom & Reset Controls */}
-        <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
-          <span className="text-[11px] text-zinc-500 px-2 select-none hidden md:inline">
+        <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-lg">
+          <span className="text-[11px] font-mono text-[#85a6b1]/70 px-2 select-none hidden md:inline">
             Drag to rotate 360°
           </span>
           <button
             type="button"
             onClick={handleZoomIn}
-            className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
             title="Zoom In"
           >
             <Plus className="w-4 h-4" />
@@ -1433,7 +1433,7 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
             title="Zoom Out"
           >
             <Minus className="w-4 h-4" />
@@ -1441,7 +1441,7 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={handleReset}
-            className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
             title="Reset View"
           >
             <RotateCcw className="w-4 h-4" />
@@ -1452,46 +1452,46 @@ export function IsometricRoom({
       {/* ─── Add Rack Modal ────────────────────────────────────────── */}
       {showAddModal && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-[#141414] border border-[#2b2b2b] p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#262626]">
+          <div className="w-full max-w-sm rounded-[3px] bg-[#20282f] border border-[#394650] p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#394650]">
               <div className="flex items-center gap-2">
-                <Plus className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white">Add Rack in 3D Slot</h3>
+                <Plus className="w-4 h-4 text-[#8bd7d1]" />
+                <h3 className="text-sm font-bold text-[#caedde] font-mono">Add Rack in 3D Slot</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddModal(null)}
-                className="text-zinc-500 hover:text-white"
+                className="text-[#85a6b1] hover:text-[#caedde]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 font-mono">
               <div>
-                <label className="text-[11px] font-semibold text-zinc-400">Position</label>
-                <div className="text-xs font-mono text-cyan-300 font-bold bg-[#1c1c1c] px-3 py-1.5 rounded-lg border border-[#2b2b2b] mt-1">
+                <label className="text-[11px] font-semibold text-[#85a6b1]">Position</label>
+                <div className="text-xs font-mono text-[#8bd7d1] font-bold bg-[#161c20] px-3 py-1.5 rounded-[2px] border border-[#394650] mt-1">
                   {showAddModal.row} • Column {showAddModal.col}
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-zinc-400">Rack Name</label>
+                <label className="text-[11px] font-semibold text-[#85a6b1]">Rack Name</label>
                 <input
                   type="text"
                   value={addRackName}
                   onChange={(e) => setAddRackName(e.target.value)}
-                  className="w-full mt-1 px-3 py-1.5 rounded-lg bg-[#1c1c1c] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full mt-1 px-3 py-1.5 rounded-[2px] bg-[#273139] border border-[#394650] text-xs text-[#caedde] placeholder:text-[#85a6b1]/50 focus:outline-none focus:border-[#8bd7d1]"
                   placeholder="e.g. Rack A03"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-zinc-400">Total U Capacity</label>
+                <label className="text-[11px] font-semibold text-[#85a6b1]">Total U Capacity</label>
                 <select
                   value={addRackTotalU}
                   onChange={(e) => setAddRackTotalU(Number(e.target.value))}
-                  className="w-full mt-1 px-3 py-1.5 rounded-lg bg-[#1c1c1c] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full mt-1 px-3 py-1.5 rounded-[2px] bg-[#273139] border border-[#394650] text-xs text-[#caedde] focus:outline-none focus:border-[#8bd7d1]"
                 >
                   <option value={42}>42U (Standard)</option>
                   <option value={48}>48U (High Density)</option>
@@ -1500,11 +1500,11 @@ export function IsometricRoom({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#394650]">
               <button
                 type="button"
                 onClick={() => setShowAddModal(null)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white"
+                className="px-3 py-1.5 rounded-[2px] text-xs font-mono text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b]"
               >
                 Cancel
               </button>
@@ -1512,7 +1512,7 @@ export function IsometricRoom({
                 type="button"
                 onClick={handleConfirmAddRack}
                 disabled={isAddingRack || !addRackName.trim()}
-                className="px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition-colors cursor-pointer"
+                className="px-4 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-[#34424b] hover:bg-[#414a50] border border-[#8bd7d1] text-[#8bd7d1] transition-colors cursor-pointer disabled:opacity-50"
               >
                 {isAddingRack ? 'Adding...' : 'Add to Floor'}
               </button>
@@ -1524,22 +1524,22 @@ export function IsometricRoom({
       {/* ─── Delete Confirmation Modal ─────────────────────────────── */}
       {deleteConfirm && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-[#141414] border border-[#2b2b2b] p-5 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-[#262626]">
+          <div className="w-full max-w-sm rounded-[3px] bg-[#20282f] border border-[#394650] p-5 shadow-2xl space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-[#394650]">
               <Trash2 className="w-4 h-4 text-rose-500" />
-              <h3 className="text-sm font-bold text-white">Delete Rack</h3>
+              <h3 className="text-sm font-bold text-[#caedde] font-mono">Delete Rack</h3>
             </div>
 
-            <p className="text-xs text-zinc-300">
-              Are you sure you want to remove <span className="font-bold text-white">{deleteConfirm.name}</span> from the room?
+            <p className="text-xs text-[#85a6b1] font-mono leading-relaxed">
+              Are you sure you want to remove <span className="font-bold text-[#caedde]">{deleteConfirm.name}</span> from the room?
               This will also unmount all associated devices.
             </p>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#394650]">
               <button
                 type="button"
                 onClick={() => setDeleteConfirm(null)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white"
+                className="px-3 py-1.5 rounded-[2px] text-xs font-mono text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b]"
               >
                 Cancel
               </button>
@@ -1547,7 +1547,7 @@ export function IsometricRoom({
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="px-4 py-1.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition-colors cursor-pointer"
+                className="px-4 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-rose-950/60 hover:bg-rose-900 border border-rose-700 text-rose-300 transition-colors cursor-pointer"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Rack'}
               </button>

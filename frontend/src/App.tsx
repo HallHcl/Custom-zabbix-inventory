@@ -227,7 +227,7 @@ export function App() {
   }, [overview, currentView, rackElevation, activeNav, handleBack])
 
   return (
-    <div className={`flex h-screen w-screen bg-[#050505] text-zinc-100 font-sans overflow-hidden ${theme === 'light' ? 'light-theme' : ''}`}>
+    <div className={`flex h-screen w-screen bg-[#161c20] text-[#caedde] font-sans overflow-hidden ${theme === 'light' ? 'light-theme' : ''}`}>
       {/* Left Sidebar */}
       <Sidebar
         activeTab={activeNav}
@@ -248,52 +248,52 @@ export function App() {
         />
 
         {/* Scrollable View Content */}
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* 42U Rack Elevation View (displayed when any rack is inspected) */}
           {currentView === 'rack_elevation' && rackElevation ? (
-            <div className="max-w-[1600px] mx-auto space-y-5">
+            <div className="max-w-[1600px] mx-auto space-y-4 select-none">
               {/* Rack Header Sub-bar */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#222222]">
-                <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#394650]">
+                <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white px-3 py-1.5 rounded-xl bg-[#141414] border border-[#262626] hover:border-zinc-500 transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-mono font-medium text-[#caedde] hover:text-white px-2.5 py-1 rounded-[2px] bg-[#34424b] border border-[#50626f] transition-colors cursor-pointer"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Back</span>
+                    <ArrowLeft className="w-3.5 h-3.5 text-[#8bd7d1]" />
+                    <span>RETURN</span>
                   </button>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-bold text-white tracking-tight">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-white font-mono tracking-tight">
                       {rackElevation.name}
                     </h2>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
-                      Row {rackElevation.row} • Col {rackElevation.col}
+                    <span className="px-2 py-0.2 rounded-[2px] text-[10px] font-mono bg-[#34424b] text-[#8bd7d1] border border-[#50626f]">
+                      ROW {rackElevation.row} / COL {rackElevation.col}
                     </span>
                   </div>
                 </div>
 
                 {/* Top Rack Quick Stats */}
-                <div className="flex items-center gap-6 text-xs text-zinc-400">
-                  <div>
-                    <span className="text-zinc-500 block">Space</span>
-                    <span className="font-semibold text-white">
-                      {rackElevation.used_u} / {rackElevation.total_u} U Used
+                <div className="flex items-center gap-5 text-xs font-mono text-[#85a6b1]">
+                  <div className="text-right">
+                    <span className="text-[#85a6b1] block text-[9px] uppercase">Slot Capacity</span>
+                    <span className="font-bold text-[#caedde]">
+                      {rackElevation.used_u} / {rackElevation.total_u} U
                     </span>
                   </div>
-                  <div>
-                    <span className="text-zinc-500 block">Devices</span>
-                    <span className="font-semibold text-white">
-                      {rackElevation.devices.length} Mounted
+                  <div className="text-right">
+                    <span className="text-[#85a6b1] block text-[9px] uppercase">Equipment</span>
+                    <span className="font-bold text-[#caedde]">
+                      {rackElevation.devices.length} Units
                     </span>
                   </div>
-                  <div>
-                    <span className="text-zinc-500 block">Total Power</span>
-                    <span className="font-semibold text-white">{rackElevation.power_kw} kW</span>
+                  <div className="text-right">
+                    <span className="text-[#85a6b1] block text-[9px] uppercase">Power Load</span>
+                    <span className="font-bold text-amber-400">{rackElevation.power_kw} kW</span>
                   </div>
-                  <div>
-                    <span className="text-zinc-500 block">Inlet Temp</span>
-                    <span className="font-semibold text-white">
+                  <div className="text-right">
+                    <span className="text-[#85a6b1] block text-[9px] uppercase">Inlet Temp</span>
+                    <span className="font-bold text-[#8bd7d1]">
                       {rackElevation.inlet_temp_c} °C
                     </span>
                   </div>
@@ -301,7 +301,7 @@ export function App() {
               </div>
 
               {/* 3-Column Rack Layout: Inventory Nav (Left), 42U Cabinet (Center), Details (Right) */}
-              <div className="flex items-start justify-between gap-6">
+              <div className="flex items-start justify-between gap-4">
                 {/* Left: Inventory Nav Filter */}
                 <RackInventoryNav
                   devices={rackElevation.devices}
