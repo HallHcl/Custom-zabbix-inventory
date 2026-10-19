@@ -154,3 +154,11 @@ export interface DeviceOverview {
   latest_data_items: ZabbixLatestItem[]
 }
 
+// Floor Plan Editor Types
+export interface RoomLayout {
+  room_id: number
+  room_name: string
+  grid_rows: number
+  grid_cols: number
+  racks: RackSummary[]
+}

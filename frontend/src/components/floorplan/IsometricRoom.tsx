@@ -1,6 +1,29 @@
-import { useState, useRef, useMemo } from 'react'
-import { Eye, Activity, Thermometer, Zap, RotateCcw, RotateCw, Plus, Minus, Compass } from 'lucide-react'
+import { useState, useRef, useMemo, useEffect } from 'react'
+import {
+  Eye,
+  Activity,
+  Thermometer,
+  Zap,
+  RotateCcw,
+  RotateCw,
+  Plus,
+  Minus,
+  Compass,
+  Save,
+  Check,
+  AlertCircle,
+  Trash2,
+  X,
+  Sparkles,
+} from 'lucide-react'
 import type { RackSummary } from '../../types'
+import {
+  updateRoomLayout,
+  batchUpdateRackPositions,
+  createRack,
+  deleteRack,
+  fetchRoomLayout,
+} from '../../api/client'
 
 interface IsometricRoomProps {
   racks: RackSummary[]
@@ -12,6 +35,11 @@ interface IsometricRoomProps {
     critical: number
     offline: number
   }
+  roomId?: number
+  initialEditMode?: boolean
+  fullPage?: boolean
+  onLayoutSaved?: () => void
+  onViewRackElevation?: (rack: RackSummary) => void
 }
 
 type ViewMode = '3d' | 'status' | 'temp' | 'power'
@@ -21,11 +49,63 @@ export function IsometricRoom({
   selectedRackId,
   onSelectRack,
   statusCounts,
+  roomId = 1,
+  initialEditMode = false,
+  fullPage = false,
+  onLayoutSaved,
+  onViewRackElevation,
 }: IsometricRoomProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('3d')
   const [zoom, setZoom] = useState<number>(1)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [rotationAngle, setRotationAngle] = useState<number>(0) // 0 to 360 degrees
+
+  // ─── Edit Mode State ─────────────────────────────────────────
+  const [isEditMode, setIsEditMode] = useState(initialEditMode)
+  const [gridRows, setGridRows] = useState(3)
+  const [gridCols, setGridCols] = useState(4)
+  const [localRacks, setLocalRacks] = useState<RackSummary[]>(racks)
+  const [pickedUpRackId, setPickedUpRackId] = useState<number | null>(null)
+  const [hoveredRackId, setHoveredRackId] = useState<number | null>(null)
+  const [hoveredEmptySlot, setHoveredEmptySlot] = useState<string | null>(null)
+  const [hasChanges, setHasChanges] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // Modals
+  const [showAddModal, setShowAddModal] = useState<{ row: string; col: number } | null>(null)
+  const [addRackName, setAddRackName] = useState('')
+  const [addRackTotalU, setAddRackTotalU] = useState(42)
+  const [isAddingRack, setIsAddingRack] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<RackSummary | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // Sync initial racks when racks prop changes (if no pending changes)
+  useEffect(() => {
+    if (!hasChanges) {
+      setLocalRacks(racks)
+    }
+  }, [racks, hasChanges])
+
+  // Load layout from backend on mount to get exact grid dimensions
+  useEffect(() => {
+    let isMounted = true
+    fetchRoomLayout(roomId)
+      .then((data) => {
+        if (!isMounted) return
+        setGridRows(data.grid_rows || 3)
+        setGridCols(data.grid_cols || 4)
+        if (!hasChanges && data.racks && data.racks.length > 0) {
+          setLocalRacks(data.racks)
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not fetch initial room layout dimensions, using defaults:', err)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [roomId, hasChanges])
 
   // Drag-to-rotate state
   const isDraggingRef = useRef(false)
@@ -34,10 +114,19 @@ export function IsometricRoom({
   const hasMovedRef = useRef(false)
   const [isDragging, setIsDragging] = useState(false)
 
+  // Dynamic scaling factor based on grid dimensions so rooms from 3x3 to 8x8 remain balanced and auto-fit
+  const maxDim = Math.max(gridRows, gridCols)
+  const autoScale = Math.min(1.0, 4.4 / Math.max(maxDim, 4.4))
+
+  // Dynamically scaled isometric units
+  const tileW = Math.round(95 * autoScale)
+  const tileH = Math.round(48 * autoScale)
+  const rackHeight = Math.round(85 * autoScale)
+  const wallHeight = Math.round(150 * autoScale)
+  const curbHeight = Math.max(6, Math.round(12 * autoScale))
+
   // Center of the room grid in isometric screen space
-  const centerIso = useMemo(() => ({ x: 540, y: 360 }), [])
-  const tileW = 110
-  const tileH = 55
+  const centerIso = useMemo(() => ({ x: 540, y: 350 }), [])
 
   // Rotation in radians
   const rad = useMemo(() => (rotationAngle * Math.PI) / 180, [rotationAngle])
@@ -48,14 +137,14 @@ export function IsometricRoom({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'critical':
-        return '#e82127' // Critical Red
+        return '#e82127'
       case 'warning':
-        return '#f59e0b' // Amber yellow
+        return '#f59e0b'
       case 'offline':
-        return '#52525b' // Slate
+        return '#52525b'
       case 'healthy':
       default:
-        return '#10b981' // Emerald
+        return '#10b981'
     }
   }
 
@@ -72,6 +161,7 @@ export function IsometricRoom({
 
   // Mouse drag handlers for 360° free rotation
   const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button, input, select, .no-drag')) return
     isDraggingRef.current = true
     setIsDragging(true)
     dragStartXRef.current = e.clientX
@@ -85,7 +175,6 @@ export function IsometricRoom({
     if (Math.abs(deltaX) > 4) {
       hasMovedRef.current = true
     }
-    // Inverted so dragging left rotates the view to the right (natural orbital trackball motion)
     const nextAngle = (startAngleRef.current - deltaX * 0.45) % 360
     setRotationAngle(nextAngle < 0 ? nextAngle + 360 : nextAngle)
   }
@@ -121,43 +210,56 @@ export function IsometricRoom({
     setIsDragging(false)
   }
 
-  // Calculate rotated floor, cold aisle, and back walls
+  // Calculate rotated floor, cold aisle, and back walls dynamically based on gridRows and gridCols
   const roomGeometry = useMemo(() => {
-    // 4 corners of the floor in isometric (u, v) space relative to center (540, 420)
-    const floorCornersUV = [
-      { u: -120, v: -120 }, // Top
-      { u: 210, v: -210 },  // Right
-      { u: 120, v: 120 },   // Bottom
-      { u: -210, v: 210 },  // Left
+    // Symmetrical floor boundaries based directly on rack grid coordinates (dc, dr)
+    // plus uniform walkway padding around the racks on all 4 sides.
+    const padC = 0.85
+    const padR = 0.85
+    const halfC = (gridCols - 1) / 2 + padC
+    const halfR = (gridRows - 1) / 2 + padR
+
+    // 4 corners of the room floor in (dc, dr) grid space:
+    // Top (Back), Right (East), Bottom (Front), Left (West)
+    const floorCorners = [
+      { dc: -halfC, dr: -halfR }, // 0: Top / Back
+      { dc: +halfC, dr: -halfR }, // 1: Right / East
+      { dc: +halfC, dr: +halfR }, // 2: Bottom / Front
+      { dc: -halfC, dr: +halfR }, // 3: Left / West
     ]
 
-    const floorPts = floorCornersUV.map((c) => {
-      const ur = c.u * cos - c.v * sin
-      const vr = c.u * sin + c.v * cos
+    // Project each floor corner with the EXACT same isometric rotation matrix as rack slots
+    const floorPts = floorCorners.map((c) => {
+      const rc = c.dc * cos - c.dr * sin
+      const rr = c.dc * sin + c.dr * cos
       return {
-        x: 540 + (ur - vr),
-        y: 420 + (ur + vr) * 0.5,
+        x: centerIso.x + (rc - rr) * tileW,
+        y: centerIso.y + (rc + rr) * tileH,
       }
     })
 
-    // Cold Aisle mat in (u, v) space
-    const aisleUV = [
-      { u: -90, v: -90 },
-      { u: 130, v: -130 },
-      { u: 90, v: 90 },
-      { u: -130, v: 130 },
+    // Cold Aisle mat centered under the equipment
+    const aislePadC = 0.4
+    const aislePadR = 0.4
+    const aisleHalfC = (gridCols - 1) / 2 + aislePadC
+    const aisleHalfR = (gridRows - 1) / 2 + aislePadR
+
+    const aisleCorners = [
+      { dc: -aisleHalfC, dr: -aisleHalfR },
+      { dc: +aisleHalfC, dr: -aisleHalfR },
+      { dc: +aisleHalfC, dr: +aisleHalfR },
+      { dc: -aisleHalfC, dr: +aisleHalfR },
     ]
-    const aislePts = aisleUV.map((c) => {
-      const ur = c.u * cos - c.v * sin
-      const vr = c.u * sin + c.v * cos
+
+    const aislePts = aisleCorners.map((c) => {
+      const rc = c.dc * cos - c.dr * sin
+      const rr = c.dc * sin + c.dr * cos
       return {
-        x: 540 + (ur - vr),
-        y: 380 + (ur + vr) * 0.5,
+        x: centerIso.x + (rc - rr) * tileW,
+        y: centerIso.y + (rc + rr) * tileH,
       }
     })
 
-    // Determine back walls vs front curbs
-    const wallHeight = 240
     const backWalls: string[] = []
     const frontCurbs: string[] = []
 
@@ -167,15 +269,15 @@ export function IsometricRoom({
       const p2 = floorPts[j]
       const midY = (p1.y + p2.y) / 2
 
-      if (midY < 420) {
-        // Back Wall
+      if (midY < centerIso.y) {
+        // Back wall rising vertically
         backWalls.push(
           `${p1.x},${p1.y - wallHeight} ${p2.x},${p2.y - wallHeight} ${p2.x},${p2.y} ${p1.x},${p1.y}`
         )
       } else {
-        // Front Glass Curb
+        // Front curb slab edge
         frontCurbs.push(
-          `${p1.x},${p1.y} ${p2.x},${p2.y} ${p2.x},${p2.y + 14} ${p1.x},${p1.y + 14}`
+          `${p1.x},${p1.y} ${p2.x},${p2.y} ${p2.x},${p2.y + curbHeight} ${p1.x},${p1.y + curbHeight}`
         )
       }
     }
@@ -186,49 +288,60 @@ export function IsometricRoom({
       backWalls,
       frontCurbs,
     }
-  }, [cos, sin])
+  }, [gridRows, gridCols, cos, sin, centerIso, tileW, tileH, wallHeight, curbHeight])
 
-  // Compute position and 3D mesh vertices for all 12 racks with painter's depth sorting
-  const sortedRacks = useMemo(() => {
-    const rackHeight = 85
+  // Helper to get row letter from index (0 -> 'A', 1 -> 'B')
+  const getRowLetter = (idx: number) => String.fromCharCode(65 + idx)
+  const getRowIndex = (rowStr: string) => {
+    const letter = rowStr.replace('Row ', '').trim().toUpperCase()
+    return letter.charCodeAt(0) - 65
+  }
 
-    return racks.map((rack) => {
-      const rowIdx = rack.row.includes('C') ? 0 : rack.row.includes('B') ? 1 : 2
-      const colIdx = rack.col - 1
+  // Calculate 3D position and vertices for all grid cells (both occupied racks and empty slots)
+  const { allRacksSorted, emptyCells } = useMemo(() => {
+    const occupiedCoords = new Set<string>()
 
-      // Relative grid offset from room center (row: 1.0, col: 1.5)
-      const dc = colIdx - 1.5
-      const dr = rowIdx - 1.0
+    // Base corners relative to anchor (u, v) in isometric space, scaled dynamically
+    const u_front = 12 * autoScale
+    const v_front = 12 * autoScale
+    const u_w = -23 * autoScale
+    const v_w = -1 * autoScale
+    const u_d = 1 * autoScale
+    const v_d = -29 * autoScale
 
-      // Rotate coordinates around center
+    const cornersUV = [
+      { u: u_front, v: v_front },
+      { u: u_front + u_d, v: v_front + v_d },
+      { u: u_front + u_w + u_d, v: v_front + v_w + v_d },
+      { u: u_front + u_w, v: v_front + v_w },
+    ]
+
+    // Compute racks
+    const racksComputed = localRacks.map((rack) => {
+      const rIdx = getRowIndex(rack.row)
+      const cIdx = rack.col - 1
+      const coordKey = `${rIdx}_${rack.col}`
+      occupiedCoords.add(coordKey)
+
+      const dr = (gridRows - 1 - rIdx) - (gridRows - 1) / 2
+      const dc = cIdx - (gridCols - 1) / 2
+
       const rc = dc * cos - dr * sin
       const rr = dc * sin + dr * cos
 
       const x = centerIso.x + (rc - rr) * tileW
       const y = centerIso.y + (rc + rr) * tileH
-      const depth = rc + rr // Camera depth value for painter's order
+      const depth = rc + rr
 
-      // 4 Base corners relative to anchor (u, v) rotated
-      const u_front = 12
-      const v_front = 12
-      const u_w = -23
-      const v_w = -1
-      const u_d = 1
-      const v_d = -29
-
-      const cornersUV = [
-        { u: u_front, v: v_front },                       // 0: Front
-        { u: u_front + u_d, v: v_front + v_d },           // 1: Right
-        { u: u_front + u_w + u_d, v: v_front + v_w + v_d }, // 2: Back
-        { u: u_front + u_w, v: v_front + v_w },           // 3: Left
-      ]
+      const isPickedUp = pickedUpRackId === rack.id
+      const liftY = isPickedUp ? Math.round(26 * autoScale) : 0
 
       const baseCorners = cornersUV.map((c) => {
         const ur = c.u * cos - c.v * sin
         const vr = c.u * sin + c.v * cos
         return {
           x: x + (ur - vr),
-          y: y + (ur + vr) * 0.5,
+          y: y + (ur + vr) * 0.5 - liftY,
         }
       })
 
@@ -237,10 +350,8 @@ export function IsometricRoom({
         y: p.y - rackHeight,
       }))
 
-      // Top face polygon
       const topPolygon = topCorners.map((p) => `${p.x},${p.y}`).join(' ')
 
-      // 4 side faces, back-face culled (visible if edge dx > 0 in screen space)
       const visibleSideFaces: { points: string; shade: string }[] = []
       const shades = ['#1c1c1c', '#141414', '#181818', '#222222']
 
@@ -265,101 +376,563 @@ export function IsometricRoom({
       return {
         rack,
         x,
-        y,
+        y: y - liftY,
+        floorY: y,
         depth,
+        isPickedUp,
         baseCorners,
         topCorners,
         topPolygon,
         visibleSideFaces,
       }
-    }).sort((a, b) => a.depth - b.depth) // Sort back-to-front
-  }, [racks, cos, sin, centerIso])
+    }).sort((a, b) => a.depth - b.depth)
+
+    // Compute empty grid cells
+    const emptyCellsComputed: {
+      rowLetter: string
+      rowIdx: number
+      col: number
+      slotCode: string
+      x: number
+      y: number
+      depth: number
+      polygon: string
+    }[] = []
+
+    for (let r = 0; r < gridRows; r++) {
+      const rowLetter = getRowLetter(r)
+      for (let c = 1; c <= gridCols; c++) {
+        const coordKey = `${r}_${c}`
+        if (!occupiedCoords.has(coordKey)) {
+          const dr = (gridRows - 1 - r) - (gridRows - 1) / 2
+          const dc = (c - 1) - (gridCols - 1) / 2
+
+          const rc = dc * cos - dr * sin
+          const rr = dc * sin + dr * cos
+
+          const x = centerIso.x + (rc - rr) * tileW
+          const y = centerIso.y + (rc + rr) * tileH
+          const depth = rc + rr
+
+          const tileCorners = cornersUV.map((corner) => {
+            const ur = corner.u * cos - corner.v * sin
+            const vr = corner.u * sin + corner.v * cos
+            return {
+              x: x + (ur - vr),
+              y: y + (ur + vr) * 0.5,
+            }
+          })
+
+          emptyCellsComputed.push({
+            rowLetter,
+            rowIdx: r,
+            col: c,
+            slotCode: `${rowLetter}${c < 10 ? '0' + c : c}`,
+            x,
+            y,
+            depth,
+            polygon: tileCorners.map((p) => `${p.x},${p.y}`).join(' '),
+          })
+        }
+      }
+    }
+
+    return {
+      allRacksSorted: racksComputed,
+      emptyCells: emptyCellsComputed,
+    }
+  }, [localRacks, gridRows, gridCols, cos, sin, centerIso, pickedUpRackId, autoScale, tileW, tileH, rackHeight])
+
+  // ─── Scale Adjustment Handler ────────────────────────────────
+  const handleSetScale = (newRows: number, newCols: number) => {
+    if (newRows < 2 || newCols < 2 || newRows > 8 || newCols > 8) return
+
+    const outOfBoundsRack = localRacks.find((r) => {
+      const rIdx = getRowIndex(r.row)
+      return rIdx >= newRows || r.col > newCols
+    })
+
+    if (outOfBoundsRack) {
+      setSaveMessage({
+        type: 'error',
+        text: `Cannot shrink to ${newRows}×${newCols}: ${outOfBoundsRack.name} is at Row ${outOfBoundsRack.row} Col ${outOfBoundsRack.col}. Move or delete it first.`,
+      })
+      setTimeout(() => setSaveMessage(null), 4000)
+      return
+    }
+
+    setGridRows(newRows)
+    setGridCols(newCols)
+    setHasChanges(true)
+    setSaveMessage({
+      type: 'success',
+      text: `Grid scale adjusted to ${newRows}×${newCols} (${newRows * newCols} slots). Click 'Save Layout' to persist.`,
+    })
+    setTimeout(() => setSaveMessage(null), 3000)
+  }
+
+  // ─── 3D Pick, Place & Swap Handlers ──────────────────────────
+  const handleRackClick = (rack: RackSummary) => {
+    if (hasMovedRef.current) return
+
+    if (!isEditMode) {
+      onSelectRack(rack)
+      return
+    }
+
+    // 1. If no rack is currently lifted: Lift this rack!
+    if (pickedUpRackId === null) {
+      setPickedUpRackId(rack.id)
+      return
+    }
+
+    // 2. If clicking the SAME rack that is lifted: Put it back down (cancel)
+    if (pickedUpRackId === rack.id) {
+      setPickedUpRackId(null)
+      return
+    }
+
+    // 3. If clicking a DIFFERENT rack while one is lifted: SWAP POSITIONS (e.g. A01 <-> C04)!
+    const sourceRack = localRacks.find((r) => r.id === pickedUpRackId)
+    const targetRack = rack
+
+    if (sourceRack && targetRack) {
+      const sourceRow = sourceRack.row
+      const sourceCol = sourceRack.col
+      const targetRow = targetRack.row
+      const targetCol = targetRack.col
+
+      const targetLetter = targetRow.replace('Row ', '').trim()
+      const sourceLetter = sourceRow.replace('Row ', '').trim()
+
+      const targetSlotCode = `${targetLetter}${targetCol < 10 ? '0' + targetCol : targetCol}`
+      const sourceSlotCode = `${sourceLetter}${sourceCol < 10 ? '0' + sourceCol : sourceCol}`
+
+      const updated = localRacks.map((r) => {
+        if (r.id === sourceRack.id) {
+          return {
+            ...r,
+            row: targetRow,
+            col: targetCol,
+            name: `Rack ${targetSlotCode}`,
+          }
+        }
+        if (r.id === targetRack.id) {
+          return {
+            ...r,
+            row: sourceRow,
+            col: sourceCol,
+            name: `Rack ${sourceSlotCode}`,
+          }
+        }
+        return r
+      })
+
+      setLocalRacks(updated)
+      setPickedUpRackId(null)
+      setHasChanges(true)
+      setSaveMessage({
+        type: 'success',
+        text: `🔄 Swapped ${sourceRack.name} ↔ ${targetRack.name}! Click 'Save Layout' to persist.`,
+      })
+      setTimeout(() => setSaveMessage(null), 3500)
+    }
+  }
+
+  const handleEmptySlotClick = (cell: { rowLetter: string; col: number; slotCode: string }) => {
+    if (hasMovedRef.current) return
+
+    if (pickedUpRackId !== null) {
+      const targetRack = localRacks.find((r) => r.id === pickedUpRackId)
+      if (!targetRack) return
+
+      const updated = localRacks.map((r) => {
+        if (r.id === pickedUpRackId) {
+          return {
+            ...r,
+            row: `Row ${cell.rowLetter}`,
+            col: cell.col,
+            name: `Rack ${cell.slotCode}`,
+          }
+        }
+        return r
+      })
+
+      setLocalRacks(updated)
+      setPickedUpRackId(null)
+      setHasChanges(true)
+      setSaveMessage({
+        type: 'success',
+        text: `Moved ${targetRack.name} to Row ${cell.rowLetter} Col ${cell.col}!`,
+      })
+      setTimeout(() => setSaveMessage(null), 2500)
+    } else {
+      setAddRackName(`Rack ${cell.slotCode}`)
+      setAddRackTotalU(42)
+      setShowAddModal({ row: `Row ${cell.rowLetter}`, col: cell.col })
+    }
+  }
+
+  // ─── Save Layout to Backend ──────────────────────────────────
+  const handleSaveLayout = async () => {
+    try {
+      setSaving(true)
+      setSaveMessage(null)
+
+      await updateRoomLayout(roomId, gridRows, gridCols)
+
+      const positions = localRacks.map((r) => ({
+        rack_id: r.id,
+        row: r.row,
+        col: r.col,
+      }))
+      await batchUpdateRackPositions(roomId, positions)
+
+      setHasChanges(false)
+      setSaveMessage({ type: 'success', text: '✓ 3D Room Layout saved successfully to database!' })
+      onLayoutSaved?.()
+      setTimeout(() => setSaveMessage(null), 3500)
+    } catch (err: any) {
+      console.error('Failed to save room layout:', err)
+      setSaveMessage({
+        type: 'error',
+        text: err?.message || 'Failed to save layout to server.',
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // ─── Reset Layout ────────────────────────────────────────────
+  const handleResetLayout = () => {
+    setLocalRacks(racks)
+    setPickedUpRackId(null)
+    setHasChanges(false)
+    setSaveMessage({ type: 'success', text: 'Layout changes reset to original.' })
+    setTimeout(() => setSaveMessage(null), 2500)
+  }
+
+  // ─── Create New Rack ─────────────────────────────────────────
+  const handleConfirmAddRack = async () => {
+    if (!showAddModal || !addRackName.trim()) return
+    try {
+      setIsAddingRack(true)
+      const res = await createRack(roomId, {
+        name: addRackName.trim(),
+        row: showAddModal.row,
+        col: showAddModal.col,
+        total_u: addRackTotalU,
+        room_id: roomId,
+      })
+
+      const newRackSummary: RackSummary = {
+        id: res.id,
+        name: res.name,
+        row: res.row,
+        col: res.col,
+        total_u: res.total_u,
+        used_u: 0,
+        usage_percent: 0,
+        power_kw: 1.2,
+        inlet_temp_c: 24.5,
+        device_count: 0,
+        status: 'healthy',
+        highest_severity: 0,
+      }
+
+      setLocalRacks((prev) => [...prev, newRackSummary])
+      setShowAddModal(null)
+      setHasChanges(true)
+      onLayoutSaved?.()
+      setSaveMessage({ type: 'success', text: `Created ${res.name} at ${showAddModal.row} Col ${showAddModal.col}!` })
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch (err: any) {
+      setSaveMessage({ type: 'error', text: err?.message || 'Failed to create rack.' })
+    } finally {
+      setIsAddingRack(false)
+    }
+  }
+
+  // ─── Delete Rack ─────────────────────────────────────────────
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm) return
+    try {
+      setIsDeleting(true)
+      await deleteRack(roomId, deleteConfirm.id)
+      setLocalRacks((prev) => prev.filter((r) => r.id !== deleteConfirm.id))
+      if (pickedUpRackId === deleteConfirm.id) setPickedUpRackId(null)
+      setDeleteConfirm(null)
+      setHasChanges(true)
+      onLayoutSaved?.()
+      setSaveMessage({ type: 'success', text: `Deleted ${deleteConfirm.name}.` })
+      setTimeout(() => setSaveMessage(null), 3000)
+    } catch (err: any) {
+      setSaveMessage({ type: 'error', text: err?.message || 'Failed to delete rack.' })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const pickedUpRack = localRacks.find((r) => r.id === pickedUpRackId)
 
   return (
-    <div className="relative rounded-2xl bg-[#090909] border border-[#1f1f1f] shadow-2xl overflow-hidden flex flex-col h-[520px]">
-      {/* Top View Mode Toggles */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
-        <button
-          type="button"
-          onClick={() => setViewMode('3d')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            viewMode === '3d'
-              ? 'bg-[#292929] text-white shadow-sm'
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          <Eye className="w-3.5 h-3.5" />
-          <span>3D View</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setViewMode('status')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            viewMode === 'status'
-              ? 'bg-[#292929] text-white shadow-sm'
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          <Activity className="w-3.5 h-3.5" />
-          <span>Status</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setViewMode('temp')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            viewMode === 'temp'
-              ? 'bg-[#292929] text-white shadow-sm'
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          <Thermometer className="w-3.5 h-3.5" />
-          <span>Temperature</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setViewMode('power')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-            viewMode === 'power'
-              ? 'bg-[#292929] text-white shadow-sm'
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          <Zap className="w-3.5 h-3.5" />
-          <span>Power</span>
-        </button>
-      </div>
+    <div className={`relative rounded-2xl bg-[#090909] border border-[#1f1f1f] shadow-2xl overflow-hidden flex flex-col ${fullPage ? 'min-h-[720px] h-[750px]' : 'min-h-[580px] h-[600px]'}`}>
+      {/* ─── Top Main Bar: View Modes & Edit Toggle ────────────────── */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
+        {/* Left Side: View Mode Toggles (or Edit Mode Indicator) */}
+        <div className="pointer-events-auto flex items-center gap-2">
+          {!isEditMode ? (
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
+              <button
+                type="button"
+                onClick={() => setViewMode('3d')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === '3d'
+                    ? 'bg-[#292929] text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>3D View</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('status')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'status'
+                    ? 'bg-[#292929] text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>Status</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('temp')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'temp'
+                    ? 'bg-[#292929] text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <Thermometer className="w-3.5 h-3.5" />
+                <span>Temp</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('power')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'power'
+                    ? 'bg-[#292929] text-white shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>Power</span>
+              </button>
+            </div>
+          ) : (
+            /* Edit Mode Scale Controls Toolbar */
+            <div className="flex items-center gap-2 p-1.5 rounded-xl bg-[#141414]/95 border border-cyan-500/40 backdrop-blur shadow-2xl">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs font-bold tracking-wide">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '4s' }} />
+                <span>3D EDIT MODE</span>
+              </div>
 
-      {/* Top Right: Rotation Controls & Angle Indicator */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
-        <button
-          type="button"
-          onClick={handleRotateLeft}
-          className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
-          title="Rotate Left 45° (⟲)"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
+              <div className="h-4 w-px bg-zinc-800" />
 
-        <div
-          className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-medium text-zinc-300 bg-[#1c1c1c] rounded-lg border border-[#2b2b2b] select-none cursor-pointer hover:border-zinc-500 transition-colors"
-          onClick={() => setRotationAngle(0)}
-          title="Click to reset rotation to 0°"
-        >
-          <Compass className="w-3.5 h-3.5 text-zinc-400" />
-          <span>{Math.round(rotationAngle)}°</span>
+              {/* Scale Presets */}
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-zinc-400 text-[11px] font-medium mr-1 hidden sm:inline">Scale:</span>
+                {[
+                  { r: 3, c: 3, label: '3×3' },
+                  { r: 3, c: 4, label: '3×4' },
+                  { r: 4, c: 4, label: '4×4' },
+                  { r: 5, c: 5, label: '5×5' },
+                ].map((p) => {
+                  const isActive = gridRows === p.r && gridCols === p.c
+                  return (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => handleSetScale(p.r, p.c)}
+                      className={`px-2 py-1 rounded-md font-mono text-[11px] font-semibold transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-cyan-600 text-white shadow-sm shadow-cyan-600/50'
+                          : 'bg-[#1e1e1e] text-zinc-300 hover:text-white hover:bg-zinc-800'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="h-4 w-px bg-zinc-800" />
+
+              {/* Custom Row / Col Adjuster */}
+              <div className="flex items-center gap-1 text-[11px] font-mono text-zinc-300">
+                <span>R:</span>
+                <button
+                  type="button"
+                  onClick={() => handleSetScale(gridRows - 1, gridCols)}
+                  disabled={gridRows <= 2}
+                  className="px-1.5 py-0.5 rounded bg-[#1e1e1e] hover:bg-zinc-800 disabled:opacity-40 cursor-pointer"
+                >
+                  -
+                </button>
+                <span className="font-bold text-white px-0.5">{gridRows}</span>
+                <button
+                  type="button"
+                  onClick={() => handleSetScale(gridRows + 1, gridCols)}
+                  disabled={gridRows >= 8}
+                  className="px-1.5 py-0.5 rounded bg-[#1e1e1e] hover:bg-zinc-800 disabled:opacity-40 cursor-pointer"
+                >
+                  +
+                </button>
+
+                <span className="ml-1">C:</span>
+                <button
+                  type="button"
+                  onClick={() => handleSetScale(gridRows, gridCols - 1)}
+                  disabled={gridCols <= 2}
+                  className="px-1.5 py-0.5 rounded bg-[#1e1e1e] hover:bg-zinc-800 disabled:opacity-40 cursor-pointer"
+                >
+                  -
+                </button>
+                <span className="font-bold text-white px-0.5">{gridCols}</span>
+                <button
+                  type="button"
+                  onClick={() => handleSetScale(gridRows, gridCols + 1)}
+                  disabled={gridCols >= 8}
+                  className="px-1.5 py-0.5 rounded bg-[#1e1e1e] hover:bg-zinc-800 disabled:opacity-40 cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <button
-          type="button"
-          onClick={handleRotateRight}
-          className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
-          title="Rotate Right 45° (⟳)"
-        >
-          <RotateCw className="w-4 h-4" />
-        </button>
+        {/* Right Side: Edit Mode Actions */}
+        <div className="pointer-events-auto flex items-center gap-2">
+          {isEditMode && (
+            /* Edit Actions: Save, Reset, Done */
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#141414]/95 border border-[#262626] backdrop-blur shadow-2xl">
+              {hasChanges && (
+                <button
+                  type="button"
+                  onClick={handleResetLayout}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white hover:bg-[#222222] transition-colors cursor-pointer"
+                >
+                  Reset
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleSaveLayout}
+                disabled={saving || !hasChanges}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  hasChanges
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/40 animate-pulse'
+                    : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                }`}
+              >
+                {saving ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                <span>{saving ? 'Saving...' : 'Save Layout'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditMode(false)
+                  setPickedUpRackId(null)
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-white transition-colors cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5 text-zinc-300" />
+                <span>Done</span>
+              </button>
+            </div>
+          )}
+
+          {/* 360 Rotation Controls */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
+            <button
+              type="button"
+              onClick={handleRotateLeft}
+              className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+              title="Rotate Left 45° (⟲)"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+            <div
+              className="flex items-center gap-1 px-2 py-1 text-xs font-mono font-medium text-zinc-300 bg-[#1c1c1c] rounded-lg border border-[#2b2b2b] select-none cursor-pointer hover:border-zinc-500"
+              onClick={() => setRotationAngle(0)}
+              title="Reset rotation to 0°"
+            >
+              <Compass className="w-3 h-3 text-zinc-400" />
+              <span>{Math.round(rotationAngle)}°</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleRotateRight}
+              className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
+              title="Rotate Right 45° (⟳)"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Main Isometric SVG Room Canvas with Free Drag-to-Rotate */}
+      {/* ─── Notification / Instruction Strip ────────────────────────── */}
+      {saveMessage && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 transition-all duration-300">
+          <div
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur shadow-2xl border ${
+              saveMessage.type === 'success'
+                ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/50'
+                : 'bg-rose-950/90 text-rose-300 border-rose-500/50'
+            }`}
+          >
+            {saveMessage.type === 'success' ? (
+              <Check className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-rose-400" />
+            )}
+            <span>{saveMessage.text}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Micro-hint banner when in Edit Mode */}
+      {isEditMode && !saveMessage && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-cyan-500/30 text-xs text-zinc-300 backdrop-blur shadow-lg">
+            {pickedUpRack ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                <span className="text-cyan-300 font-bold">{pickedUpRack.name}</span>
+                <span>is lifted! Click an empty slot to MOVE, or click another rack (e.g. C04) to SWAP positions.</span>
+              </>
+            ) : (
+              <>
+                <span className="text-cyan-400 font-bold">3D Move & Swap:</span>
+                <span>Click any rack to lift it, then click an empty slot or another rack to swap.</span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Main Isometric SVG Room Canvas ─────────────────────────── */}
       <div
         className={`flex-1 w-full h-full flex items-center justify-center overflow-hidden select-none ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
@@ -373,7 +946,7 @@ export function IsometricRoom({
         onTouchEnd={handleTouchEnd}
       >
         <svg
-          viewBox="0 0 1080 580"
+          viewBox="0 0 1080 620"
           className="w-full h-full transition-transform duration-150"
           style={{ transform: `scale(${zoom})` }}
         >
@@ -407,7 +980,7 @@ export function IsometricRoom({
             </filter>
           </defs>
 
-          {/* Dynamic Back Walls (Stay behind racks at any angle) */}
+          {/* Dynamic Back Walls */}
           {roomGeometry.backWalls.map((pts, idx) => (
             <polygon
               key={`back-wall-${idx}`}
@@ -422,118 +995,366 @@ export function IsometricRoom({
           <polygon
             points={roomGeometry.floorPoints}
             fill="url(#floorTilesGrid)"
-            stroke="#222222"
-            strokeWidth="1"
+            stroke={isEditMode ? '#0891b2' : '#222222'}
+            strokeWidth={isEditMode ? '1.5' : '1'}
           />
 
           {/* Rotated Cold Aisle Mat */}
           <polygon
             points={roomGeometry.aislePoints}
             fill="url(#aisleTiles)"
-            opacity="0.9"
+            opacity="0.85"
             stroke="#2b2b2b"
             strokeWidth="0.8"
           />
 
-          {/* 12 Racks Drawn in Dynamic Painter's Depth Order */}
-          {sortedRacks.map(({ rack, x, y, topPolygon, visibleSideFaces }) => {
-            const isSelected = selectedRackId === rack.id
-            const isDimmed = statusFilter !== null && rack.status !== statusFilter
-            const statusColor = getStatusColor(rack.status)
+          {/* ─── Empty 3D Isometric Slots in Edit Mode ──────────────── */}
+          {isEditMode &&
+            emptyCells.map((cell) => {
+              const isHovered = hoveredEmptySlot === cell.slotCode
+              const isReadyToPlace = pickedUpRackId !== null
 
-            let badgeText = rack.name.replace('Rack ', '')
-            if (viewMode === 'temp') badgeText = `${rack.inlet_temp_c}°C`
-            if (viewMode === 'power') badgeText = `${rack.power_kw}kW`
-            if (viewMode === 'status') badgeText = rack.status.toUpperCase()
-
-            const rackHeight = 85
-
-            return (
-              <g
-                key={rack.id}
-                onClick={() => {
-                  if (hasMovedRef.current) return
-                  onSelectRack(rack)
-                }}
-                className={`cursor-pointer transition-opacity duration-200 ${
-                  isDimmed ? 'opacity-30' : 'opacity-100'
-                }`}
-              >
-                {/* Selection Halo Ring */}
-                {isSelected && (
-                  <ellipse
-                    cx={x}
-                    cy={y + 12}
-                    rx="38"
-                    ry="18"
-                    fill="#ffffff"
-                    fillOpacity="0.1"
-                    stroke="#ffffff"
-                    strokeWidth="2"
-                    filter="url(#beaconGlow)"
-                  />
-                )}
-
-                {/* Base Shadow */}
-                <ellipse cx={x} cy={y + 10} rx="26" ry="12" fill="#000000" fillOpacity="0.8" />
-
-                {/* Visible 3D Side Faces */}
-                {visibleSideFaces.map((face, fIdx) => (
+              return (
+                <g
+                  key={`empty-${cell.slotCode}`}
+                  onClick={() => handleEmptySlotClick(cell)}
+                  onMouseEnter={() => setHoveredEmptySlot(cell.slotCode)}
+                  onMouseLeave={() => setHoveredEmptySlot(null)}
+                  className="cursor-pointer transition-all duration-200"
+                >
+                  {/* Isometric Slot Floor Polygon */}
                   <polygon
-                    key={`face-${fIdx}`}
-                    points={face.points}
-                    fill={isSelected ? (fIdx === 0 ? '#2e2e2e' : '#222222') : face.shade}
-                    stroke={isSelected ? '#ffffff' : '#333333'}
-                    strokeWidth={isSelected ? '2' : '1'}
+                    points={cell.polygon}
+                    fill={
+                      isHovered
+                        ? isReadyToPlace
+                          ? 'rgba(16, 185, 129, 0.3)'
+                          : 'rgba(6, 182, 212, 0.25)'
+                        : isReadyToPlace
+                        ? 'rgba(16, 185, 129, 0.12)'
+                        : 'rgba(255, 255, 255, 0.03)'
+                    }
+                    stroke={
+                      isHovered
+                        ? isReadyToPlace
+                          ? '#10b981'
+                          : '#06b6d4'
+                        : isReadyToPlace
+                        ? '#10b981'
+                        : '#3f3f46'
+                    }
+                    strokeWidth={isHovered || isReadyToPlace ? '2' : '1'}
+                    strokeDasharray={isReadyToPlace ? '4 3' : '3 3'}
                   />
-                ))}
 
-                {/* Top Face */}
-                <polygon
-                  points={topPolygon}
-                  fill={isSelected ? '#3f3f46' : '#262626'}
-                  stroke={isSelected ? '#ffffff' : '#404040'}
-                  strokeWidth={isSelected ? '2' : '1'}
-                />
-
-                {/* Status LED Beacon */}
-                <circle
-                  cx={x + 5}
-                  cy={y - rackHeight + 8}
-                  r={isSelected ? '5.5' : '4'}
-                  fill={statusColor}
-                  filter="url(#beaconGlow)"
-                  className="animate-pulse"
-                />
-
-                {/* Floating Billboard Label (Facing Viewer At All Angles) */}
-                <g transform={`translate(${x - 30}, ${y - rackHeight - 26})`}>
-                  <rect
-                    width="60"
-                    height="18"
-                    rx="6"
-                    fill={isSelected ? '#ffffff' : '#141414'}
-                    fillOpacity="0.95"
-                    stroke={isSelected ? '#ffffff' : '#333333'}
-                    strokeWidth="1"
-                  />
-                  <text
-                    x="30"
-                    y="13"
-                    textAnchor="middle"
-                    fill={isSelected ? '#000000' : '#ffffff'}
-                    fontSize="10"
-                    fontWeight="700"
-                    letterSpacing="0.5"
-                  >
-                    {badgeText}
-                  </text>
+                  {/* Slot Coordinate Label (Rotated / Centered in 3D Tile) */}
+                  {(() => {
+                    const slotW = Math.round(Math.max(34, 44 * autoScale))
+                    const slotH = Math.round(Math.max(13, 16 * autoScale))
+                    const slotFont = Math.max(7.5, Math.round(9 * autoScale))
+                    return (
+                      <g transform={`translate(${cell.x - slotW / 2}, ${cell.y - slotH / 2})`}>
+                        <rect
+                          width={slotW}
+                          height={slotH}
+                          rx={Math.max(3, Math.round(4 * autoScale))}
+                          fill={isHovered ? '#0891b2' : '#141414'}
+                          fillOpacity="0.85"
+                          stroke={isReadyToPlace ? '#10b981' : '#333333'}
+                          strokeWidth="1"
+                        />
+                        <text
+                          x={slotW / 2}
+                          y={slotH * 0.72}
+                          textAnchor="middle"
+                          fill={isHovered ? '#ffffff' : isReadyToPlace ? '#34d399' : '#a1a1aa'}
+                          fontSize={slotFont}
+                          fontFamily="monospace"
+                          fontWeight="bold"
+                        >
+                          {isReadyToPlace ? `+ PLACE` : cell.slotCode}
+                        </text>
+                      </g>
+                    )
+                  })()}
                 </g>
-              </g>
-            )
-          })}
+              )
+            })}
 
-          {/* Front Perimeter Curbs (Stay in front of racks) */}
+          {/* ─── 3D Racks Rendered with Depth Sorting ───────────────── */}
+          {allRacksSorted.map(
+            ({
+              rack,
+              x,
+              y,
+              floorY,
+              isPickedUp,
+              topPolygon,
+              visibleSideFaces,
+            }) => {
+              const isSelected = selectedRackId === rack.id
+              const isHovered = hoveredRackId === rack.id && isEditMode
+              const isDimmed = !isEditMode && statusFilter !== null && rack.status !== statusFilter
+              const statusColor = getStatusColor(rack.status)
+
+              let badgeText = rack.name.replace('Rack ', '')
+              if (!isEditMode) {
+                if (viewMode === 'temp') badgeText = `${rack.inlet_temp_c}°C`
+                if (viewMode === 'power') badgeText = `${rack.power_kw}kW`
+                if (viewMode === 'status') badgeText = rack.status.toUpperCase()
+              } else if (isPickedUp) {
+                badgeText = 'PLACING...'
+              }
+
+              return (
+                <g
+                  key={rack.id}
+                  onClick={() => handleRackClick(rack)}
+                  onMouseEnter={() => setHoveredRackId(rack.id)}
+                  onMouseLeave={() => setHoveredRackId(null)}
+                  className={`cursor-pointer transition-opacity duration-200 ${
+                    isDimmed ? 'opacity-30' : 'opacity-100'
+                  }`}
+                >
+                  {/* Picked-up 3D Elevation Line & Floor Shadow */}
+                  {isPickedUp ? (
+                    <>
+                      {/* Floor Shadow Ring */}
+                      <ellipse
+                        cx={x}
+                        cy={floorY + Math.round(8 * autoScale)}
+                        rx={Math.round(30 * autoScale)}
+                        ry={Math.round(14 * autoScale)}
+                        fill="#06b6d4"
+                        fillOpacity="0.3"
+                        stroke="#22d3ee"
+                        strokeWidth="2"
+                        strokeDasharray="4 2"
+                        filter="url(#beaconGlow)"
+                      />
+                      {/* Vertical Elevation Guide Line */}
+                      <line
+                        x1={x}
+                        y1={floorY + Math.round(6 * autoScale)}
+                        x2={x}
+                        y2={y + Math.round(6 * autoScale)}
+                        stroke="#22d3ee"
+                        strokeWidth="2"
+                        strokeDasharray="3 3"
+                        filter="url(#beaconGlow)"
+                      />
+                    </>
+                  ) : (
+                    /* Normal Base Shadow */
+                    <ellipse
+                      cx={x}
+                      cy={y + Math.round(8 * autoScale)}
+                      rx={Math.round(24 * autoScale)}
+                      ry={Math.round(11 * autoScale)}
+                      fill="#000000"
+                      fillOpacity="0.8"
+                    />
+                  )}
+
+                  {/* Selection Halo Ring */}
+                  {(isSelected || isPickedUp) && (
+                    <ellipse
+                      cx={x}
+                      cy={y + Math.round(10 * autoScale)}
+                      rx={Math.round(34 * autoScale)}
+                      ry={Math.round(16 * autoScale)}
+                      fill={isPickedUp ? '#06b6d4' : '#ffffff'}
+                      fillOpacity={isPickedUp ? 0.25 : 0.1}
+                      stroke={isPickedUp ? '#22d3ee' : '#ffffff'}
+                      strokeWidth="2"
+                      filter="url(#beaconGlow)"
+                    />
+                  )}
+
+                  {/* Visible 3D Side Faces */}
+                  {visibleSideFaces.map((face, fIdx) => (
+                    <polygon
+                      key={`face-${fIdx}`}
+                      points={face.points}
+                      fill={
+                        isPickedUp
+                          ? fIdx === 0
+                            ? '#0e7490'
+                            : '#083344'
+                          : isSelected
+                          ? fIdx === 0
+                            ? '#2e2e2e'
+                            : '#222222'
+                          : face.shade
+                      }
+                      stroke={
+                        isPickedUp
+                          ? '#22d3ee'
+                          : isHovered
+                          ? '#06b6d4'
+                          : isSelected
+                          ? '#ffffff'
+                          : '#333333'
+                      }
+                      strokeWidth={isPickedUp || isHovered || isSelected ? '2' : '1'}
+                    />
+                  ))}
+
+                  {/* Top Face */}
+                  <polygon
+                    points={topPolygon}
+                    fill={
+                      isPickedUp
+                        ? '#0891b2'
+                        : isSelected
+                        ? '#3f3f46'
+                        : '#262626'
+                    }
+                    stroke={
+                      isPickedUp
+                        ? '#67e8f9'
+                        : isHovered
+                        ? '#06b6d4'
+                        : isSelected
+                        ? '#ffffff'
+                        : '#404040'
+                    }
+                    strokeWidth={isPickedUp || isHovered || isSelected ? '2' : '1'}
+                  />
+
+                  {/* Status LED Beacon */}
+                  <circle
+                    cx={x + Math.round(4 * autoScale)}
+                    cy={y - rackHeight + Math.round(7 * autoScale)}
+                    r={Math.max(3, Math.round((isSelected || isPickedUp ? 5 : 3.8) * autoScale))}
+                    fill={isPickedUp ? '#22d3ee' : statusColor}
+                    filter="url(#beaconGlow)"
+                    className="animate-pulse"
+                  />
+
+                  {/* Floating Billboard Label */}
+                  {(() => {
+                    const badgeW = Math.round(Math.max(46, 62 * autoScale))
+                    const badgeH = Math.round(Math.max(14, 18 * autoScale))
+                    const badgeFont = Math.max(8.5, Math.round(10 * autoScale))
+                    return (
+                      <g
+                        transform={`translate(${x - badgeW / 2}, ${
+                          y - rackHeight - badgeH - Math.round(6 * autoScale)
+                        })`}
+                      >
+                        <rect
+                          width={badgeW}
+                          height={badgeH}
+                          rx={Math.max(4, Math.round(6 * autoScale))}
+                          fill={
+                            isPickedUp
+                              ? '#06b6d4'
+                              : isSelected
+                              ? '#ffffff'
+                              : '#141414'
+                          }
+                          fillOpacity="0.95"
+                          stroke={
+                            isPickedUp
+                              ? '#67e8f9'
+                              : isSelected
+                              ? '#ffffff'
+                              : rack.status === 'critical'
+                              ? '#e82127'
+                              : rack.status === 'warning'
+                              ? '#f59e0b'
+                              : '#333333'
+                          }
+                          strokeWidth="1"
+                        />
+                        <text
+                          x={badgeW / 2}
+                          y={badgeH * 0.72}
+                          textAnchor="middle"
+                          fill={isPickedUp ? '#000000' : isSelected ? '#000000' : '#ffffff'}
+                          fontSize={badgeFont}
+                          fontWeight="700"
+                          letterSpacing="0.5"
+                        >
+                          {badgeText}
+                        </text>
+                      </g>
+                    )
+                  })()}
+
+                  {/* Quick Action Pill on Hover in Edit Mode */}
+                  {isEditMode && isHovered && !isPickedUp && (
+                    <g
+                      transform={`translate(${x - 50}, ${
+                        y - rackHeight - Math.round(Math.max(14, 18 * autoScale)) - 34
+                      })`}
+                      className="pointer-events-auto"
+                    >
+                      <rect
+                        width="100"
+                        height="22"
+                        rx="8"
+                        fill="#18181b"
+                        stroke="#3f3f46"
+                        strokeWidth="1"
+                        filter="url(#beaconGlow)"
+                      />
+                      {/* Pick up button */}
+                      <text
+                        x="24"
+                        y="15"
+                        fill="#38bdf8"
+                        fontSize="10"
+                        fontWeight="bold"
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setPickedUpRackId(rack.id)
+                        }}
+                      >
+                        🖐️ Move
+                      </text>
+                      {/* View Elevation button */}
+                      {onViewRackElevation && (
+                        <text
+                          x="60"
+                          y="15"
+                          fill="#34d399"
+                          fontSize="10"
+                          fontWeight="bold"
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onViewRackElevation(rack)
+                          }}
+                        >
+                          ↗️ 42U
+                        </text>
+                      )}
+                      {/* Delete icon */}
+                      <text
+                        x="86"
+                        y="15"
+                        fill="#f43f5e"
+                        fontSize="10"
+                        fontWeight="bold"
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeleteConfirm(rack)
+                        }}
+                      >
+                        🗑️
+                      </text>
+                    </g>
+                  )}
+                </g>
+              )
+            }
+          )}
+
+          {/* Front Perimeter Curbs */}
           {roomGeometry.frontCurbs.map((pts, idx) => (
             <polygon
               key={`front-curb-${idx}`}
@@ -547,9 +1368,9 @@ export function IsometricRoom({
         </svg>
       </div>
 
-      {/* Bottom Controls & Clickable Legend */}
+      {/* ─── Bottom Status Legend & Zoom Controls ────────────────── */}
       <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
-        {/* Clickable Status Legend */}
+        {/* Status Legend */}
         <div className="pointer-events-auto flex items-center gap-3 px-3 py-1.5 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur text-xs">
           <button
             type="button"
@@ -596,7 +1417,7 @@ export function IsometricRoom({
           </button>
         </div>
 
-        {/* Zoom, Drag Hint & Reset Controls */}
+        {/* Zoom & Reset Controls */}
         <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-xl bg-[#141414]/90 border border-[#262626] backdrop-blur shadow-lg">
           <span className="text-[11px] text-zinc-500 px-2 select-none hidden md:inline">
             Drag to rotate 360°
@@ -621,12 +1442,119 @@ export function IsometricRoom({
             type="button"
             onClick={handleReset}
             className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222222] rounded-lg transition-colors cursor-pointer"
-            title="Reset View (Zoom 1.0, Angle 0°)"
+            title="Reset View"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {/* ─── Add Rack Modal ────────────────────────────────────────── */}
+      {showAddModal && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-[#141414] border border-[#2b2b2b] p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#262626]">
+              <div className="flex items-center gap-2">
+                <Plus className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold text-white">Add Rack in 3D Slot</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(null)}
+                className="text-zinc-500 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-[11px] font-semibold text-zinc-400">Position</label>
+                <div className="text-xs font-mono text-cyan-300 font-bold bg-[#1c1c1c] px-3 py-1.5 rounded-lg border border-[#2b2b2b] mt-1">
+                  {showAddModal.row} • Column {showAddModal.col}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-zinc-400">Rack Name</label>
+                <input
+                  type="text"
+                  value={addRackName}
+                  onChange={(e) => setAddRackName(e.target.value)}
+                  className="w-full mt-1 px-3 py-1.5 rounded-lg bg-[#1c1c1c] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-cyan-500"
+                  placeholder="e.g. Rack A03"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-zinc-400">Total U Capacity</label>
+                <select
+                  value={addRackTotalU}
+                  onChange={(e) => setAddRackTotalU(Number(e.target.value))}
+                  className="w-full mt-1 px-3 py-1.5 rounded-lg bg-[#1c1c1c] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-cyan-500"
+                >
+                  <option value={42}>42U (Standard)</option>
+                  <option value={48}>48U (High Density)</option>
+                  <option value={24}>24U (Half Rack)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(null)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAddRack}
+                disabled={isAddingRack || !addRackName.trim()}
+                className="px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition-colors cursor-pointer"
+              >
+                {isAddingRack ? 'Adding...' : 'Add to Floor'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Delete Confirmation Modal ─────────────────────────────── */}
+      {deleteConfirm && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-[#141414] border border-[#2b2b2b] p-5 shadow-2xl space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-[#262626]">
+              <Trash2 className="w-4 h-4 text-rose-500" />
+              <h3 className="text-sm font-bold text-white">Delete Rack</h3>
+            </div>
+
+            <p className="text-xs text-zinc-300">
+              Are you sure you want to remove <span className="font-bold text-white">{deleteConfirm.name}</span> from the room?
+              This will also unmount all associated devices.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirm(null)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-1.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition-colors cursor-pointer"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Rack'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import type { RoomOverview, RackSummary, RackElevation as RackElevationType, Device } from './types'
 import { fetchRoomOverview, fetchRackElevation, unmountDevice } from './api/client'
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
@@ -20,11 +20,24 @@ import { DevicesView } from './components/views/DevicesView'
 import { AlertsView } from './components/views/AlertsView'
 import { ReportsView } from './components/views/ReportsView'
 
+const VALID_TABS: NavTab[] = ['overview', 'floor_plan', 'racks', 'devices', 'alerts', 'reports']
+
 export function App() {
-  const [activeNav, setActiveNav] = useState<NavTab>('overview')
-  const [returnNav, setReturnNav] = useState<NavTab>('overview')
-  const [currentView, setCurrentView] = useState<'floor_plan' | 'rack_elevation'>('floor_plan')
+  const [activeNav, setActiveNav] = useState<NavTab>(() => {
+    const saved = localStorage.getItem('dc_vision_active_tab') as NavTab | null
+    return saved && VALID_TABS.includes(saved) ? saved : 'overview'
+  })
+  const [returnNav, setReturnNav] = useState<NavTab>(() => {
+    const saved = localStorage.getItem('dc_vision_active_tab') as NavTab | null
+    return saved && VALID_TABS.includes(saved) ? saved : 'overview'
+  })
+  const [currentView, setCurrentView] = useState<'floor_plan' | 'rack_elevation' | 'floor_plan_editor'>('floor_plan')
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Persist active navigation tab to localStorage on change
+  useEffect(() => {
+    localStorage.setItem('dc_vision_active_tab', activeNav)
+  }, [activeNav])
 
   // Floor plan data
   const [overview, setOverview] = useState<RoomOverview | null>(null)
@@ -175,6 +188,22 @@ export function App() {
         onClick: handleBack,
       })
       list.push({ label: rackElevation.name })
+    } else if (currentView === 'floor_plan_editor') {
+      list.push({
+        label: overview?.room_name || 'Room A',
+        onClick: () => {
+          setCurrentView('floor_plan')
+          setActiveNav('floor_plan')
+        },
+      })
+      list.push({
+        label: 'Floor Plan',
+        onClick: () => {
+          setCurrentView('floor_plan')
+          setActiveNav('floor_plan')
+        },
+      })
+      list.push({ label: 'Editor' })
     } else {
       list.push({
         label: overview?.room_name || 'Room A',
@@ -320,6 +349,53 @@ export function App() {
               onNavigateToAlerts={() => handleSelectTab('alerts')}
               onNavigateToDevices={() => handleSelectTab('devices')}
             />
+          ) : currentView === 'floor_plan_editor' ? (
+            /* 3D Floor Plan Editor View */
+            <div className="max-w-[1600px] mx-auto space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-[#222222]">
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentView('floor_plan')
+                      setActiveNav('floor_plan')
+                      loadOverview()
+                    }}
+                    className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white px-3 py-1.5 rounded-xl bg-[#141414] border border-[#262626] hover:border-zinc-500 transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Floor Plan</span>
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-bold text-white tracking-tight">
+                      3D Floor Plan Editor
+                    </h2>
+                    <span className="text-xs font-mono font-semibold text-cyan-400 bg-cyan-950/60 px-2.5 py-0.5 rounded-full border border-cyan-500/30">
+                      ROOM A • ISOMETRIC 3D
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <IsometricRoom
+                racks={filteredRacks}
+                selectedRackId={selectedRackSummary?.id || null}
+                onSelectRack={(rack) => setSelectedRackSummary(rack)}
+                statusCounts={
+                  overview?.status_counts || {
+                    healthy: 10,
+                    warning: 1,
+                    critical: 1,
+                    offline: 0,
+                  }
+                }
+                roomId={1}
+                initialEditMode={true}
+                fullPage={true}
+                onLayoutSaved={() => loadOverview()}
+                onViewRackElevation={handleViewRackElevation}
+              />
+            </div>
           ) : activeNav === 'floor_plan' ? (
             /* TAB 2: Dedicated 2.5D Isometric Floor Plan View */
             <div className="max-w-[1600px] mx-auto space-y-5">
@@ -329,7 +405,7 @@ export function App() {
                   <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                     <span>Data Center Floor Plan</span>
                     <span className="text-xs font-mono font-semibold text-zinc-400 bg-zinc-900 px-2.5 py-0.5 rounded-full border border-zinc-800">
-                      ROOM A • 12 RACKS
+                      ROOM A • {overview?.total_racks || 12} RACKS
                     </span>
                   </h2>
                   <p className="text-xs text-zinc-400 mt-0.5">
@@ -337,18 +413,30 @@ export function App() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs font-mono">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <span className="text-zinc-400">Healthy ({overview?.status_counts.healthy || 0})</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                    <span className="text-zinc-400">Warning ({overview?.status_counts.warning || 0})</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                    <span className="text-zinc-400">Critical ({overview?.status_counts.critical || 0})</span>
+                <div className="flex items-center gap-4">
+                  {/* Edit Floor Plan Button */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('floor_plan_editor')}
+                    className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white px-3.5 py-2 rounded-xl bg-[#141414] border border-[#262626] hover:border-cyan-600 hover:bg-cyan-950/20 transition-all cursor-pointer"
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Edit 3D Layout</span>
+                  </button>
+
+                  <div className="flex items-center gap-4 text-xs font-mono">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <span className="text-zinc-400">Healthy ({overview?.status_counts.healthy || 0})</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                      <span className="text-zinc-400">Warning ({overview?.status_counts.warning || 0})</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                      <span className="text-zinc-400">Critical ({overview?.status_counts.critical || 0})</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -369,6 +457,9 @@ export function App() {
                         offline: 0,
                       }
                     }
+                    roomId={1}
+                    onLayoutSaved={() => loadOverview()}
+                    onViewRackElevation={handleViewRackElevation}
                   />
                 </div>
 

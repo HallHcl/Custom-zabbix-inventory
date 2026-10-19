@@ -53,7 +53,7 @@ async def list_racks(room_id: int = 1, db: AsyncSession = Depends(get_db)):
                 elif h_summary.get("status") == "warning":
                     has_warning = True
 
-        status = "critical" if has_critical else ("warning" if has_warning else "ok")
+        status = "critical" if has_critical else ("warning" if has_warning else "healthy")
 
         summaries.append(
             RackSummary(

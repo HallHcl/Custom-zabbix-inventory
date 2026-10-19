@@ -4,6 +4,7 @@ import type {
   DeviceMetrics,
   ZabbixHostOption,
   Device,
+  RoomLayout,
 } from '../types'
 
 const API_BASE = '/api/v1'
@@ -109,3 +110,68 @@ export async function updateDeviceInventory(
   return res.json()
 }
 
+// ─── Floor Plan Editor API ───────────────────────────────────
+
+export async function fetchRoomLayout(roomId: number = 1): Promise<RoomLayout> {
+  const res = await fetch(`${API_BASE}/rooms/${roomId}/layout`)
+  if (!res.ok) throw new Error('Failed to fetch room layout')
+  return res.json()
+}
+
+export async function updateRoomLayout(
+  roomId: number,
+  gridRows: number,
+  gridCols: number
+): Promise<RoomLayout> {
+  const res = await fetch(`${API_BASE}/rooms/${roomId}/layout`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grid_rows: gridRows, grid_cols: gridCols }),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to update room layout')
+  }
+  return res.json()
+}
+
+export async function batchUpdateRackPositions(
+  roomId: number,
+  positions: { rack_id: number; row: string; col: number }[]
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/rooms/${roomId}/rack-positions`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ positions }),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to update rack positions')
+  }
+}
+
+export async function createRack(
+  roomId: number,
+  payload: { name: string; row: string; col: number; total_u?: number; room_id: number }
+): Promise<{ id: number; name: string; row: string; col: number; total_u: number; room_id: number }> {
+  const res = await fetch(`${API_BASE}/rooms/${roomId}/racks`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to create rack')
+  }
+  return res.json()
+}
+
+export async function deleteRack(roomId: number, rackId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/rooms/${roomId}/racks/${rackId}`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to delete rack')
+  }
+}

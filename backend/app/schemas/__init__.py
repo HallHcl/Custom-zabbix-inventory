@@ -140,3 +140,51 @@ class DeviceOverviewResponse(BaseModel):
     active_alerts: List[Dict[str, Any]] = []
     # Zabbix Latest Data Items (Full Metric List)
     latest_data_items: List[ZabbixLatestItem] = []
+
+
+# ─── Floor Plan Editor Schemas ───────────────────────────────────
+
+class RoomLayoutUpdate(BaseModel):
+    """Update the room grid dimensions (rows x cols)"""
+    grid_rows: int = Field(..., ge=1, le=20)
+    grid_cols: int = Field(..., ge=1, le=20)
+
+
+class RackCreate(BaseModel):
+    """Create a new rack in a room"""
+    room_id: int
+    name: str = Field(..., min_length=1, max_length=50)
+    row: str = Field(..., min_length=1, max_length=10)
+    col: int = Field(..., ge=1)
+    total_u: int = Field(default=42, ge=1, le=60)
+
+
+class RackPositionUpdate(BaseModel):
+    """Update a single rack's grid position"""
+    rack_id: int
+    row: str
+    col: int
+
+
+class BatchRackPositionUpdate(BaseModel):
+    """Batch update rack positions in a room"""
+    positions: List[RackPositionUpdate]
+
+
+class RackCreateResponse(BaseModel):
+    id: int
+    name: str
+    row: str
+    col: int
+    total_u: int
+    room_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoomLayoutResponse(BaseModel):
+    room_id: int
+    room_name: str
+    grid_rows: int
+    grid_cols: int
+    racks: List[RackSummary]
