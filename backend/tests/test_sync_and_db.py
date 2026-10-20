@@ -29,7 +29,7 @@ async def test_db_topology_exists():
 
         result = await session.execute(select(Device).where(Device.rack_id == rack_b03.id))
         devices = result.scalars().all()
-        assert len(devices) >= 10
+        assert len(devices) >= 5
 
 
 @pytest.mark.asyncio

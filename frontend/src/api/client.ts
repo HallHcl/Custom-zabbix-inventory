@@ -5,6 +5,12 @@ import type {
   ZabbixHostOption,
   Device,
   RoomLayout,
+  UnassignedHostsOverview,
+  DeviceAssignFromZabbix,
+  DeviceStatusUpdate,
+  Subnet,
+  SubnetCreate,
+  SubnetGridMap,
 } from '../types'
 
 const API_BASE = '/api/v1'
@@ -175,3 +181,78 @@ export async function deleteRack(roomId: number, rackId: number): Promise<void> 
     throw new Error(errorData.detail || 'Failed to delete rack')
   }
 }
+
+// ─── Zabbix Ingestion & Reconciliation API ──────────────────
+
+export async function fetchUnassignedHosts(): Promise<UnassignedHostsOverview> {
+  const res = await fetch(`${API_BASE}/zabbix/unassigned-hosts`)
+  if (!res.ok) throw new Error('Failed to fetch unassigned Zabbix hosts')
+  return res.json()
+}
+
+export async function assignDeviceFromZabbix(payload: DeviceAssignFromZabbix): Promise<Device> {
+  const res = await fetch(`${API_BASE}/devices/assign-from-zabbix`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to slot device into rack')
+  }
+  return res.json()
+}
+
+export async function updateDeviceStatus(
+  deviceId: number,
+  status: DeviceStatusUpdate['status']
+): Promise<Device> {
+  const res = await fetch(`${API_BASE}/devices/${deviceId}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to update device operational status')
+  }
+  return res.json()
+}
+
+// ─── IPAM Lite API ──────────────────────────────────────────
+
+export async function fetchSubnets(): Promise<Subnet[]> {
+  const res = await fetch(`${API_BASE}/ipam/subnets`)
+  if (!res.ok) throw new Error('Failed to fetch subnets')
+  return res.json()
+}
+
+export async function createSubnet(payload: SubnetCreate): Promise<Subnet> {
+  const res = await fetch(`${API_BASE}/ipam/subnets`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to create subnet')
+  }
+  return res.json()
+}
+
+export async function deleteSubnet(subnetId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/ipam/subnets/${subnetId}`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to delete subnet')
+  }
+}
+
+export async function fetchSubnetGridMap(subnetId: number): Promise<SubnetGridMap> {
+  const res = await fetch(`${API_BASE}/ipam/subnets/${subnetId}/ips`)
+  if (!res.ok) throw new Error(`Failed to fetch IP grid for subnet ${subnetId}`)
+  return res.json()
+}
+

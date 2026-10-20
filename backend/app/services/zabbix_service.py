@@ -112,5 +112,43 @@ class ZabbixService:
         }
         return await self._call("item.get", params)
 
+    async def create_maintenance(self, host_ids: List[str], name: str, duration_seconds: int = 7200) -> Optional[Dict[str, Any]]:
+        """Create a temporary maintenance period in Zabbix to suppress alerts"""
+        import time
+        now = int(time.time())
+        params = {
+            "name": name,
+            "active_since": now,
+            "active_till": now + duration_seconds,
+            "hostids": host_ids,
+            "timeperiods": [
+                {
+                    "timeperiod_type": 0,  # One time only
+                    "start_date": now,
+                    "period": duration_seconds,
+                }
+            ],
+        }
+        try:
+            return await self._call("maintenance.create", params)
+        except Exception as e:
+            print(f"[Zabbix Maintenance] Warning: Could not create maintenance in Zabbix: {e}")
+            return None
+
+    async def delete_maintenance_by_name(self, name: str) -> bool:
+        """Find and remove a maintenance period by name"""
+        try:
+            records = await self._call("maintenance.get", {"filter": {"name": name}})
+            if records and isinstance(records, list):
+                maint_ids = [m.get("maintenanceid") for m in records if m.get("maintenanceid")]
+                if maint_ids:
+                    await self._call("maintenance.delete", maint_ids)
+                    return True
+            return False
+        except Exception as e:
+            print(f"[Zabbix Maintenance] Warning: Could not delete maintenance: {e}")
+            return False
+
 
 zabbix_service = ZabbixService()
+

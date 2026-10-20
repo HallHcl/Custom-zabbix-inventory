@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import type { RoomOverview, RackSummary, RackElevation as RackElevationType, Device } from './types'
-import { fetchRoomOverview, fetchRackElevation, unmountDevice } from './api/client'
+import { fetchRoomOverview, fetchRackElevation, unmountDevice, fetchUnassignedHosts } from './api/client'
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
 import { Header } from './components/layout/Header'
 import { IsometricRoom } from './components/floorplan/IsometricRoom'
@@ -11,7 +11,7 @@ import { RackInventoryNav } from './components/rack/RackInventoryNav'
 import { RackElevation } from './components/rack/RackElevation'
 import { DeviceDetailPanel } from './components/rack/DeviceDetailPanel'
 import { MountDeviceModal } from './components/rack/MountDeviceModal'
-import { DevicePageModal } from './components/rack/DevicePageModal'
+import { UnassignedHostsDrawer } from './components/rack/UnassignedHostsDrawer'
 
 // Dedicated Tab Views
 import { OverviewView } from './components/views/OverviewView'
@@ -19,8 +19,10 @@ import { RacksView } from './components/views/RacksView'
 import { DevicesView } from './components/views/DevicesView'
 import { AlertsView } from './components/views/AlertsView'
 import { ReportsView } from './components/views/ReportsView'
+import { DevicePageView } from './components/views/DevicePageView'
+import { IPAMView } from './components/views/IPAMView'
 
-const VALID_TABS: NavTab[] = ['overview', 'floor_plan', 'racks', 'devices', 'alerts', 'reports']
+const VALID_TABS: NavTab[] = ['overview', 'floor_plan', 'racks', 'devices', 'ipam', 'alerts', 'reports']
 
 export function App() {
   const [activeNav, setActiveNav] = useState<NavTab>(() => {
@@ -31,7 +33,7 @@ export function App() {
     const saved = localStorage.getItem('dc_vision_active_tab') as NavTab | null
     return saved && VALID_TABS.includes(saved) ? saved : 'overview'
   })
-  const [currentView, setCurrentView] = useState<'floor_plan' | 'rack_elevation' | 'floor_plan_editor'>('floor_plan')
+  const [currentView, setCurrentView] = useState<'floor_plan' | 'rack_elevation' | 'floor_plan_editor' | 'device_page'>('floor_plan')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Persist active navigation tab to localStorage on change
@@ -103,17 +105,29 @@ export function App() {
       .catch((err) => console.error('Failed to load rack elevation:', err))
   }, [])
 
+  // Unassigned Hosts Drawer State & Count
+  const [isUnassignedDrawerOpen, setIsUnassignedDrawerOpen] = useState(false)
+  const [unassignedCount, setUnassignedCount] = useState<number>(0)
+
+  const loadUnassignedCount = useCallback(() => {
+    fetchUnassignedHosts()
+      .then((data) => setUnassignedCount(data.total_unassigned))
+      .catch(() => {})
+  }, [])
+
   // Initial load & Polling interval
   useEffect(() => {
     loadOverview()
+    loadUnassignedCount()
     const timer = setInterval(() => {
       loadOverview()
+      loadUnassignedCount()
       if (currentView === 'rack_elevation' && activeRackId) {
         loadRackElevation(activeRackId)
       }
     }, 20000)
     return () => clearInterval(timer)
-  }, [loadOverview, loadRackElevation, currentView, activeRackId])
+  }, [loadOverview, loadRackElevation, loadUnassignedCount, currentView, activeRackId])
 
   // Top-level Navigation Switcher
   const handleSelectTab = (tab: NavTab) => {
@@ -143,6 +157,12 @@ export function App() {
     setActiveRackId(rackId)
     loadRackElevation(rackId, deviceId)
     setCurrentView('rack_elevation')
+  }
+
+  // Navigate to full-fledged Device Page
+  const handleOpenDevicePage = (deviceId: number) => {
+    setDevicePageId(deviceId)
+    setCurrentView('device_page')
   }
 
   // Unmount device
@@ -217,6 +237,8 @@ export function App() {
         list.push({ label: 'Racks (12)' })
       } else if (activeNav === 'devices') {
         list.push({ label: 'Devices' })
+      } else if (activeNav === 'ipam') {
+        list.push({ label: 'IPAM Subnets' })
       } else if (activeNav === 'alerts') {
         list.push({ label: 'Alerts' })
       } else if (activeNav === 'reports') {
@@ -245,12 +267,30 @@ export function App() {
           isLive={true}
           theme={theme}
           onToggleTheme={handleToggleTheme}
+          onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
+          unassignedCount={unassignedCount}
         />
 
         {/* Scrollable View Content */}
         <main className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* 42U Rack Elevation View (displayed when any rack is inspected) */}
-          {currentView === 'rack_elevation' && rackElevation ? (
+          {/* Full-Fledged Dedicated Device Page (Latest Data + Hardware Model + PostgreSQL CMDB) */}
+          {currentView === 'device_page' && devicePageId ? (
+            <DevicePageView
+              deviceId={devicePageId}
+              onBack={() => {
+                if (activeRackId) {
+                  setCurrentView('rack_elevation')
+                } else {
+                  setCurrentView('floor_plan')
+                  setActiveNav(returnNav)
+                }
+              }}
+              onDeviceUpdated={() => {
+                loadOverview()
+                if (activeRackId) loadRackElevation(activeRackId)
+              }}
+            />
+          ) : currentView === 'rack_elevation' && rackElevation ? (
             <div className="max-w-[1600px] mx-auto space-y-4 select-none">
               {/* Rack Header Sub-bar */}
               <div className="flex items-center justify-between pb-3 border-b border-[#394650]">
@@ -329,7 +369,7 @@ export function App() {
                   rackDevices={rackElevation.devices}
                   onSelectDevice={(dev) => setSelectedDevice(dev)}
                   onUnmountDevice={handleUnmountDevice}
-                  onOpenDevicePage={(devId) => setDevicePageId(devId)}
+                  onOpenDevicePage={handleOpenDevicePage}
                 />
               </div>
             </div>
@@ -488,13 +528,18 @@ export function App() {
             <DevicesView
               racks={overview?.racks || []}
               onOpenDeviceInRack={handleOpenDeviceInRack}
-              onOpenDevicePage={(devId) => setDevicePageId(devId)}
+              onOpenDevicePage={handleOpenDevicePage}
+              onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
+              unassignedCount={unassignedCount}
             />
+          ) : activeNav === 'ipam' ? (
+            /* TAB 5: IPAM Lite Subnets & IP Grid View */
+            <IPAMView />
           ) : activeNav === 'alerts' ? (
-            /* TAB 5: Live Zabbix Alerts View */
+            /* TAB 6: Live Zabbix Alerts View */
             <AlertsView alerts={overview?.recent_alerts || []} />
           ) : activeNav === 'reports' ? (
-            /* TAB 6: Reports & Datacenter Analytics */
+            /* TAB 7: Reports & Datacenter Analytics */
             <ReportsView overview={overview} />
           ) : null}
         </main>
@@ -513,17 +558,17 @@ export function App() {
         />
       )}
 
-      {/* Full Device Page Modal (Latest Data + Dynamic Inventory) */}
-      {devicePageId && (
-        <DevicePageModal
-          deviceId={devicePageId}
-          onClose={() => setDevicePageId(null)}
-          onDeviceUpdated={() => {
-            loadOverview()
-            if (activeRackId) loadRackElevation(activeRackId)
-          }}
-        />
-      )}
+      {/* Zabbix Unassigned Hosts Ingestion Drawer */}
+      <UnassignedHostsDrawer
+        isOpen={isUnassignedDrawerOpen}
+        onClose={() => setIsUnassignedDrawerOpen(false)}
+        racks={overview?.racks || []}
+        onDeviceAssigned={() => {
+          loadOverview()
+          loadUnassignedCount()
+          if (activeRackId) loadRackElevation(activeRackId)
+        }}
+      />
     </div>
   )
 }

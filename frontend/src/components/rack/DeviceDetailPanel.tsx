@@ -278,24 +278,37 @@ export function DeviceDetailPanel({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => onUnmountDevice(device.id)}
-              className="flex-1 py-1.5 px-2 rounded-[2px] border border-rose-800/60 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Trash2 className="w-3 h-3" />
-              <span>Unmount Slot</span>
-            </button>
-            <a
-              href="http://192.168.1.190"
-              target="_blank"
-              rel="noreferrer"
-              className="flex-1 py-1.5 px-2 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-white text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <ExternalLink className="w-3 h-3 text-[#8bd7d1]" />
-              <span>Zabbix Host</span>
-            </a>
+          <div className="space-y-2 pt-1">
+            {onOpenDevicePage && (
+              <button
+                type="button"
+                onClick={() => onOpenDevicePage(device.id)}
+                className="w-full py-2 px-3 rounded-[2px] bg-[#8bd7d1] hover:bg-[#caedde] text-[#161c20] text-xs font-mono font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>Open Full Device Page (Latest Data &amp; Specs)</span>
+              </button>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => onUnmountDevice(device.id)}
+                className="flex-1 py-1.5 px-2 rounded-[2px] border border-rose-800/60 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Unmount Slot</span>
+              </button>
+              <a
+                href={`http://192.168.1.85:8080/zabbix.php?action=latest.view&filter_hostids%5B%5D=${device.zabbix_host_id || ''}&filter_set=1`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 py-1.5 px-2 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#50626f] text-[#caedde] text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <ExternalLink className="w-3 h-3 text-[#8bd7d1]" />
+                <span>Zabbix (.85)</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>

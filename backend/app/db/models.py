@@ -96,9 +96,36 @@ class Device(Base):
     # Zabbix Integration Link
     zabbix_host_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
     
+    # Operational Lifecycle Status
+    status: Mapped[str] = mapped_column(String(20), default="Active")  # Active, Maintenance, Planned, Decommissioned
+    
     tags: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
     custom_fields: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     # Relationships
     rack: Mapped["Rack"] = relationship("Rack", back_populates="devices")
+
+    def __init__(self, **kw):
+        kw.setdefault("status", "Active")
+        kw.setdefault("device_type", "Server")
+        kw.setdefault("height_u", 1)
+        kw.setdefault("position_face", "Front")
+        kw.setdefault("tags", {})
+        kw.setdefault("custom_fields", {})
+        super().__init__(**kw)
+
+
+
+class Subnet(Base):
+    __tablename__ = "subnets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g. "App Servers VLAN"
+    cidr: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)  # e.g. "10.10.20.0/24"
+    vlan_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # e.g. 20
+    gateway: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)  # e.g. "10.10.20.1"
+    dns_servers: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # e.g. "1.1.1.1, 8.8.8.8"
+    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -30,6 +31,7 @@ class DeviceBase(BaseModel):
     ip_address: Optional[str] = None
     serial_number: Optional[str] = None
     zabbix_host_id: Optional[str] = None
+    status: str = "Active"  # Active, Maintenance, Planned, Decommissioned
     tags: Optional[Dict[str, Any]] = None
     custom_fields: Optional[Dict[str, Any]] = None
 
@@ -42,6 +44,7 @@ class DeviceResponse(DeviceBase):
     id: int
     rack_id: int
     zabbix_status: Optional[ZabbixStatusSummary] = None
+
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -113,6 +116,8 @@ class ZabbixLatestItem(BaseModel):
     lastvalue: Optional[str] = None
     units: Optional[str] = None
     lastclock: Optional[str] = None
+    category: str = "System"
+    change_delta: Optional[str] = None
 
 
 class DeviceOverviewResponse(BaseModel):
@@ -130,6 +135,7 @@ class DeviceOverviewResponse(BaseModel):
     ip_address: Optional[str] = None
     serial_number: Optional[str] = None
     zabbix_host_id: Optional[str] = None
+    status: str = "Active"
     tags: Optional[Dict[str, Any]] = None
     custom_fields: Optional[Dict[str, Any]] = None
     # Live Telemetry
@@ -138,6 +144,8 @@ class DeviceOverviewResponse(BaseModel):
     temperature_c: Optional[float] = None
     cpu_history: List[DeviceMetricHistoryPoint] = []
     active_alerts: List[Dict[str, Any]] = []
+    # Hardware Specifications & Visual Chassis Identification
+    chassis_specs: Optional[Dict[str, Any]] = None
     # Zabbix Latest Data Items (Full Metric List)
     latest_data_items: List[ZabbixLatestItem] = []
 
@@ -188,3 +196,94 @@ class RoomLayoutResponse(BaseModel):
     grid_rows: int
     grid_cols: int
     racks: List[RackSummary]
+
+
+# ─── IPAM Lite Schemas ──────────────────────────────────────────
+
+class SubnetBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    cidr: str = Field(..., min_length=7, max_length=50)  # e.g. "10.10.20.0/24"
+    vlan_id: Optional[int] = None
+    gateway: Optional[str] = None
+    dns_servers: Optional[str] = None
+    description: Optional[str] = None
+
+
+class SubnetCreate(SubnetBase):
+    pass
+
+
+class SubnetUpdate(BaseModel):
+    name: Optional[str] = None
+    vlan_id: Optional[int] = None
+    gateway: Optional[str] = None
+    dns_servers: Optional[str] = None
+    description: Optional[str] = None
+
+
+class SubnetResponse(SubnetBase):
+    id: int
+    created_at: Optional[datetime] = None
+    total_ips: int = 0
+    used_ips: int = 0
+    free_ips: int = 0
+    utilization_percent: float = 0.0
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SubnetIPDetail(BaseModel):
+    ip: str
+    status: str  # "assigned", "zabbix_monitored", "gateway", "available"
+    device_id: Optional[int] = None
+    device_name: Optional[str] = None
+    zabbix_host_id: Optional[str] = None
+    is_gateway: bool = False
+
+
+# ─── Zabbix Unassigned Host Schemas ──────────────────────────────
+
+class UnassignedHostResponse(BaseModel):
+    hostid: str
+    name: str
+    technical_name: str
+    ip: str = ""
+    dns: Optional[str] = None
+    port: Optional[str] = None
+    interface_type: str = "Agent"  # Agent, SNMP, IPMI, JMX
+    groups: List[str] = []
+    tags: Dict[str, str] = {}
+    suggested_device_type: str = "Server"  # Server, Switch, Firewall, Storage, UPS
+    status: str = "ok"  # ok, warning, critical
+    problems_count: int = 0
+
+
+class UnassignedHostsOverview(BaseModel):
+    total_unassigned: int
+    hosts: List[UnassignedHostResponse]
+    cached: bool = False
+
+
+# ─── Device Assignment & Maintenance Schemas ─────────────────────
+
+class DeviceAssignFromZabbix(BaseModel):
+    zabbix_host_id: str
+    rack_id: int
+    start_u: int = Field(..., ge=1, le=42)
+    height_u: int = Field(default=1, ge=1, le=42)
+    position_face: str = "Front"  # Front or Rear
+    name: Optional[str] = None
+    device_type: Optional[str] = None
+    model: Optional[str] = None
+    manufacturer: Optional[str] = None
+    status: str = "Active"  # Active, Maintenance, Planned, Decommissioned
+    custom_fields: Optional[Dict[str, Any]] = None
+    tags: Optional[Dict[str, Any]] = None
+
+
+class DeviceStatusUpdate(BaseModel):
+    status: str = Field(..., pattern="^(Active|Maintenance|Planned|Decommissioned)$")
+    maintenance_duration_hours: int = 2
+
+
+

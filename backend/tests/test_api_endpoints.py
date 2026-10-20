@@ -42,7 +42,7 @@ async def test_api_racks_and_elevation():
         assert len(elev["devices"]) > 0
 
         # Check that devices have zabbix_status enriched
-        srv_app = next((d for d in elev["devices"] if "APP" in d["name"] or "WEB" in d["name"]), None)
+        srv_app = next((d for d in elev["devices"] if any(k in d["name"] for k in ["SRV", "K8S", "DB", "APP", "PP"])), None)
         assert srv_app is not None
         assert "start_u" in srv_app
         assert "height_u" in srv_app
@@ -57,12 +57,12 @@ async def test_api_device_mount_and_collision():
         rack_b03 = next((r for r in racks_resp.json() if "B03" in r["name"]))
         rack_id = rack_b03["id"]
 
-        # 1. Test collision (U27 is occupied by SRV-APP-03)
+        # 1. Test collision (U26 is occupied by DC1-SRV-K8S-M01)
         collision_payload = {
             "rack_id": rack_id,
             "name": "TEST-COLLISION",
             "device_type": "Server",
-            "start_u": 27,
+            "start_u": 26,
             "height_u": 1,
             "position_face": "Front",
         }
@@ -70,13 +70,13 @@ async def test_api_device_mount_and_collision():
         assert res_collision.status_code == 400
         assert "collision" in res_collision.json()["detail"].lower()
 
-        # 2. Mount into free slot (e.g. U15)
+        # 2. Mount into free slot (e.g. U2)
         valid_payload = {
             "rack_id": rack_id,
             "name": "SRV-TEST-MOUNT",
             "device_type": "Server",
             "model": "PowerEdge R450",
-            "start_u": 15,
+            "start_u": 2,
             "height_u": 1,
             "position_face": "Front",
             "ip_address": "10.10.20.99",

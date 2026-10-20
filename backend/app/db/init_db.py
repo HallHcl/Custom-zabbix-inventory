@@ -1,15 +1,22 @@
 import asyncio
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, text
 from backend.app.db.session import engine, AsyncSessionLocal, Base
-from backend.app.db.models import Site, Room, Rack, Device
+from backend.app.db.models import Site, Room, Rack, Device, Subnet
 from backend.app.services.zabbix_service import zabbix_service
 
 
 async def init_tables():
-    """Create all tables in PostgreSQL"""
+    """Create all tables in PostgreSQL and apply schema migrations"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("[DB Init] All database tables created successfully.")
+        await conn.execute(
+            text("ALTER TABLE devices ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'")
+        )
+        await conn.execute(
+            text("UPDATE devices SET status = 'Active' WHERE status IS NULL")
+        )
+    print("[DB Init] All database tables created and schema migrated successfully.")
+
 
 
 async def seed_initial_data(reset_devices: bool = False):
@@ -483,8 +490,43 @@ async def seed_initial_data(reset_devices: bool = False):
             await session.flush()
             print(f"[DB Seed] Successfully seeded {len(devices_to_create)} devices across Racks with Dynamic Custom Fields.")
 
+        # Check Subnets
+        result = await session.execute(select(Subnet))
+        existing_subnets = result.scalars().all()
+        if not existing_subnets:
+            default_subnets = [
+                Subnet(
+                    name="Application Servers VLAN",
+                    cidr="10.220.50.0/24",
+                    vlan_id=50,
+                    gateway="10.220.50.1",
+                    dns_servers="10.220.10.2, 1.1.1.1",
+                    description="Production App and DB Servers in DC1",
+                ),
+                Subnet(
+                    name="Management Network VLAN",
+                    cidr="192.168.100.0/24",
+                    vlan_id=100,
+                    gateway="192.168.100.1",
+                    dns_servers="1.1.1.1, 8.8.8.8",
+                    description="Out-of-band management (iDRAC, iLO, BMC, IPMI)",
+                ),
+                Subnet(
+                    name="Storage SAN VLAN",
+                    cidr="172.16.50.0/24",
+                    vlan_id=500,
+                    gateway="172.16.50.1",
+                    dns_servers="1.1.1.1",
+                    description="iSCSI / NVMe-oF High-Speed Storage Interconnect",
+                ),
+            ]
+            session.add_all(default_subnets)
+            await session.flush()
+            print(f"[DB Seed] Seeded {len(default_subnets)} IPAM Subnets.")
+
         await session.commit()
         print("[DB Seed] Database initialization and seed completed.")
+
 
 
 if __name__ == "__main__":

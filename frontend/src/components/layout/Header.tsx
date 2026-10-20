@@ -1,4 +1,4 @@
-import { Search, Home, ChevronRight, Sun, Moon, Radio } from 'lucide-react'
+import { Search, Home, ChevronRight, Sun, Moon, Radio, Inbox } from 'lucide-react'
 
 interface HeaderProps {
   breadcrumbs: { label: string; onClick?: () => void }[]
@@ -7,6 +7,8 @@ interface HeaderProps {
   isLive?: boolean
   theme?: 'dark' | 'light'
   onToggleTheme?: () => void
+  onOpenUnassigned?: () => void
+  unassignedCount?: number
 }
 
 export function Header({
@@ -16,6 +18,8 @@ export function Header({
   isLive = true,
   theme = 'dark',
   onToggleTheme,
+  onOpenUnassigned,
+  unassignedCount,
 }: HeaderProps) {
   return (
     <header className="h-13 shrink-0 border-b border-[#394650] bg-[#20282f] px-4 flex items-center justify-between z-10 select-none">
@@ -61,6 +65,24 @@ export function Header({
             {isLive ? 'TELEMETRY LIVE' : 'TELEMETRY PAUSED'}
           </span>
         </div>
+
+        {/* Zabbix Unassigned Hosts Ingestion Drawer Trigger */}
+        {onOpenUnassigned && (
+          <button
+            type="button"
+            onClick={onOpenUnassigned}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#8bd7d1] text-xs text-[#caedde] hover:text-white transition-colors cursor-pointer"
+            title="Open Zabbix Unassigned Hosts Ingestion Queue"
+          >
+            <Inbox className="w-3.5 h-3.5 text-[#8bd7d1]" />
+            <span className="text-[11px] font-mono hidden sm:inline">Unassigned</span>
+            {typeof unassignedCount === 'number' && unassignedCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-[2px] bg-cyan-950 border border-cyan-700 text-[10px] font-mono text-cyan-300 font-bold">
+                {unassignedCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* High-Contrast / Tactical Theme Switcher */}
         {onToggleTheme && (

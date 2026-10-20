@@ -8,6 +8,7 @@ import {
   AlertOctagon,
   CheckCircle2,
   Filter,
+  Inbox,
 } from 'lucide-react'
 import type { Device, RackSummary } from '../../types'
 import { fetchDevices } from '../../api/client'
@@ -16,9 +17,17 @@ interface DevicesViewProps {
   racks: RackSummary[]
   onOpenDeviceInRack: (rackId: number, deviceId: number) => void
   onOpenDevicePage?: (deviceId: number) => void
+  onOpenUnassigned?: () => void
+  unassignedCount?: number
 }
 
-export function DevicesView({ racks, onOpenDeviceInRack, onOpenDevicePage }: DevicesViewProps) {
+export function DevicesView({
+  racks,
+  onOpenDeviceInRack,
+  onOpenDevicePage,
+  onOpenUnassigned,
+  unassignedCount,
+}: DevicesViewProps) {
   const [devices, setDevices] = useState<Device[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -96,6 +105,22 @@ export function DevicesView({ racks, onOpenDeviceInRack, onOpenDevicePage }: Dev
               ))}
             </select>
           </div>
+
+          {onOpenUnassigned && (
+            <button
+              type="button"
+              onClick={onOpenUnassigned}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[3px] bg-[#34424b] hover:bg-[#435561] border border-[#8bd7d1] text-xs font-mono text-[#8bd7d1] hover:text-white transition-colors cursor-pointer"
+            >
+              <Inbox className="w-3.5 h-3.5" />
+              <span>Unassigned Queue</span>
+              {typeof unassignedCount === 'number' && unassignedCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-[2px] bg-cyan-950 border border-cyan-700 text-[10px] text-cyan-300 font-bold">
+                  {unassignedCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -204,9 +229,10 @@ export function DevicesView({ racks, onOpenDeviceInRack, onOpenDevicePage }: Dev
                           <button
                             type="button"
                             onClick={() => onOpenDevicePage(d.id)}
-                            className="px-2 py-1 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] text-xs font-mono transition-colors cursor-pointer"
+                            className="px-2.5 py-1 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] text-xs font-mono font-bold transition-colors cursor-pointer"
+                            title="Open full Device Page with Zabbix latest data and specs"
                           >
-                            <span>Diag</span>
+                            <span>Device Page</span>
                           </button>
                         )}
                         <button
