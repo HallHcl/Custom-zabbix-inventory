@@ -246,17 +246,13 @@ export interface SubnetCreate {
   description?: string
 }
 
-export interface SubnetIPAllocation {
+export interface SubnetIPDetail {
   ip: string
-  status: 'allocated' | 'gateway' | 'free'
-  device_id?: number
-  device_name?: string
-  device_type?: string
-  zabbix_host_id?: string
+  status: 'assigned' | 'zabbix_monitored' | 'gateway' | 'available'
+  device_id?: number | null
+  device_name?: string | null
+  zabbix_host_id?: string | null
+  is_gateway: boolean
 }
 
-export interface SubnetGridMap {
-  subnet: Subnet
-  ips: SubnetIPAllocation[]
-}
 

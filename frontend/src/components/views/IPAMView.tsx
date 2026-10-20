@@ -8,8 +8,8 @@ import {
   X,
   RefreshCw,
 } from 'lucide-react'
-import type { Subnet, SubnetCreate, SubnetGridMap, SubnetIPAllocation } from '../../types'
-import { fetchSubnets, createSubnet, deleteSubnet, fetchSubnetGridMap } from '../../api/client'
+import type { Subnet, SubnetCreate, SubnetIPDetail } from '../../types'
+import { fetchSubnets, createSubnet, deleteSubnet, fetchSubnetIPs } from '../../api/client'
 
 export function IPAMView() {
   const [subnets, setSubnets] = useState<Subnet[]>([])
@@ -18,16 +18,16 @@ export function IPAMView() {
 
   // Selected subnet for grid view
   const [selectedSubnetId, setSelectedSubnetId] = useState<number | null>(null)
-  const [gridData, setGridData] = useState<SubnetGridMap | null>(null)
+  const [ipList, setIpList] = useState<SubnetIPDetail[]>([])
   const [gridLoading, setGridLoading] = useState(false)
   const [gridError, setGridError] = useState<string | null>(null)
 
   // Filter & Search inside Subnet Grid
-  const [statusFilter, setStatusFilter] = useState<'all' | 'allocated' | 'gateway' | 'free'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'allocated' | 'gateway' | 'available'>('all')
   const [ipSearch, setIpSearch] = useState('')
 
   // Selected IP for detail inspect card
-  const [inspectIP, setInspectIP] = useState<SubnetIPAllocation | null>(null)
+  const [inspectIP, setInspectIP] = useState<SubnetIPDetail | null>(null)
 
   // Add Subnet Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -38,6 +38,10 @@ export function IPAMView() {
   const [newDesc, setNewDesc] = useState('')
   const [createLoading, setCreateLoading] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+
+  const selectedSubnet = useMemo(() => {
+    return subnets.find((s) => s.id === selectedSubnetId) || null
+  }, [subnets, selectedSubnetId])
 
   const loadSubnets = async (selectId?: number) => {
     setLoading(true)
@@ -51,7 +55,7 @@ export function IPAMView() {
         loadSubnetGrid(targetId)
       } else {
         setSelectedSubnetId(null)
-        setGridData(null)
+        setIpList([])
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load subnets')
@@ -64,10 +68,12 @@ export function IPAMView() {
     setGridLoading(true)
     setGridError(null)
     try {
-      const data = await fetchSubnetGridMap(subnetId)
-      setGridData(data)
-      if (data.ips.length > 0) {
-        const firstAlloc = data.ips.find((i) => i.status === 'allocated') || data.ips[0]
+      const data = await fetchSubnetIPs(subnetId)
+      setIpList(data)
+      if (data.length > 0) {
+        const firstAlloc =
+          data.find((i) => i.status === 'assigned' || i.status === 'zabbix_monitored') ||
+          data[0]
         setInspectIP(firstAlloc)
       } else {
         setInspectIP(null)
@@ -100,7 +106,7 @@ export function IPAMView() {
           handleSelectSubnet(nextSubnets[0])
         } else {
           setSelectedSubnetId(null)
-          setGridData(null)
+          setIpList([])
         }
       }
     } catch (err: any) {
@@ -139,18 +145,23 @@ export function IPAMView() {
 
   // Filtered IPs
   const filteredIPs = useMemo(() => {
-    if (!gridData) return []
-    return gridData.ips.filter((ip) => {
-      if (statusFilter !== 'all' && ip.status !== statusFilter) return false
+    return ipList.filter((ip) => {
+      const isAllocated = ip.status === 'assigned' || ip.status === 'zabbix_monitored'
+      const isGateway = ip.status === 'gateway' || ip.is_gateway
+      const isAvailable = ip.status === 'available'
+
+      if (statusFilter === 'allocated' && !isAllocated) return false
+      if (statusFilter === 'gateway' && !isGateway) return false
+      if (statusFilter === 'available' && !isAvailable) return false
+
       if (!ipSearch) return true
       const q = ipSearch.toLowerCase()
       return (
         ip.ip.includes(q) ||
-        (ip.device_name && ip.device_name.toLowerCase().includes(q)) ||
-        (ip.device_type && ip.device_type.toLowerCase().includes(q))
+        (ip.device_name && ip.device_name.toLowerCase().includes(q))
       )
     })
-  }, [gridData, statusFilter, ipSearch])
+  }, [ipList, statusFilter, ipSearch])
 
   // Summary Metrics
   const totalSubnets = subnets.length
@@ -340,24 +351,24 @@ export function IPAMView() {
               <AlertCircle className="w-6 h-6 mx-auto text-rose-400" />
               <div>{gridError}</div>
             </div>
-          ) : gridData ? (
+          ) : selectedSubnet ? (
             <div className="noc-panel p-4 space-y-4">
               {/* Grid Header Info */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#394650]">
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-white text-sm font-mono">
-                      {gridData.subnet.name} ({gridData.subnet.cidr})
+                      {selectedSubnet.name} ({selectedSubnet.cidr})
                     </h3>
-                    {gridData.subnet.vlan_id && (
+                    {selectedSubnet.vlan_id && (
                       <span className="px-1.5 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[10px] font-mono text-[#8bd7d1]">
-                        VLAN {gridData.subnet.vlan_id}
+                        VLAN {selectedSubnet.vlan_id}
                       </span>
                     )}
                   </div>
                   <div className="text-xs text-[#85a6b1] font-mono mt-0.5">
-                    Gateway: {gridData.subnet.gateway || 'None'} • {gridData.subnet.used_ips} of{' '}
-                    {gridData.subnet.total_ips} IPs In Use ({gridData.subnet.utilization_percent}%)
+                    Gateway: {selectedSubnet.gateway || 'None'} • {selectedSubnet.used_ips} of{' '}
+                    {selectedSubnet.total_ips} IPs In Use ({selectedSubnet.utilization_percent}%)
                   </div>
                 </div>
 
@@ -379,11 +390,11 @@ export function IPAMView() {
                     onChange={(e) => setStatusFilter(e.target.value as any)}
                     className="bg-[#273139] border border-[#394650] rounded-[2px] px-2 py-1 text-xs text-[#caedde] font-mono focus:outline-none focus:border-[#8bd7d1] cursor-pointer"
                   >
-                    <option value="all">All IPs ({gridData.ips.length})</option>
-                    <option value="allocated">Allocated ({gridData.subnet.used_ips})</option>
+                    <option value="all">All IPs ({ipList.length})</option>
+                    <option value="allocated">Allocated ({selectedSubnet.used_ips})</option>
                     <option value="gateway">Gateway</option>
-                    <option value="free">
-                      Free ({gridData.subnet.total_ips - gridData.subnet.used_ips})
+                    <option value="available">
+                      Free ({selectedSubnet.total_ips - selectedSubnet.used_ips})
                     </option>
                   </select>
                 </div>
@@ -408,15 +419,18 @@ export function IPAMView() {
               {/* High-Density IP Matrix (Squares) */}
               <div className="p-3 bg-[#171e23] border border-[#394650] rounded-[3px]">
                 <div className="text-[10px] font-mono text-[#85a6b1] mb-2 uppercase tracking-wider">
-                  Host Allocation Map ({gridData.ips.length} Host Addresses)
+                  Host Allocation Map ({ipList.length} Host Addresses)
                 </div>
                 <div className="grid grid-cols-8 sm:grid-cols-16 md:grid-cols-24 lg:grid-cols-32 gap-1 max-h-56 overflow-y-auto p-1">
-                  {gridData.ips.map((ipObj) => {
+                  {ipList.map((ipObj) => {
                     const isInspect = inspectIP?.ip === ipObj.ip
+                    const isGw = ipObj.status === 'gateway' || ipObj.is_gateway
+                    const isAlloc = ipObj.status === 'assigned' || ipObj.status === 'zabbix_monitored'
+
                     let bg = 'bg-[#253038] hover:bg-[#34424b] text-zinc-500'
-                    if (ipObj.status === 'gateway') {
+                    if (isGw) {
                       bg = 'bg-sky-500 text-black font-bold'
-                    } else if (ipObj.status === 'allocated') {
+                    } else if (isAlloc) {
                       bg = 'bg-[#8bd7d1] text-black font-bold'
                     }
 
@@ -449,9 +463,9 @@ export function IPAMView() {
                       <span className="font-bold text-white text-sm">{inspectIP.ip}</span>
                       <span
                         className={`px-1.5 py-0.2 rounded-[2px] text-[9px] font-bold uppercase ${
-                          inspectIP.status === 'gateway'
+                          inspectIP.status === 'gateway' || inspectIP.is_gateway
                             ? 'bg-sky-950 text-sky-300 border border-sky-700'
-                            : inspectIP.status === 'allocated'
+                            : inspectIP.status === 'assigned' || inspectIP.status === 'zabbix_monitored'
                             ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
                             : 'bg-[#273139] text-[#85a6b1] border border-[#394650]'
                         }`}
@@ -465,7 +479,6 @@ export function IPAMView() {
                         <span>
                           Equipment: <strong>{inspectIP.device_name}</strong>
                         </span>
-                        {inspectIP.device_type && <span>Category: {inspectIP.device_type}</span>}
                         {inspectIP.zabbix_host_id && (
                           <span className="text-[#8bd7d1]">
                             Zabbix Host ID: {inspectIP.zabbix_host_id}
@@ -474,7 +487,7 @@ export function IPAMView() {
                       </div>
                     ) : (
                       <div className="text-[11px] text-[#85a6b1]">
-                        {inspectIP.status === 'gateway'
+                        {inspectIP.status === 'gateway' || inspectIP.is_gateway
                           ? 'Designated Network Gateway Interface'
                           : 'Unallocated address available in subnet pool'}
                       </div>
@@ -497,44 +510,45 @@ export function IPAMView() {
                       <th className="py-2 px-3">IP Address</th>
                       <th className="py-2 px-3">Status</th>
                       <th className="py-2 px-3">Assigned Hardware</th>
-                      <th className="py-2 px-3">Device Category</th>
                       <th className="py-2 px-3">Zabbix Sync</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#394650] bg-[#20282f]">
-                    {filteredIPs.slice(0, 50).map((ipObj) => (
-                      <tr
-                        key={ipObj.ip}
-                        onClick={() => setInspectIP(ipObj)}
-                        className={`hover:bg-[#273139] cursor-pointer transition-colors ${
-                          inspectIP?.ip === ipObj.ip ? 'bg-[#27333d]' : ''
-                        }`}
-                      >
-                        <td className="py-2 px-3 font-semibold text-white">{ipObj.ip}</td>
-                        <td className="py-2 px-3">
-                          <span
-                            className={`px-1.5 py-0.2 rounded-[2px] text-[9px] uppercase font-bold ${
-                              ipObj.status === 'gateway'
-                                ? 'bg-sky-950 text-sky-300 border border-sky-700'
-                                : ipObj.status === 'allocated'
-                                ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
-                                : 'bg-[#273139] text-[#85a6b1]'
-                            }`}
-                          >
-                            {ipObj.status}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-[#caedde]">
-                          {ipObj.device_name || <span className="text-[#85a6b1]">—</span>}
-                        </td>
-                        <td className="py-2 px-3 text-[#85a6b1]">
-                          {ipObj.device_type || '—'}
-                        </td>
-                        <td className="py-2 px-3 font-mono text-[11px] text-[#8bd7d1]">
-                          {ipObj.zabbix_host_id ? `Host ${ipObj.zabbix_host_id}` : '—'}
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredIPs.slice(0, 50).map((ipObj) => {
+                      const isGw = ipObj.status === 'gateway' || ipObj.is_gateway
+                      const isAlloc = ipObj.status === 'assigned' || ipObj.status === 'zabbix_monitored'
+
+                      return (
+                        <tr
+                          key={ipObj.ip}
+                          onClick={() => setInspectIP(ipObj)}
+                          className={`hover:bg-[#273139] cursor-pointer transition-colors ${
+                            inspectIP?.ip === ipObj.ip ? 'bg-[#27333d]' : ''
+                          }`}
+                        >
+                          <td className="py-2 px-3 font-semibold text-white">{ipObj.ip}</td>
+                          <td className="py-2 px-3">
+                            <span
+                              className={`px-1.5 py-0.2 rounded-[2px] text-[9px] uppercase font-bold ${
+                                isGw
+                                  ? 'bg-sky-950 text-sky-300 border border-sky-700'
+                                  : isAlloc
+                                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                                  : 'bg-[#273139] text-[#85a6b1]'
+                              }`}
+                            >
+                              {ipObj.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-[#caedde]">
+                            {ipObj.device_name || <span className="text-[#85a6b1]">—</span>}
+                          </td>
+                          <td className="py-2 px-3 font-mono text-[11px] text-[#8bd7d1]">
+                            {ipObj.zabbix_host_id ? `Host ${ipObj.zabbix_host_id}` : '—'}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
                 {filteredIPs.length > 50 && (

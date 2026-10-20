@@ -10,7 +10,7 @@ import type {
   DeviceStatusUpdate,
   Subnet,
   SubnetCreate,
-  SubnetGridMap,
+  SubnetIPDetail,
 } from '../types'
 
 const API_BASE = '/api/v1'
@@ -250,9 +250,10 @@ export async function deleteSubnet(subnetId: number): Promise<void> {
   }
 }
 
-export async function fetchSubnetGridMap(subnetId: number): Promise<SubnetGridMap> {
-  const res = await fetch(`${API_BASE}/ipam/subnets/${subnetId}/ips`)
+export async function fetchSubnetIPs(subnetId: number): Promise<SubnetIPDetail[]> {
+  const res = await fetch(`${API_BASE}/ipam/subnets/${subnetId}/ips?limit=1024`)
   if (!res.ok) throw new Error(`Failed to fetch IP grid for subnet ${subnetId}`)
   return res.json()
 }
+
 
