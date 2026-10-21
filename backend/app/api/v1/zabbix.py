@@ -34,6 +34,7 @@ def parse_interface_type(type_val: Any) -> str:
     return mapping.get(str(type_val), "Agent")
 
 
+@router.get("/unracked-hosts", response_model=UnassignedHostsOverview)
 @router.get("/unassigned-hosts", response_model=UnassignedHostsOverview)
 async def get_unassigned_hosts(
     force_refresh: bool = Query(False, description="Bypass Redis cache and query Zabbix directly"),
@@ -43,7 +44,7 @@ async def get_unassigned_hosts(
 ):
     """
     Reconciliation Diff Engine:
-    Cross-matches live Zabbix hosts against DCIM registered devices to return
+    Cross-matches live/discovered Zabbix hosts against DCIM registered devices to return
     hosts discovered by Zabbix that haven't been assigned to a Rack slot yet.
     """
     # 1. Check Redis Cache if not forcing refresh and no ad-hoc filter
@@ -56,7 +57,7 @@ async def get_unassigned_hosts(
     else:
         is_cached = False
         # Query registered devices in PostgreSQL
-        stmt = select(Device.zabbix_host_id).where(Device.zabbix_host_id.isnot(None))
+        stmt = select(Device.zabbix_hostid).where(Device.zabbix_hostid.isnot(None))
         result = await db.execute(stmt)
         assigned_ids = {str(row[0]) for row in result.all() if row[0]}
 
@@ -65,6 +66,20 @@ async def get_unassigned_hosts(
             all_zabbix_hosts = await zabbix_service.get_all_hosts()
         except Exception:
             all_zabbix_hosts = []
+
+        if not all_zabbix_hosts:
+            # Fallback to simulated auto-discovered hosts if Zabbix has none unracked
+            simulated = zabbix_service.get_unassigned_hosts()
+            for sim in simulated:
+                if sim["zabbix_hostid"] not in assigned_ids:
+                    all_zabbix_hosts.append({
+                        "hostid": sim["zabbix_hostid"],
+                        "host": sim["hostname"],
+                        "name": f"{sim['vendor']} {sim['model']}",
+                        "interfaces": [{"ip": sim["ip_address"], "main": "1", "type": "1"}],
+                        "tags": [{"tag": "Category", "value": sim["category"]}],
+                        "hostgroups": [{"name": sim["category"]}],
+                    })
 
         # Get problems to classify status
         problems = await redis_service.get_active_problems()

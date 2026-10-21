@@ -31,6 +31,13 @@ class RedisService:
             self._client = None
             self._loop = None
 
+    async def ping(self) -> bool:
+        try:
+            client = self.get_client()
+            return bool(await client.ping())
+        except Exception:
+            return False
+
     async def set_json(self, key: str, value: Any, ttl: int = 60):
         client = self.get_client()
         await client.set(key, json.dumps(value), ex=ttl)
@@ -86,10 +93,38 @@ class RedisService:
     async def get_unassigned_hosts(self) -> Optional[Dict[str, Any]]:
         return await self.get_json("zabbix:unassigned_hosts")
 
-    async def invalidate_unassigned_hosts(self):
-        client = self.get_client()
-        await client.delete("zabbix:unassigned_hosts")
+    # ========================================================================
+    # Digital Twin Real-Time Telemetry Methods
+    # ========================================================================
+    async def cache_rack_telemetry(self, rack_id: str, data: Dict[str, Any], ttl: int = 120):
+        await self.set_json(f"twin:rack:{rack_id}:telemetry", data, ttl=ttl)
 
+    async def get_rack_telemetry(self, rack_id: str) -> Optional[Dict[str, Any]]:
+        return await self.get_json(f"twin:rack:{rack_id}:telemetry")
+
+    async def cache_all_racks_telemetry(self, data: Dict[str, Any], ttl: int = 120):
+        await self.set_json("twin:racks:summary", data, ttl=ttl)
+
+    async def get_all_racks_telemetry(self) -> Optional[Dict[str, Any]]:
+        return await self.get_json("twin:racks:summary")
+
+    async def cache_device_telemetry(self, device_id: str, data: Dict[str, Any], ttl: int = 120):
+        await self.set_json(f"twin:device:{device_id}:telemetry", data, ttl=ttl)
+
+    async def get_device_telemetry(self, device_id: str) -> Optional[Dict[str, Any]]:
+        return await self.get_json(f"twin:device:{device_id}:telemetry")
+
+    async def cache_facility_telemetry(self, data: Dict[str, Any], ttl: int = 120):
+        await self.set_json("twin:facility:telemetry", data, ttl=ttl)
+
+    async def get_facility_telemetry(self) -> Optional[Dict[str, Any]]:
+        return await self.get_json("twin:facility:telemetry")
+
+    async def publish_live_event(self, channel: str, message: Any):
+        """Publish real-time telemetry or alert delta onto Redis Pub/Sub"""
+        client = self.get_client()
+        payload = json.dumps(message) if not isinstance(message, str) else message
+        await client.publish(channel, payload)
 
 
 redis_service = RedisService()

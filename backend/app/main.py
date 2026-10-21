@@ -10,15 +10,19 @@ from backend.app.services.sync_service import sync_service
 from backend.app.services.redis_service import redis_service
 
 
+from backend.app.workers.zabbix_poller import poll_once
+from backend.app.api.websocket import router as ws_router, manager as ws_manager
+
+
 async def background_zabbix_poller():
-    """Background worker that continuously syncs Zabbix to Redis"""
+    """Background worker that continuously collects and refreshes Digital Twin telemetry"""
     while True:
         try:
-            await sync_service.sync_zabbix_cache()
+            await poll_once()
         except asyncio.CancelledError:
             break
         except Exception as e:
-            print(f"[Background Sync Error] {e}")
+            print(f"[Background Telemetry Poller Error] {e}")
         await asyncio.sleep(settings.ZABBIX_SYNC_INTERVAL_SECONDS)
 
 
@@ -28,7 +32,7 @@ async def lifespan(app: FastAPI):
     try:
         await init_tables()
         await seed_initial_data()
-        await sync_service.sync_zabbix_cache()
+        await poll_once()
     except Exception as e:
         print(f"[Lifespan Startup Error] {e}")
 
@@ -42,6 +46,7 @@ async def lifespan(app: FastAPI):
         await poller_task
     except asyncio.CancelledError:
         pass
+    await ws_manager.stop()
     await redis_service.close()
 
 
@@ -62,16 +67,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from sqlalchemy import text
+from backend.app.db.session import engine
+
+# Include WebSocket Routers (at root /ws/live-twin and /api/v1/ws/live-twin)
+app.include_router(ws_router)
+app.include_router(ws_router, prefix=settings.API_V1_PREFIX)
+
 # Include API v1 Routers
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health")
+@app.get(f"{settings.API_V1_PREFIX}/health")
 async def health_check():
+    db_status = "connected"
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"disconnected: {str(e)}"
+
+    redis_ok = await redis_service.ping()
+    redis_status = "connected" if redis_ok else "disconnected"
+
+    is_healthy = (db_status == "connected") and redis_ok
+
     return {
-        "status": "healthy",
-        "app": settings.APP_NAME,
+        "status": "healthy" if is_healthy else "degraded",
+        "app": "NexusTwin DCIM & Digital Twin",
         "version": settings.APP_VERSION,
+        "database": db_status,
+        "redis": redis_status,
+        "zabbix_mode": settings.ZABBIX_MODE,
         "environment": settings.APP_ENV,
     }
 
@@ -80,5 +108,5 @@ async def health_check():
 async def api_status():
     return {
         "status": "ok",
-        "service": "dc_vision_backend",
+        "service": "nexustwin_backend",
     }
