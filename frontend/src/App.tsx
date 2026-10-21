@@ -5,7 +5,7 @@ import { fetchRoomOverview, fetchRackElevation, unmountDevice, fetchUnassignedHo
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
 import { Header } from './components/layout/Header'
 import { IsometricRoom } from './components/floorplan/IsometricRoom'
-import { DataCenter3DView } from './components/floorplan/DataCenter3DView'
+import { DataCenter3DView, type ColorMode } from './components/floorplan/DataCenter3DView'
 import { RackDetailCard } from './components/floorplan/RackDetailCard'
 import { RecentAlerts } from './components/floorplan/RecentAlerts'
 import { RackInventoryNav } from './components/rack/RackInventoryNav'
@@ -53,6 +53,7 @@ export function App() {
   const [rackTypeFilter, setRackTypeFilter] = useState<string | null>(null)
   const [rackSearchFilter, setRackSearchFilter] = useState('')
   const [floorPlanMode, setFloorPlanMode] = useState<'3d_twin' | 'isometric'>('3d_twin')
+  const [floorPlanMetricMode, setFloorPlanMetricMode] = useState<ColorMode>('status')
 
   // Mount modal state
   const [isMountModalOpen, setIsMountModalOpen] = useState(false)
@@ -511,6 +512,8 @@ export function App() {
                       gridRows={3}
                       gridCols={4}
                       roomTempTarget={overview?.room_temp_c || 24.5}
+                      mode={floorPlanMetricMode}
+                      onModeChange={setFloorPlanMetricMode}
                     />
                   </div>
 
@@ -544,6 +547,8 @@ export function App() {
                         }
                       }
                       roomId={1}
+                      mode={floorPlanMetricMode}
+                      onModeChange={setFloorPlanMetricMode}
                       onLayoutSaved={() => loadOverview()}
                       onViewRackElevation={handleViewRackElevation}
                     />

@@ -12,8 +12,11 @@ import {
   Zap,
   ShieldAlert,
   ChevronRight,
+  Eye,
 } from 'lucide-react'
 import type { RackSummary } from '../../types'
+
+export type ColorMode = '3d' | 'status' | 'temp' | 'power'
 
 interface DataCenter3DViewProps {
   racks: RackSummary[]
@@ -23,9 +26,9 @@ interface DataCenter3DViewProps {
   gridRows?: number
   gridCols?: number
   roomTempTarget?: number
+  mode?: ColorMode
+  onModeChange?: (mode: ColorMode) => void
 }
-
-type ColorMode = 'status' | 'temp' | 'power'
 
 export function DataCenter3DView({
   racks,
@@ -35,6 +38,8 @@ export function DataCenter3DView({
   gridRows = 3,
   gridCols = 4,
   roomTempTarget = 24.5,
+  mode,
+  onModeChange,
 }: DataCenter3DViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
@@ -48,7 +53,13 @@ export function DataCenter3DView({
   const beaconMeshesRef = useRef<{ mesh: THREE.Mesh; rack: RackSummary; baseColor: THREE.Color }[]>([])
 
   // UI state
-  const [colorMode, setColorMode] = useState<ColorMode>('status')
+  const [internalMode, setInternalMode] = useState<ColorMode>('status')
+  const activeMode = mode !== undefined ? mode : internalMode
+  const handleModeChange = (newMode: ColorMode) => {
+    setInternalMode(newMode)
+    onModeChange?.(newMode)
+  }
+
   const [autoRotate, setAutoRotate] = useState<boolean>(false)
   const [hoveredRack, setHoveredRack] = useState<RackSummary | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
@@ -63,56 +74,66 @@ export function DataCenter3DView({
     return isNaN(num) ? 0 : num - 1
   }
 
-  // Get color for rack status / temp / power
-  const getRackColor = (rack: RackSummary, mode: ColorMode): { hex: string; threeColor: THREE.Color } => {
-    if (mode === 'status') {
-      if (rack.status === 'critical') return { hex: '#ef4444', threeColor: new THREE.Color(0xef4444) }
-      if (rack.status === 'warning') return { hex: '#f59e0b', threeColor: new THREE.Color(0xf59e0b) }
-      if (rack.status === 'offline') return { hex: '#64748b', threeColor: new THREE.Color(0x64748b) }
-      return { hex: '#10b981', threeColor: new THREE.Color(0x10b981) }
-    }
-    if (mode === 'temp') {
-      const t = rack.inlet_temp_c || roomTempTarget
+  // Get color for rack status / temp / power / 3d capacity
+  const getRackColor = (rack: RackSummary, currentMode: ColorMode): { hex: string; threeColor: THREE.Color } => {
+    if (currentMode === 'temp') {
+      const t = rack.inlet_temp_c !== undefined && rack.inlet_temp_c !== null ? rack.inlet_temp_c : roomTempTarget
       if (t >= 27) return { hex: '#ef4444', threeColor: new THREE.Color(0xef4444) }
       if (t >= 25.5) return { hex: '#f97316', threeColor: new THREE.Color(0xf97316) }
-      if (t >= 24) return { hex: '#8bd7d1', threeColor: new THREE.Color(0x8bd7d1) }
-      return { hex: '#00bceb', threeColor: new THREE.Color(0x00bceb) }
+      if (t >= 24) return { hex: '#7aa5d2', threeColor: new THREE.Color(0x7aa5d2) }
+      return { hex: '#38bdf8', threeColor: new THREE.Color(0x38bdf8) }
     }
-    // Power mode
-    const kw = rack.power_kw || 1.2
-    if (kw >= 3.0) return { hex: '#ef4444', threeColor: new THREE.Color(0xef4444) }
-    if (kw >= 2.0) return { hex: '#f59e0b', threeColor: new THREE.Color(0xf59e0b) }
-    if (kw >= 1.5) return { hex: '#38bdf8', threeColor: new THREE.Color(0x38bdf8) }
+    if (currentMode === 'power') {
+      const kw = rack.power_kw !== undefined && rack.power_kw !== null ? rack.power_kw : 1.2
+      if (kw >= 3.0) return { hex: '#ef4444', threeColor: new THREE.Color(0xef4444) }
+      if (kw >= 2.0) return { hex: '#f59e0b', threeColor: new THREE.Color(0xf59e0b) }
+      if (kw >= 1.5) return { hex: '#7aa5d2', threeColor: new THREE.Color(0x7aa5d2) }
+      return { hex: '#10b981', threeColor: new THREE.Color(0x10b981) }
+    }
+    if (currentMode === '3d') {
+      if (rack.usage_percent >= 85) return { hex: '#ef4444', threeColor: new THREE.Color(0xef4444) }
+      if (rack.usage_percent >= 70) return { hex: '#f59e0b', threeColor: new THREE.Color(0xf59e0b) }
+      return { hex: '#7aa5d2', threeColor: new THREE.Color(0x7aa5d2) }
+    }
+    // Default 'status' mode
+    if (rack.status === 'critical') return { hex: '#ef4444', threeColor: new THREE.Color(0xef4444) }
+    if (rack.status === 'warning') return { hex: '#f59e0b', threeColor: new THREE.Color(0xf59e0b) }
+    if (rack.status === 'offline') return { hex: '#64748b', threeColor: new THREE.Color(0x64748b) }
     return { hex: '#10b981', threeColor: new THREE.Color(0x10b981) }
   }
 
-  // Helper to create sharp billboard text canvas
-  const createTextSprite = (text: string, subtext?: string) => {
+  // Helper to create sharp billboard text canvas with dynamic telemetry subtext
+  const createTextSprite = (
+    text: string,
+    subtext?: string,
+    subtextColor: string = '#9bb7d4',
+    borderColor: string = '#7aa5d2'
+  ) => {
     const canvas = document.createElement('canvas')
     canvas.width = 256
     canvas.height = 96
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
 
-    // Background pill
-    ctx.fillStyle = 'rgba(48, 56, 65, 0.92)'
-    ctx.strokeStyle = '#7aa5d2'
+    // Background pill (#303841)
+    ctx.fillStyle = 'rgba(48, 56, 65, 0.94)'
+    ctx.strokeStyle = borderColor
     ctx.lineWidth = 3
     ctx.beginPath()
     ctx.roundRect(8, 8, 240, 80, 16)
     ctx.fill()
     ctx.stroke()
 
-    // Title text
-    ctx.font = 'bold 30px "JetBrains Mono", monospace'
+    // Title text (Rack Name e.g. Rack A01)
+    ctx.font = 'bold 28px "JetBrains Mono", monospace'
     ctx.fillStyle = '#eeeeee'
     ctx.textAlign = 'center'
-    ctx.fillText(text, 128, 44)
+    ctx.fillText(text, 128, 42)
 
-    // Subtext
+    // Subtext (Live Telemetry Number e.g. 25.0 °C, 1.80 kW)
     if (subtext) {
-      ctx.font = 'bold 20px "JetBrains Mono", monospace'
-      ctx.fillStyle = '#9bb7d4'
+      ctx.font = 'bold 22px "JetBrains Mono", monospace'
+      ctx.fillStyle = subtextColor
       ctx.fillText(subtext, 128, 72)
     }
 
@@ -310,7 +331,7 @@ export function DataCenter3DView({
       }
 
       // Top Status Beacon (LED Alert Sphere)
-      const { threeColor } = getRackColor(rack, colorMode)
+      const { hex: metricHex, threeColor } = getRackColor(rack, activeMode)
       const beaconGeo = new THREE.CylinderGeometry(0.08, 0.12, 0.15, 16)
       const beaconMat = new THREE.MeshStandardMaterial({
         color: threeColor,
@@ -335,8 +356,32 @@ export function DataCenter3DView({
         rackGroup.add(alertLight)
       }
 
-      // Floating 3D Text Label
-      const labelSprite = createTextSprite(rack.name, `${rack.used_u}/${rack.total_u}U`)
+      // Floating 3D Text Label - Formatted by active metric mode (Temp / Power / Status / 3D)
+      let subtext = `${rack.used_u}/${rack.total_u} U`
+      let subtextColor = '#9bb7d4'
+
+      if (activeMode === 'temp') {
+        const t = rack.inlet_temp_c !== undefined && rack.inlet_temp_c !== null ? rack.inlet_temp_c : roomTempTarget
+        subtext = `${t.toFixed(1)} °C`
+        subtextColor = metricHex
+      } else if (activeMode === 'power') {
+        const kw = rack.power_kw !== undefined && rack.power_kw !== null ? rack.power_kw : 0
+        subtext = `${kw.toFixed(2)} kW`
+        subtextColor = metricHex
+      } else if (activeMode === 'status') {
+        subtext = `${rack.status.toUpperCase()} • ${rack.used_u}/${rack.total_u}U`
+        subtextColor = metricHex
+      } else if (activeMode === '3d') {
+        subtext = `${rack.used_u}/${rack.total_u} U (${rack.usage_percent}%)`
+        subtextColor = metricHex
+      }
+
+      const labelSprite = createTextSprite(
+        rack.name,
+        subtext,
+        subtextColor,
+        rack.id === selectedRackId ? '#7aa5d2' : metricHex
+      )
       if (labelSprite) {
         labelSprite.position.set(0, 3.2, 0)
         rackGroup.add(labelSprite)
@@ -436,7 +481,7 @@ export function DataCenter3DView({
       renderer.dispose()
       container.innerHTML = ''
     }
-  }, [racks, selectedRackId, gridRows, gridCols, colorMode, roomTempTarget])
+  }, [racks, selectedRackId, gridRows, gridCols, activeMode, roomTempTarget])
 
   // Sync autoRotate
   useEffect(() => {
@@ -477,42 +522,54 @@ export function DataCenter3DView({
       {/* Top HUD Controls Ribbon */}
       <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
         {/* Left: Mode Switcher */}
-        <div className="flex items-center gap-1.5 p-1 rounded-[2px] bg-[#161f26]/90 border border-[#304250] shadow-xl pointer-events-auto backdrop-blur-sm">
+        <div className="flex items-center gap-1 p-1 rounded-[2px] bg-[#161f26]/90 border border-[#304250] shadow-xl pointer-events-auto backdrop-blur-sm">
           <button
             type="button"
-            onClick={() => setColorMode('status')}
+            onClick={() => handleModeChange('3d')}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono rounded-[2px] transition-colors cursor-pointer ${
-              colorMode === 'status'
-                ? 'bg-[#34424b] text-[#8bd7d1] font-bold border border-[#50626f]'
+              activeMode === '3d'
+                ? 'bg-[#34424b] text-[#7aa5d2] font-bold border border-[#50626f]'
+                : 'text-[#85a6b1] hover:text-white'
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5 text-[#7aa5d2]" />
+            <span>3D View</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleModeChange('status')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono rounded-[2px] transition-colors cursor-pointer ${
+              activeMode === 'status'
+                ? 'bg-[#34424b] text-[#7aa5d2] font-bold border border-[#50626f]'
                 : 'text-[#85a6b1] hover:text-white'
             }`}
           >
             <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-            <span>Zabbix Alert Status</span>
+            <span>Status</span>
           </button>
           <button
             type="button"
-            onClick={() => setColorMode('temp')}
+            onClick={() => handleModeChange('temp')}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono rounded-[2px] transition-colors cursor-pointer ${
-              colorMode === 'temp'
-                ? 'bg-[#34424b] text-[#8bd7d1] font-bold border border-[#50626f]'
+              activeMode === 'temp'
+                ? 'bg-[#34424b] text-[#7aa5d2] font-bold border border-[#50626f]'
                 : 'text-[#85a6b1] hover:text-white'
             }`}
           >
             <Thermometer className="w-3.5 h-3.5 text-amber-400" />
-            <span>Inlet Heatmap</span>
+            <span>Temp</span>
           </button>
           <button
             type="button"
-            onClick={() => setColorMode('power')}
+            onClick={() => handleModeChange('power')}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono rounded-[2px] transition-colors cursor-pointer ${
-              colorMode === 'power'
-                ? 'bg-[#34424b] text-[#8bd7d1] font-bold border border-[#50626f]'
+              activeMode === 'power'
+                ? 'bg-[#34424b] text-[#7aa5d2] font-bold border border-[#50626f]'
                 : 'text-[#85a6b1] hover:text-white'
             }`}
           >
             <Zap className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Power Load</span>
+            <span>Power</span>
           </button>
         </div>
 

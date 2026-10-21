@@ -40,9 +40,11 @@ interface IsometricRoomProps {
   fullPage?: boolean
   onLayoutSaved?: () => void
   onViewRackElevation?: (rack: RackSummary) => void
+  mode?: ViewMode
+  onModeChange?: (mode: ViewMode) => void
 }
 
-type ViewMode = '3d' | 'status' | 'temp' | 'power'
+export type ViewMode = '3d' | 'status' | 'temp' | 'power'
 
 export function IsometricRoom({
   racks,
@@ -54,8 +56,16 @@ export function IsometricRoom({
   fullPage = false,
   onLayoutSaved,
   onViewRackElevation,
+  mode,
+  onModeChange,
 }: IsometricRoomProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('3d')
+  const [internalViewMode, setInternalViewMode] = useState<ViewMode>('3d')
+  const viewMode = mode !== undefined ? mode : internalViewMode
+  const handleViewModeChange = (newMode: ViewMode) => {
+    setInternalViewMode(newMode)
+    onModeChange?.(newMode)
+  }
+
   const [zoom, setZoom] = useState<number>(1)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [rotationAngle, setRotationAngle] = useState<number>(0) // 0 to 360 degrees
@@ -685,10 +695,10 @@ export function IsometricRoom({
             <div className="flex items-center gap-1 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-lg">
               <button
                 type="button"
-                onClick={() => setViewMode('3d')}
+                onClick={() => handleViewModeChange('3d')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === '3d'
-                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f] shadow-sm'
+                    ? 'bg-[#34424b] text-[#7aa5d2] border border-[#50626f] shadow-sm'
                     : 'text-[#85a6b1] hover:text-[#caedde]'
                 }`}
               >
@@ -697,10 +707,10 @@ export function IsometricRoom({
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode('status')}
+                onClick={() => handleViewModeChange('status')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === 'status'
-                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f] shadow-sm'
+                    ? 'bg-[#34424b] text-[#7aa5d2] border border-[#50626f] shadow-sm'
                     : 'text-[#85a6b1] hover:text-[#caedde]'
                 }`}
               >
@@ -709,10 +719,10 @@ export function IsometricRoom({
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode('temp')}
+                onClick={() => handleViewModeChange('temp')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === 'temp'
-                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f] shadow-sm'
+                    ? 'bg-[#34424b] text-[#7aa5d2] border border-[#50626f] shadow-sm'
                     : 'text-[#85a6b1] hover:text-[#caedde]'
                 }`}
               >
@@ -721,10 +731,10 @@ export function IsometricRoom({
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode('power')}
+                onClick={() => handleViewModeChange('power')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === 'power'
-                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f] shadow-sm'
+                    ? 'bg-[#34424b] text-[#7aa5d2] border border-[#50626f] shadow-sm'
                     : 'text-[#85a6b1] hover:text-[#caedde]'
                 }`}
               >
