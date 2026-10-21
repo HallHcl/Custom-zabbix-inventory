@@ -15,6 +15,28 @@ export interface ZabbixStatusSummary {
   problems: ZabbixProblem[]
 }
 
+export interface BrandInfo {
+  name: string
+  tag: string
+  color: string
+  bg_color: string
+  badge_class: string
+  glow_color: string
+  model_family?: string | null
+}
+
+export interface DeviceTemplate {
+  id: string
+  brand: string
+  manufacturer: string
+  model: string
+  device_type: 'Server' | 'Switch' | 'Firewall' | 'Storage' | 'UPS' | 'Patch Panel' | 'Blank Panel' | string
+  height_u: number
+  description?: string
+  brand_info?: BrandInfo | null
+}
+
+
 export interface Device {
   id: number
   rack_id: number
@@ -32,6 +54,7 @@ export interface Device {
   custom_fields?: Record<string, any>
   zabbix_status?: ZabbixStatusSummary | null
   status?: 'Active' | 'Planned' | 'Maintenance' | 'Offline'
+  brand_info?: BrandInfo | null
 }
 
 export interface RackSummary {
@@ -172,6 +195,7 @@ export interface DeviceOverview {
   cpu_history: MetricHistoryPoint[]
   active_alerts: ZabbixProblem[]
   chassis_specs?: ChassisSpecs
+  brand_info?: BrandInfo | null
   latest_data_items: ZabbixLatestItem[]
 }
 

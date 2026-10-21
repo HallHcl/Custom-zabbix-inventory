@@ -52,6 +52,8 @@ export function DeviceDetailPanel({
   }
 
   const status = device.zabbix_status?.status || 'ok'
+  const brandInfo = device.brand_info
+  const brandColor = brandInfo?.color || '#8bd7d1'
   const cpuPercent = metrics?.cpu_utilization ?? 78.0
   const memPercent = metrics?.memory_utilization ?? 64.0
   const tempC = metrics?.temperature_c ?? 72.0
@@ -73,32 +75,72 @@ export function DeviceDetailPanel({
         </div>
 
         <div className="p-3.5 space-y-3">
-          {/* Device Name & Status */}
-          <div className="pb-2 border-b border-[#394650]">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold text-white font-mono truncate max-w-[200px]">
-                {device.name}
-              </h3>
+          {/* Signature Hardware Hero Card */}
+          <div
+            className="p-3 rounded-[3px] border relative overflow-hidden space-y-2.5 transition-all shadow-md"
+            style={{
+              borderColor: brandColor ? `${brandColor}55` : '#394650',
+              background: `linear-gradient(135deg, ${brandColor}18 0%, #1e262c 85%)`,
+            }}
+          >
+            {/* Top Brand Pill & Operational Status */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] border text-[8.5px] font-mono font-black tracking-wider uppercase shadow-xs shrink-0 ${
+                    brandInfo?.badge_class || 'bg-[#273139] border-[#50626f] text-[#caedde]'
+                  }`}
+                  style={{
+                    boxShadow: brandInfo?.glow_color ? `0 0 8px ${brandInfo.glow_color}` : undefined,
+                  }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ backgroundColor: brandColor }}
+                  />
+                  <span>{brandInfo?.tag || brandInfo?.name || device.manufacturer || 'ENTERPRISE'}</span>
+                </span>
+                <span className="px-1.5 py-0.2 rounded-[2px] bg-[#14191d] border border-[#394650] text-[8px] font-mono font-bold text-[#85a6b1] shrink-0">
+                  {device.height_u}U {device.device_type}
+                </span>
+              </div>
+
+              {/* Status Indicator */}
               {status === 'critical' ? (
-                <span className="px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-700 flex items-center gap-1">
+                <span className="px-1.5 py-0.2 rounded-[2px] text-[9.5px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-700 flex items-center gap-1 shadow-xs animate-pulse shrink-0">
                   <AlertOctagon className="w-3 h-3" />
                   CRITICAL
                 </span>
               ) : status === 'warning' ? (
-                <span className="px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-700 flex items-center gap-1">
+                <span className="px-1.5 py-0.2 rounded-[2px] text-[9.5px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-700 flex items-center gap-1 shadow-xs animate-pulse shrink-0">
                   <AlertTriangle className="w-3 h-3" />
                   WARNING
                 </span>
               ) : (
-                <span className="px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-[#1a3835] text-[#8bd7d1] border border-[#2b5d58] flex items-center gap-1">
+                <span className="px-1.5 py-0.2 rounded-[2px] text-[9.5px] font-mono font-bold bg-[#142e2b] text-[#8bd7d1] border border-[#2b5d58] flex items-center gap-1 shadow-xs shrink-0">
                   <CheckCircle2 className="w-3 h-3" />
                   NOMINAL
                 </span>
               )}
             </div>
-            <div className="flex items-center justify-between text-[11px] text-[#85a6b1] font-mono">
-              <span>{device.model || 'Enterprise Chassis'}</span>
-              <span className="text-[#caedde] font-bold">{device.manufacturer || 'OEM'}</span>
+
+            {/* Model Family & Hostname Typography */}
+            <div>
+              <div className="flex items-baseline justify-between gap-1">
+                <h3 className="text-sm font-mono font-black text-white tracking-tight truncate max-w-[200px]" title={device.name}>
+                  {device.name}
+                </h3>
+                <span
+                  className="text-xs font-mono font-bold tracking-tight shrink-0"
+                  style={{ color: brandColor }}
+                >
+                  {brandInfo?.model_family || device.model || 'Standard Chassis'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-[#85a6b1] font-mono mt-0.5">
+                <span>{device.model || 'OEM Spec'}</span>
+                <span className="text-[#caedde] font-semibold">{device.manufacturer || brandInfo?.name || 'Enterprise'}</span>
+              </div>
             </div>
           </div>
 

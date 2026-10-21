@@ -180,6 +180,18 @@ export function DevicePageView({ deviceId, onBack, onDeviceUpdated }: DevicePage
           <span className="text-white font-bold px-1.5 py-0.5 rounded-xs bg-[#273139] border border-[#50626f]">
             Slot U{data.start_u}-U{endU} ({data.height_u}U, {data.position_face})
           </span>
+          {data.brand_info && (
+            <span
+              className={`px-2 py-0.5 rounded-[2px] border text-[9.5px] font-mono font-black tracking-wider uppercase shadow-xs ${
+                data.brand_info.badge_class || 'bg-[#273139] border-[#50626f] text-[#caedde]'
+              }`}
+              style={{
+                boxShadow: data.brand_info.glow_color ? `0 0 8px ${data.brand_info.glow_color}` : undefined,
+              }}
+            >
+              {data.brand_info.tag}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -456,6 +468,7 @@ export function DevicePageView({ deviceId, onBack, onDeviceUpdated }: DevicePage
             manufacturer={data.manufacturer}
             heightU={data.height_u}
             chassisSpecs={data.chassis_specs}
+            brandInfo={data.brand_info}
           />
         )}
 

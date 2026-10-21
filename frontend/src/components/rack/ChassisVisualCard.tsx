@@ -10,7 +10,7 @@ import {
   Server,
   Box,
 } from 'lucide-react'
-import type { ChassisSpecs } from '../../types'
+import type { ChassisSpecs, BrandInfo } from '../../types'
 
 interface ChassisVisualCardProps {
   deviceType: string
@@ -18,6 +18,7 @@ interface ChassisVisualCardProps {
   manufacturer?: string
   heightU: number
   chassisSpecs?: ChassisSpecs
+  brandInfo?: BrandInfo | null
 }
 
 export function ChassisVisualCard({
@@ -26,12 +27,15 @@ export function ChassisVisualCard({
   manufacturer,
   heightU,
   chassisSpecs,
+  brandInfo,
 }: ChassisVisualCardProps) {
   const [viewFace, setViewFace] = useState<'front' | 'rear'>('front')
 
-  const brand = chassisSpecs?.brand || manufacturer || 'Enterprise Hardware'
-  const modelName = chassisSpecs?.model_family || model || `${deviceType} Appliance`
+  const brand = brandInfo?.name || chassisSpecs?.brand || manufacturer || 'Enterprise Hardware'
+  const brandTag = brandInfo?.tag || brand.toUpperCase()
+  const modelName = brandInfo?.model_family || chassisSpecs?.model_family || model || `${deviceType} Appliance`
   const formFactor = chassisSpecs?.form_factor || `${heightU}U Standard Rackmount`
+  const brandColor = brandInfo?.color || '#8bd7d1'
 
   // Render Realistic Front Bezel Visual
   const renderFrontChassis = () => {
@@ -42,8 +46,16 @@ export function ChassisVisualCard({
             {/* Switch Front Bezel */}
             <div className="flex items-center justify-between border-b border-[#2d3a43] pb-2">
               <div className="flex items-center gap-2">
-                <span className="px-1.5 py-0.5 rounded-xs bg-[#273139] border border-[#50626f] text-[10px] font-bold text-[#8bd7d1]">
-                  HUAWEI / CISCO
+                <span
+                  className="px-2 py-0.5 rounded-[2px] border text-[9.5px] font-bold shadow-xs tracking-wider uppercase"
+                  style={{
+                    backgroundColor: brandInfo?.bg_color || '#273139',
+                    borderColor: brandColor ? `${brandColor}66` : '#50626f',
+                    color: brandColor || '#8bd7d1',
+                    boxShadow: brandInfo?.glow_color ? `0 0 6px ${brandInfo.glow_color}` : undefined,
+                  }}
+                >
+                  {brandTag}
                 </span>
                 <span className="text-xs text-[#caedde] font-bold tracking-wide">{modelName}</span>
               </div>

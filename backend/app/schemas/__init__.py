@@ -40,11 +40,21 @@ class DeviceCreate(DeviceBase):
     rack_id: int
 
 
+class BrandInfo(BaseModel):
+    name: str
+    tag: str
+    color: str
+    bg_color: str
+    badge_class: str
+    glow_color: str
+    model_family: Optional[str] = None
+
+
 class DeviceResponse(DeviceBase):
     id: int
     rack_id: int
     zabbix_status: Optional[ZabbixStatusSummary] = None
-
+    brand_info: Optional[BrandInfo] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -146,6 +156,7 @@ class DeviceOverviewResponse(BaseModel):
     active_alerts: List[Dict[str, Any]] = []
     # Hardware Specifications & Visual Chassis Identification
     chassis_specs: Optional[Dict[str, Any]] = None
+    brand_info: Optional[BrandInfo] = None
     # Zabbix Latest Data Items (Full Metric List)
     latest_data_items: List[ZabbixLatestItem] = []
 
@@ -284,6 +295,18 @@ class DeviceAssignFromZabbix(BaseModel):
 class DeviceStatusUpdate(BaseModel):
     status: str = Field(..., pattern="^(Active|Maintenance|Planned|Decommissioned)$")
     maintenance_duration_hours: int = 2
+
+
+class DeviceTemplate(BaseModel):
+    id: str
+    brand: str
+    manufacturer: str
+    model: str
+    device_type: str
+    height_u: int
+    description: Optional[str] = None
+    brand_info: Optional[BrandInfo] = None
+
 
 
 

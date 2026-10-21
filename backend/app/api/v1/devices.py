@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,13 +14,45 @@ from backend.app.schemas import (
     ZabbixLatestItem,
     DeviceAssignFromZabbix,
     DeviceStatusUpdate,
+    BrandInfo,
+    DeviceTemplate,
 )
 from backend.app.services.zabbix_service import zabbix_service
 from backend.app.services.redis_service import redis_service
+from backend.app.services.brand_service import resolve_brand_metadata
 from backend.app.api.v1.zabbix import infer_device_type
 
 
 router = APIRouter()
+
+
+def build_device_response(d: Device, z_status: Optional[Any] = None) -> DeviceResponse:
+    b_meta = resolve_brand_metadata(
+        model=d.model,
+        manufacturer=d.manufacturer,
+        name=d.name,
+        tags=d.tags,
+        custom_fields=d.custom_fields,
+    )
+    return DeviceResponse(
+        id=d.id,
+        rack_id=d.rack_id,
+        name=d.name,
+        device_type=d.device_type,
+        model=d.model,
+        manufacturer=d.manufacturer,
+        start_u=d.start_u,
+        height_u=d.height_u,
+        position_face=d.position_face,
+        ip_address=d.ip_address,
+        serial_number=d.serial_number,
+        zabbix_host_id=d.zabbix_host_id,
+        status=getattr(d, "status", "Active"),
+        tags=d.tags,
+        custom_fields=d.custom_fields,
+        zabbix_status=z_status,
+        brand_info=BrandInfo(**b_meta) if b_meta else None,
+    )
 
 
 @router.get("", response_model=List[DeviceResponse])
@@ -43,30 +75,27 @@ async def list_devices(
     zabbix_ids = [d.zabbix_host_id for d in devices if d.zabbix_host_id]
     zabbix_summaries = await redis_service.get_hosts_summaries(zabbix_ids)
 
-    responses = []
-    for d in devices:
-        z_status = zabbix_summaries.get(d.zabbix_host_id) if d.zabbix_host_id else None
-        responses.append(
-            DeviceResponse(
-                id=d.id,
-                rack_id=d.rack_id,
-                name=d.name,
-                device_type=d.device_type,
-                model=d.model,
-                manufacturer=d.manufacturer,
-                start_u=d.start_u,
-                height_u=d.height_u,
-                position_face=d.position_face,
-                ip_address=d.ip_address,
-                serial_number=d.serial_number,
-                zabbix_host_id=d.zabbix_host_id,
-                status=getattr(d, "status", "Active"),
-                tags=d.tags,
-                custom_fields=d.custom_fields,
-                zabbix_status=z_status,
-            )
+    responses = [
+        build_device_response(
+            d,
+            zabbix_summaries.get(d.zabbix_host_id) if d.zabbix_host_id else None,
         )
+        for d in devices
+    ]
     return responses
+
+
+@router.get("/templates", response_model=List[DeviceTemplate])
+async def list_device_templates(
+    brand: Optional[str] = Query(None, description="Filter templates by Brand (e.g. Dell, Cisco, HPE)"),
+    device_type: Optional[str] = Query(None, description="Filter templates by Device Type (Server, Switch, etc.)"),
+):
+    """
+    Retrieve pre-configured Enterprise Hardware Templates for 1-click mounting.
+    Returns brand badges, dimensions (U), category, and manufacturer info.
+    """
+    from backend.app.services.catalog_service import get_hardware_templates
+    return get_hardware_templates(brand=brand, category=device_type)
 
 
 @router.post("", response_model=DeviceResponse)
@@ -136,24 +165,7 @@ async def mount_device(device_in: DeviceCreate, db: AsyncSession = Depends(get_d
         summaries = await redis_service.get_hosts_summaries([new_device.zabbix_host_id])
         z_status = summaries.get(new_device.zabbix_host_id)
 
-    return DeviceResponse(
-        id=new_device.id,
-        rack_id=new_device.rack_id,
-        name=new_device.name,
-        device_type=new_device.device_type,
-        model=new_device.model,
-        manufacturer=new_device.manufacturer,
-        start_u=new_device.start_u,
-        height_u=new_device.height_u,
-        position_face=new_device.position_face,
-        ip_address=new_device.ip_address,
-        serial_number=new_device.serial_number,
-        zabbix_host_id=new_device.zabbix_host_id,
-        status=new_device.status,
-        tags=new_device.tags,
-        custom_fields=new_device.custom_fields,
-        zabbix_status=z_status,
-    )
+    return build_device_response(new_device, z_status)
 
 
 @router.post("/assign-from-zabbix", response_model=DeviceResponse)
@@ -269,24 +281,7 @@ async def assign_device_from_zabbix(
     summaries = await redis_service.get_hosts_summaries([new_device.zabbix_host_id])
     z_status = summaries.get(new_device.zabbix_host_id)
 
-    return DeviceResponse(
-        id=new_device.id,
-        rack_id=new_device.rack_id,
-        name=new_device.name,
-        device_type=new_device.device_type,
-        model=new_device.model,
-        manufacturer=new_device.manufacturer,
-        start_u=new_device.start_u,
-        height_u=new_device.height_u,
-        position_face=new_device.position_face,
-        ip_address=new_device.ip_address,
-        serial_number=new_device.serial_number,
-        zabbix_host_id=new_device.zabbix_host_id,
-        status=new_device.status,
-        tags=new_device.tags,
-        custom_fields=new_device.custom_fields,
-        zabbix_status=z_status,
-    )
+    return build_device_response(new_device, z_status)
 
 
 @router.patch("/{device_id}/status", response_model=DeviceResponse)
@@ -331,24 +326,7 @@ async def update_device_status(
         summaries = await redis_service.get_hosts_summaries([device.zabbix_host_id])
         z_status = summaries.get(device.zabbix_host_id)
 
-    return DeviceResponse(
-        id=device.id,
-        rack_id=device.rack_id,
-        name=device.name,
-        device_type=device.device_type,
-        model=device.model,
-        manufacturer=device.manufacturer,
-        start_u=device.start_u,
-        height_u=device.height_u,
-        position_face=device.position_face,
-        ip_address=device.ip_address,
-        serial_number=device.serial_number,
-        zabbix_host_id=device.zabbix_host_id,
-        status=device.status,
-        tags=device.tags,
-        custom_fields=device.custom_fields,
-        zabbix_status=z_status,
-    )
+    return build_device_response(device, z_status)
 
 
 @router.delete("/{device_id}")
@@ -479,23 +457,7 @@ async def update_device_inventory(
     await db.commit()
     await db.refresh(device)
 
-    return DeviceResponse(
-        id=device.id,
-        rack_id=device.rack_id,
-        name=device.name,
-        device_type=device.device_type,
-        model=device.model,
-        manufacturer=device.manufacturer,
-        start_u=device.start_u,
-        height_u=device.height_u,
-        position_face=device.position_face,
-        ip_address=device.ip_address,
-        serial_number=device.serial_number,
-        zabbix_host_id=device.zabbix_host_id,
-        tags=device.tags,
-        custom_fields=device.custom_fields,
-        zabbix_status=None,
-    )
+    return build_device_response(device, None)
 
 
 def categorize_zabbix_item(name: str, key: str) -> str:
@@ -782,6 +744,15 @@ async def get_device_overview(device_id: int, db: AsyncSession = Depends(get_db)
     # Hardware chassis specifications & physical model visual definition
     chassis_specs = get_hardware_chassis_specs(device.device_type, device.model, device.manufacturer)
 
+    # Normalized brand metadata & color tokens
+    b_meta = resolve_brand_metadata(
+        model=device.model,
+        manufacturer=device.manufacturer,
+        name=device.name,
+        tags=device.tags,
+        custom_fields=device.custom_fields,
+    )
+
     return DeviceOverviewResponse(
         device_id=device.id,
         device_name=device.name,
@@ -806,5 +777,6 @@ async def get_device_overview(device_id: int, db: AsyncSession = Depends(get_db)
         cpu_history=cpu_history,
         active_alerts=active_alerts,
         chassis_specs=chassis_specs,
+        brand_info=BrandInfo(**b_meta) if b_meta else None,
         latest_data_items=latest_data_items,
     )
