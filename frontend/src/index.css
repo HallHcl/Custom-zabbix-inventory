@@ -1,36 +1,153 @@
 @import "tailwindcss";
 
 @layer base {
-  :root {
-    /* Custom Darkmode 4-Color Palette: #303841, #47555E, #7AA5D2, #EEEEEE */
-    --noc-bg-base: #303841;       /* Dark Charcoal / Slate Gray (Primary Background) */
-    --noc-bg-surface: #37414b;    /* Surface Container Background */
-    --noc-bg-panel: #47555e;      /* Steel Slate (Panels, Cards, Headers) */
-    --noc-bg-elevated: #53636f;   /* Elevated Controls, Hover Buttons */
-    --noc-bg-chassis: #3f4c55;    /* Chassis Cabinet Background */
+  /* =========================================================================
+     1. THEME: TESLA MIDNIGHT (Default - Tesla Cybertruck / Model S HMI)
+     ========================================================================= */
+  :root,
+  [data-theme="tesla-midnight"] {
+    --bg-base: #0b0e14;
+    --bg-surface: rgba(22, 27, 38, 0.78);
+    --bg-panel: rgba(28, 35, 48, 0.85);
+    --bg-elevated: rgba(38, 48, 66, 0.90);
+    --bg-chassis: #121620;
 
-    /* Hairline Precision Borders (1px) */
-    --noc-border-subtle: #3f4c55;
-    --noc-border-base: #47555e;
-    --noc-border-strong: #5c6e7a;
-    --noc-border-focus: #7aa5d2;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-base: rgba(255, 255, 255, 0.14);
+    --border-strong: rgba(255, 255, 255, 0.24);
+    --border-focus: #3b82f6;
 
-    /* Palette Telemetry Accents */
-    --noc-slate: #47555e;
-    --noc-steel: #9bb7d4;
-    --noc-blue: #7aa5d2;         /* Ice Blue Signature Accent */
-    --noc-white: #eeeeee;        /* Crisp Off-White */
+    --accent-primary: #3b82f6;
+    --accent-hover: #60a5fa;
+    --accent-glow: rgba(59, 130, 246, 0.35);
 
-    /* Safety Alarm Accents */
-    --noc-emerald: #10b981;
-    --noc-amber: #f59e0b;
-    --noc-rose: #f43f5e;
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --text-bright: #ffffff;
 
-    /* Text Tiers */
-    --noc-text-bright: #ffffff;
-    --noc-text-primary: #eeeeee;  /* Main High-Contrast Text */
-    --noc-text-secondary: #9bb7d4;/* Secondary / Telemetry Text */
-    --noc-text-muted: #788998;    /* Muted Labels */
+    --glass-blur: blur(20px);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+    /* Safety Status Colors */
+    --status-emerald: #10b981;
+    --status-amber: #f59e0b;
+    --status-rose: #f43f5e;
+
+    /* Backward compatibility mappings for existing NOC components */
+    --noc-bg-base: var(--bg-base);
+    --noc-bg-surface: var(--bg-surface);
+    --noc-bg-panel: var(--bg-panel);
+    --noc-bg-elevated: var(--bg-elevated);
+    --noc-bg-chassis: var(--bg-chassis);
+    --noc-border-subtle: var(--border-subtle);
+    --noc-border-base: var(--border-base);
+    --noc-border-strong: var(--border-strong);
+    --noc-border-focus: var(--border-focus);
+    --noc-blue: var(--accent-primary);
+    --noc-text-primary: var(--text-primary);
+    --noc-text-secondary: var(--text-secondary);
+    --noc-text-muted: var(--text-muted);
+    --noc-text-bright: var(--text-bright);
+    --noc-emerald: var(--status-emerald);
+    --noc-amber: var(--status-amber);
+    --noc-rose: var(--status-rose);
+  }
+
+  /* =========================================================================
+     2. THEME: CUPERTINO FROST (Apple macOS Sequoia / VisionOS Light)
+     ========================================================================= */
+  [data-theme="cupertino-frost"] {
+    --bg-base: #f5f5f7;
+    --bg-surface: rgba(255, 255, 255, 0.82);
+    --bg-panel: rgba(240, 242, 245, 0.88);
+    --bg-elevated: rgba(230, 233, 238, 0.95);
+    --bg-chassis: #e5e7eb;
+
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-base: rgba(0, 0, 0, 0.14);
+    --border-strong: rgba(0, 0, 0, 0.26);
+    --border-focus: #0071e3;
+
+    --accent-primary: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-glow: rgba(0, 113, 227, 0.28);
+
+    --text-primary: #1d1d1f;
+    --text-secondary: #4b5563;
+    --text-muted: #86868b;
+    --text-bright: #000000;
+
+    --glass-blur: blur(24px);
+    --glass-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+
+    --status-emerald: #059669;
+    --status-amber: #d97706;
+    --status-rose: #e11d48;
+  }
+
+  /* =========================================================================
+     3. THEME: OBSIDIAN CARBON (OLED Pure Black Pro Display)
+     ========================================================================= */
+  [data-theme="obsidian-carbon"] {
+    --bg-base: #000000;
+    --bg-surface: rgba(18, 18, 20, 0.88);
+    --bg-panel: rgba(26, 26, 30, 0.90);
+    --bg-elevated: rgba(38, 38, 44, 0.95);
+    --bg-chassis: #0a0a0c;
+
+    --border-subtle: rgba(255, 255, 255, 0.10);
+    --border-base: rgba(255, 255, 255, 0.18);
+    --border-strong: rgba(255, 255, 255, 0.32);
+    --border-focus: #10b981;
+
+    --accent-primary: #10b981;
+    --accent-hover: #34d399;
+    --accent-glow: rgba(16, 185, 129, 0.40);
+
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --text-bright: #ffffff;
+
+    --glass-blur: blur(20px);
+    --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+
+    --status-emerald: #10b981;
+    --status-amber: #f59e0b;
+    --status-rose: #ef4444;
+  }
+
+  /* =========================================================================
+     4. THEME: BLUEPRINT TACTICAL (Architectural CAD / Engineering Grid)
+     ========================================================================= */
+  [data-theme="blueprint-tactical"] {
+    --bg-base: #0f172a;
+    --bg-surface: rgba(30, 41, 59, 0.82);
+    --bg-panel: rgba(24, 34, 53, 0.90);
+    --bg-elevated: rgba(43, 58, 82, 0.95);
+    --bg-chassis: #0b1120;
+
+    --border-subtle: rgba(6, 182, 212, 0.18);
+    --border-base: rgba(6, 182, 212, 0.30);
+    --border-strong: rgba(6, 182, 212, 0.50);
+    --border-focus: #06b6d4;
+
+    --accent-primary: #06b6d4;
+    --accent-hover: #22d3ee;
+    --accent-glow: rgba(6, 182, 212, 0.45);
+
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-bright: #ffffff;
+
+    --glass-blur: blur(20px);
+    --glass-shadow: 0 8px 32px rgba(6, 182, 212, 0.15);
+
+    --status-emerald: #10b981;
+    --status-amber: #fbbf24;
+    --status-rose: #f43f5e;
   }
 }
 
@@ -39,16 +156,34 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #303841;
-  color: #eeeeee;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Glassmorphism Surface Utility */
+.glass-panel {
+  background-color: var(--bg-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-panel-elevated {
+  background-color: var(--bg-elevated);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-base);
+  box-shadow: var(--glass-shadow);
 }
 
 /* Numeric & Telemetry Tabular Figures */
 .tabular-nums, .font-mono {
-  font-family: "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-family: "JetBrains Mono", "SF Mono", "IBM Plex Mono", Menlo, Monaco, Consolas, monospace;
   font-feature-settings: "tnum" 1;
 }
 
@@ -58,183 +193,23 @@ html, body, #root {
   height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #303841;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #47555e;
-  border-radius: 2px;
+  background: var(--border-base);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #7aa5d2;
+  background: var(--accent-primary);
 }
 
-/* Tactical NOC Reusable Components */
-.noc-panel {
-  background-color: #37414b;
-  border: 1px solid #47555e;
-  border-radius: 3px;
+/* Pulse Glow Keyframes for Alarms */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.4; }
+  100% { transform: scale(0.95); opacity: 0.8; }
 }
 
-.noc-panel-header {
-  background-color: #47555e;
-  border-bottom: 1px solid #5c6e7a;
-  padding: 0.5rem 0.875rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #eeeeee;
-  letter-spacing: 0.025em;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* ── Darkmode Universal Palette Color Mapping ─────────────────────── */
-/* Base & Surface Backgrounds */
-.bg-\[\#161c20\],
-.bg-\[\#0c1116\] {
-  background-color: #303841 !important;
-}
-
-.bg-\[\#1a2127\],
-.bg-\[\#20282f\],
-.bg-\[\#161f26\]\/90,
-.bg-\[\#1a2329\] {
-  background-color: #37414b !important;
-}
-
-.bg-\[\#273139\] {
-  background-color: #47555e !important;
-}
-
-.bg-\[\#34424b\] {
-  background-color: #53636f !important;
-}
-
-.bg-\[\#414a50\] {
-  background-color: #3f4c55 !important;
-}
-
-/* Borders */
-.border-\[\#2b363e\] {
-  border-color: #3f4c55 !important;
-}
-
-.border-\[\#394650\],
-.border-\[\#223240\],
-.border-\[\#304250\] {
-  border-color: #47555e !important;
-}
-
-.border-\[\#50626f\] {
-  border-color: #5c6e7a !important;
-}
-
-.border-\[\#8bd7d1\] {
-  border-color: #7aa5d2 !important;
-}
-
-/* Text Colors */
-.text-\[\#caedde\] {
-  color: #eeeeee !important;
-}
-
-.text-\[\#85a6b1\] {
-  color: #9bb7d4 !important;
-}
-
-.text-\[\#8bd7d1\] {
-  color: #7aa5d2 !important;
-}
-
-/* Focus and Active States */
-.focus\:border-\[\#8bd7d1\]:focus {
-  border-color: #7aa5d2 !important;
-}
-
-/* Background Accents & Hovers */
-.bg-\[\#8bd7d1\] {
-  background-color: #7aa5d2 !important;
-}
-
-.hover\:bg-\[\#caedde\]:hover {
-  background-color: #eeeeee !important;
-}
-
-.hover\:bg-\[\#252f36\]:hover,
-.hover\:bg-\[\#273139\]:hover {
-  background-color: #47555e !important;
-}
-
-.hover\:bg-\[\#34424b\]:hover {
-  background-color: #53636f !important;
-}
-
-.hover\:border-\[\#8bd7d1\]:hover {
-  border-color: #7aa5d2 !important;
-}
-
-/* ── Clean High-Contrast Light Theme Overrides ─────────────────────── */
-.light-theme {
-  background-color: #f1f6f5 !important;
-  color: #1b262c !important;
-}
-
-.light-theme html,
-.light-theme body,
-.light-theme #root {
-  background-color: #f1f6f5 !important;
-  color: #1b262c !important;
-}
-
-.light-theme header,
-.light-theme aside,
-.light-theme .noc-panel,
-.light-theme .bg-\[\#161c20\],
-.light-theme .bg-\[\#1a2127\],
-.light-theme .bg-\[\#20282f\],
-.light-theme .bg-\[\#080b11\],
-.light-theme .bg-\[\#0a0e17\],
-.light-theme .bg-\[\#0d121e\] {
-  background-color: #ffffff !important;
-  color: #1b262c !important;
-  border-color: #cbd8d6 !important;
-}
-
-.light-theme .noc-panel-header,
-.light-theme .bg-\[\#273139\],
-.light-theme .bg-\[\#34424b\],
-.light-theme .bg-\[\#414a50\],
-.light-theme .bg-\[\#111827\],
-.light-theme .bg-\[\#162032\] {
-  background-color: #f4f8f7 !important;
-  color: #1b262c !important;
-  border-color: #dbe6e4 !important;
-}
-
-.light-theme .border-\[\#2b363e\],
-.light-theme .border-\[\#394650\],
-.light-theme .border-\[\#50626f\],
-.light-theme .border-\[\#1e2a40\],
-.light-theme .border-\[\#2c3c5c\] {
-  border-color: #cbd8d6 !important;
-}
-
-.light-theme .text-slate-100,
-.light-theme .text-slate-200,
-.light-theme .text-white {
-  color: #1b262c !important;
-}
-
-.light-theme .text-slate-300,
-.light-theme .text-slate-400,
-.light-theme .text-\[\#caedde\],
-.light-theme .text-\[\#85a6b1\] {
-  color: #485c65 !important;
-}
-
-.light-theme ::-webkit-scrollbar-track {
-  background: #f1f6f5;
-}
-.light-theme ::-webkit-scrollbar-thumb {
-  background: #85a6b1;
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

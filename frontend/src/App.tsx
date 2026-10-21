@@ -3,7 +3,10 @@ import { ArrowLeft, Pencil, Box, LayoutGrid } from 'lucide-react'
 import type { RoomOverview, RackSummary, RackElevation as RackElevationType, Device } from './types'
 import { fetchRoomOverview, fetchRackElevation, unmountDevice, fetchUnassignedHosts } from './api/client'
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
-import { Header } from './components/layout/Header'
+import { TopGlassmorphicHUD } from './components/layout/TopGlassmorphicHUD'
+import { SpotlightCommandBar } from './components/layout/SpotlightCommandBar'
+import { PersonaViewContainer } from './components/persona/PersonaViewContainer'
+import { useTwinStore } from './store/useTwinStore'
 import { IsometricRoom } from './components/floorplan/IsometricRoom'
 import { DataCenter3DView, type ColorMode } from './components/floorplan/DataCenter3DView'
 import { RackDetailCard } from './components/floorplan/RackDetailCard'
@@ -16,7 +19,6 @@ import { EditDeviceSpecModal } from './components/rack/EditDeviceSpecModal'
 import { UnassignedHostsDrawer } from './components/rack/UnassignedHostsDrawer'
 
 // Dedicated Tab Views
-import { OverviewView } from './components/views/OverviewView'
 import { RacksView } from './components/views/RacksView'
 import { DevicesView } from './components/views/DevicesView'
 import { AlertsView } from './components/views/AlertsView'
@@ -36,12 +38,21 @@ export function App() {
     return saved && VALID_TABS.includes(saved) ? saved : 'overview'
   })
   const [currentView, setCurrentView] = useState<'floor_plan' | 'rack_elevation' | 'floor_plan_editor' | 'device_page'>('floor_plan')
-  const [searchQuery, setSearchQuery] = useState('')
+  const searchQuery = ''
 
   // Persist active navigation tab to localStorage on change
   useEffect(() => {
     localStorage.setItem('dc_vision_active_tab', activeNav)
   }, [activeNav])
+
+  // Live WebSocket connection to FastAPI & Redis Twin Stream
+  useEffect(() => {
+    const store = useTwinStore.getState()
+    store.connectWebSocket()
+    return () => {
+      store.disconnectWebSocket()
+    }
+  }, [])
 
   // Floor plan data
   const [overview, setOverview] = useState<RoomOverview | null>(null)
@@ -67,15 +78,14 @@ export function App() {
   // Full Device Page Modal State (Latest Data + Custom Inventory)
   const [devicePageId, setDevicePageId] = useState<number | null>(null)
 
-  // Theme State (High-Contrast Dark vs Clean Light Theme)
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('dc_vision_theme') as 'dark' | 'light') || 'dark'
-  })
-  const handleToggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    localStorage.setItem('dc_vision_theme', next)
-  }
+  // Sync Spatial Breadcrumb with Zustand Store when viewing racks
+  useEffect(() => {
+    if (currentView === 'rack_elevation' && rackElevation) {
+      useTwinStore.getState().setSpatialLevel('rack', String(rackElevation.id), rackElevation.name)
+    } else if (currentView === 'floor_plan') {
+      useTwinStore.getState().resetSpatialSelection()
+    }
+  }, [currentView, rackElevation])
 
   // Load Room Overview
   const loadOverview = useCallback(() => {
@@ -204,60 +214,8 @@ export function App() {
     )
   }, [overview?.racks, searchQuery])
 
-  // Breadcrumbs
-  const breadcrumbs = useMemo(() => {
-    const list: { label: string; onClick?: () => void }[] = [
-      { label: overview?.site_name || 'Bangkok DC' },
-    ]
-
-    if (currentView === 'rack_elevation' && rackElevation) {
-      list.push({
-        label: overview?.room_name || 'Room A',
-        onClick: handleBack,
-      })
-      list.push({ label: rackElevation.name })
-    } else if (currentView === 'floor_plan_editor') {
-      list.push({
-        label: overview?.room_name || 'Room A',
-        onClick: () => {
-          setCurrentView('floor_plan')
-          setActiveNav('floor_plan')
-        },
-      })
-      list.push({
-        label: 'Floor Plan',
-        onClick: () => {
-          setCurrentView('floor_plan')
-          setActiveNav('floor_plan')
-        },
-      })
-      list.push({ label: 'Editor' })
-    } else {
-      list.push({
-        label: overview?.room_name || 'Room A',
-        onClick: activeNav !== 'overview' && activeNav !== 'floor_plan' ? () => handleSelectTab('overview') : undefined,
-      })
-      if (activeNav === 'overview') {
-        list.push({ label: 'Overview' })
-      } else if (activeNav === 'floor_plan') {
-        list.push({ label: 'Floor Plan' })
-      } else if (activeNav === 'racks') {
-        list.push({ label: 'Racks (12)' })
-      } else if (activeNav === 'devices') {
-        list.push({ label: 'Devices' })
-      } else if (activeNav === 'ipam') {
-        list.push({ label: 'IPAM Subnets' })
-      } else if (activeNav === 'alerts') {
-        list.push({ label: 'Alerts' })
-      } else if (activeNav === 'reports') {
-        list.push({ label: 'Reports' })
-      }
-    }
-    return list
-  }, [overview, currentView, rackElevation, activeNav, handleBack])
-
   return (
-    <div className={`flex h-screen w-screen bg-[#161c20] text-[#caedde] font-sans overflow-hidden ${theme === 'light' ? 'light-theme' : ''}`}>
+    <div className="flex h-screen w-screen bg-[var(--bg-base)] text-[var(--text-primary)] font-sans overflow-hidden">
       {/* Left Sidebar */}
       <Sidebar
         activeTab={activeNav}
@@ -267,14 +225,8 @@ export function App() {
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Header */}
-        <Header
-          breadcrumbs={breadcrumbs}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          isLive={true}
-          theme={theme}
-          onToggleTheme={handleToggleTheme}
+        {/* Top Apple VisionOS / Tesla Glassmorphic HUD Bar */}
+        <TopGlassmorphicHUD
           onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
           unassignedCount={unassignedCount}
         />
@@ -386,20 +338,18 @@ export function App() {
               </div>
             </div>
           ) : activeNav === 'overview' ? (
-            /* TAB 1: Executive Overview Dashboard */
-            <OverviewView
+            /* TAB 1: Unified Persona Digital Twin (NOC | Supervisor | Manager) */
+            <PersonaViewContainer
               overview={overview}
-              onNavigateToFloorPlan={(rackId) => {
-                if (rackId && overview?.racks) {
-                  const match = overview.racks.find((r) => r.id === rackId)
-                  if (match) setSelectedRackSummary(match)
-                }
-                setActiveNav('floor_plan')
-                setCurrentView('floor_plan')
-              }}
-              onNavigateToRackElevation={handleViewRackElevation}
+              onSelectRack={(rack) => setSelectedRackSummary(rack)}
+              onViewRackElevation={handleViewRackElevation}
               onNavigateToAlerts={() => handleSelectTab('alerts')}
-              onNavigateToDevices={() => handleSelectTab('devices')}
+              onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
+              unassignedCount={unassignedCount}
+              onMountDevice={(rackId) => {
+                setActiveRackId(rackId)
+                setIsMountModalOpen(true)
+              }}
             />
           ) : currentView === 'floor_plan_editor' ? (
             /* 3D Floor Plan Editor View */
@@ -644,6 +594,14 @@ export function App() {
           loadUnassignedCount()
           if (activeRackId) loadRackElevation(activeRackId)
         }}
+      />
+
+      {/* Global Spotlight Command Bar (Ctrl+K or ⌘K) */}
+      <SpotlightCommandBar
+        racks={overview?.racks || []}
+        onNavigateToRackElevation={handleViewRackElevation}
+        onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
+        onNavigateToTab={(tab) => handleSelectTab(tab as NavTab)}
       />
     </div>
   )
