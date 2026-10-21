@@ -1,38 +1,146 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: dc_vision_postgres
+    image: pgvector/pgvector:pg16
+    container_name: nexustwin-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-dc_vision}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexustwin_secret}
+      POSTGRES_MULTIPLE_DATABASES: zabbix_db,dcim_db
+    volumes:
+      - nexustwin_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nexustwin-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d dc_vision"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: dc_vision_redis
+    container_name: nexustwin-redis
     restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - nexustwin_redis_data:/data
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
+    networks:
+      - nexustwin-net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # Embedded Zabbix Stack (Optional Profile: run with --profile embedded-zabbix)
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-7.0-latest
+    container_name: nexustwin-zabbix-server
+    restart: unless-stopped
+    profiles:
+      - embedded-zabbix
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_SERVER_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexustwin_secret}
+      POSTGRES_DB: zabbix_db
+    ports:
+      - "10051:10051"
+    networks:
+      - nexustwin-net
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
+    container_name: nexustwin-zabbix-web
+    restart: unless-stopped
+    profiles:
+      - embedded-zabbix
+    depends_on:
+      - zabbix-server
+      - postgres
+    environment:
+      ZBX_SERVER_HOST: zabbix-server
+      DB_SERVER_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexustwin_secret}
+      POSTGRES_DB: zabbix_db
+      PHP_TZ: Asia/Bangkok
+    ports:
+      - "8080:8080"
+    networks:
+      - nexustwin-net
+
+  dcim-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: nexustwin-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-nexustwin_secret}@postgres:5432/dcim_db
+      REDIS_URL: redis://redis:6379/0
+      ZABBIX_MODE: ${ZABBIX_MODE:-external}
+      ZABBIX_API_URL: ${ZABBIX_API_URL:-http://192.168.1.85:8080/api_jsonrpc.php}
+      ZABBIX_API_TOKEN: ${ZABBIX_API_TOKEN:-9f14f8772b0ddb6d29ebab9f809201c030b3051d3d7f8639ddd4c6fba92c3808}
+      ZABBIX_USER: ${ZABBIX_USER:-Admin}
+      ZABBIX_PASSWORD: ${ZABBIX_PASSWORD:-zabbix}
+      AI_PROVIDER_API_KEY: ${AI_PROVIDER_API_KEY:-}
+    ports:
+      - "8000:8000"
+    networks:
+      - nexustwin-net
+
+  dcim-worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: nexustwin-worker
+    command: python -m backend.app.workers.zabbix_poller
+    restart: unless-stopped
+    profiles:
+      - full-stack
+    depends_on:
+      - dcim-backend
+      - redis
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-nexustwin_secret}@postgres:5432/dcim_db
+      REDIS_URL: redis://redis:6379/0
+      ZABBIX_MODE: ${ZABBIX_MODE:-external}
+      ZABBIX_API_URL: ${ZABBIX_API_URL:-http://192.168.1.85:8080/api_jsonrpc.php}
+      ZABBIX_API_TOKEN: ${ZABBIX_API_TOKEN:-9f14f8772b0ddb6d29ebab9f809201c030b3051d3d7f8639ddd4c6fba92c3808}
+    networks:
+      - nexustwin-net
+
+  dcim-frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: nexustwin-frontend
+    restart: unless-stopped
+    depends_on:
+      - dcim-backend
+    ports:
+      - "3000:80"
+    networks:
+      - nexustwin-net
+
 volumes:
-  postgres_data:
-  redis_data:
+  nexustwin_postgres_data:
+  nexustwin_redis_data:
+
+networks:
+  nexustwin-net:
+    driver: bridge
