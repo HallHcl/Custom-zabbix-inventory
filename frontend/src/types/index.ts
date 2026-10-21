@@ -247,6 +247,17 @@ export interface DeviceStatusUpdate {
   status: 'Active' | 'Planned' | 'Maintenance' | 'Offline'
 }
 
+export interface DeviceSpecUpdate {
+  name?: string
+  device_type?: 'Server' | 'Switch' | 'Firewall' | 'Storage' | 'UPS' | 'Patch Panel' | 'Blank Panel' | string
+  model?: string
+  manufacturer?: string
+  serial_number?: string
+  status?: 'Active' | 'Planned' | 'Maintenance' | 'Offline'
+  custom_fields?: Record<string, any>
+  tags?: Record<string, any>
+}
+
 // ─── IPAM Lite Types ──────────────────────────────────────────
 
 export interface Subnet {

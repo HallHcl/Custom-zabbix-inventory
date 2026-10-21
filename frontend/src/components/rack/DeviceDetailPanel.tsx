@@ -9,6 +9,7 @@ import {
   Thermometer,
   ExternalLink,
   Activity,
+  Settings2,
 } from 'lucide-react'
 import type { Device, DeviceMetrics } from '../../types'
 import { fetchDeviceMetrics } from '../../api/client'
@@ -19,6 +20,7 @@ interface DeviceDetailPanelProps {
   onSelectDevice: (device: Device) => void
   onUnmountDevice: (deviceId: number) => void
   onOpenDevicePage?: (deviceId: number) => void
+  onEditSpec?: (device: Device) => void
 }
 
 export function DeviceDetailPanel({
@@ -27,6 +29,7 @@ export function DeviceDetailPanel({
   onSelectDevice,
   onUnmountDevice,
   onOpenDevicePage,
+  onEditSpec,
 }: DeviceDetailPanelProps) {
   const [metrics, setMetrics] = useState<DeviceMetrics | null>(null)
 
@@ -160,15 +163,15 @@ export function DeviceDetailPanel({
             </div>
           </div>
 
-          {/* Full Device Page Modal Trigger */}
-          {onOpenDevicePage && (
+          {/* Edit Hardware Spec & Brand Modal Trigger */}
+          {onEditSpec && (
             <button
               type="button"
-              onClick={() => onOpenDevicePage(device.id)}
-              className="w-full py-1.5 px-3 rounded-[3px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] font-mono font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              onClick={() => onEditSpec(device)}
+              className="w-full py-1.5 px-3 rounded-[3px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] font-mono font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer hover:border-[#8bd7d1] group"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Open Hardware Diagnostics Page</span>
+              <Settings2 className="w-3.5 h-3.5 text-[#8bd7d1] group-hover:rotate-45 transition-transform" />
+              <span>Edit Hardware Spec & Brand</span>
             </button>
           )}
 

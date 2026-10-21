@@ -12,6 +12,7 @@ import { RackInventoryNav } from './components/rack/RackInventoryNav'
 import { RackElevation } from './components/rack/RackElevation'
 import { DeviceDetailPanel } from './components/rack/DeviceDetailPanel'
 import { MountDeviceModal } from './components/rack/MountDeviceModal'
+import { EditDeviceSpecModal } from './components/rack/EditDeviceSpecModal'
 import { UnassignedHostsDrawer } from './components/rack/UnassignedHostsDrawer'
 
 // Dedicated Tab Views
@@ -58,6 +59,10 @@ export function App() {
   // Mount modal state
   const [isMountModalOpen, setIsMountModalOpen] = useState(false)
   const [mountTargetU, setMountTargetU] = useState(1)
+
+  // Edit Hardware Spec & Brand Modal State
+  const [editingDevice, setEditingDevice] = useState<Device | null>(null)
+  const [isEditSpecModalOpen, setIsEditSpecModalOpen] = useState(false)
 
   // Full Device Page Modal State (Latest Data + Custom Inventory)
   const [devicePageId, setDevicePageId] = useState<number | null>(null)
@@ -373,6 +378,10 @@ export function App() {
                   onSelectDevice={(dev) => setSelectedDevice(dev)}
                   onUnmountDevice={handleUnmountDevice}
                   onOpenDevicePage={handleOpenDevicePage}
+                  onEditSpec={(dev) => {
+                    setEditingDevice(dev)
+                    setIsEditSpecModalOpen(true)
+                  }}
                 />
               </div>
             </div>
@@ -609,6 +618,21 @@ export function App() {
           }}
         />
       )}
+
+      {/* Edit Hardware Spec & Brand Modal */}
+      <EditDeviceSpecModal
+        device={editingDevice}
+        isOpen={isEditSpecModalOpen}
+        onClose={() => {
+          setIsEditSpecModalOpen(false)
+          setEditingDevice(null)
+        }}
+        onSuccess={(updatedDevice) => {
+          setSelectedDevice(updatedDevice)
+          if (activeRackId) loadRackElevation(activeRackId, updatedDevice.id)
+          loadOverview()
+        }}
+      />
 
       {/* Zabbix Unassigned Hosts Ingestion Drawer */}
       <UnassignedHostsDrawer

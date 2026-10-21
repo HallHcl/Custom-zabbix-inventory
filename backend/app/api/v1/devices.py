@@ -7,6 +7,7 @@ from backend.app.db.session import get_db
 from backend.app.db.models import Device, Rack, Room
 from backend.app.schemas import (
     DeviceCreate,
+    DeviceUpdate,
     DeviceResponse,
     DeviceMetricsResponse,
     DeviceMetricHistoryPoint,
@@ -283,7 +284,6 @@ async def assign_device_from_zabbix(
 
     return build_device_response(new_device, z_status)
 
-
 @router.patch("/{device_id}/status", response_model=DeviceResponse)
 async def update_device_status(
     device_id: int,
@@ -422,6 +422,62 @@ async def get_device_metrics(device_id: int, db: AsyncSession = Depends(get_db))
         cpu_history=cpu_history,
         active_alerts=active_alerts,
     )
+
+
+@router.patch("/{device_id}", response_model=DeviceResponse)
+async def update_device_spec(
+    device_id: int,
+    payload: DeviceUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Update core hardware specifications and brand attributes (model, manufacturer, device_type, etc.).
+    Automatically syncs custom_fields brand/vendor and re-computes brand metadata.
+    """
+    result = await db.execute(select(Device).where(Device.id == device_id))
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+
+    if payload.name is not None and payload.name.strip():
+        device.name = payload.name.strip()
+    if payload.device_type is not None and payload.device_type.strip():
+        device.device_type = payload.device_type.strip()
+    if payload.model is not None:
+        device.model = payload.model.strip() if payload.model else None
+    if payload.manufacturer is not None:
+        device.manufacturer = payload.manufacturer.strip() if payload.manufacturer else None
+    if payload.serial_number is not None:
+        device.serial_number = payload.serial_number.strip() if payload.serial_number else None
+    if payload.status is not None:
+        device.status = payload.status
+
+    cf = dict(device.custom_fields or {})
+    if payload.custom_fields is not None:
+        cf.update(payload.custom_fields)
+
+    # Sync vendor & brand in custom_fields when manufacturer is changed
+    if payload.manufacturer:
+        cf["vendor"] = payload.manufacturer.strip()
+        cf["brand"] = payload.manufacturer.strip()
+
+    device.custom_fields = cf
+
+    if payload.tags is not None:
+        current_tags = dict(device.tags or {})
+        current_tags.update(payload.tags)
+        device.tags = current_tags
+
+    await db.commit()
+    await db.refresh(device)
+
+    # Enrich with Zabbix summaries
+    z_status = None
+    if device.zabbix_host_id:
+        summaries = await redis_service.get_hosts_summaries([device.zabbix_host_id])
+        z_status = summaries.get(device.zabbix_host_id)
+
+    return build_device_response(device, z_status)
 
 
 @router.patch("/{device_id}/inventory", response_model=DeviceResponse)

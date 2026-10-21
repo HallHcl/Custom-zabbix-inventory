@@ -114,3 +114,58 @@ async def test_api_zabbix_hosts_and_metrics():
         assert "cpu_utilization" in metrics
         assert "memory_utilization" in metrics
         assert "temperature_c" in metrics
+
+
+@pytest.mark.asyncio
+async def test_api_update_device_spec():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Fetch devices list to get a valid device
+        devices_resp = await client.get("/api/v1/devices")
+        assert devices_resp.status_code == 200
+        devices = devices_resp.json()
+        assert len(devices) > 0
+        target = devices[0]
+        dev_id = target["id"]
+
+        # 2. Update hardware spec (brand, model, device_type, serial_number)
+        patch_payload = {
+            "name": f"{target['name']}-EDITED",
+            "manufacturer": "Dell EMC",
+            "model": "PowerEdge R750xs",
+            "device_type": "Server",
+            "serial_number": "DL-TEST-998811",
+            "status": "Active",
+            "custom_fields": {
+                "brand": "Dell EMC",
+                "vendor": "Dell EMC",
+                "role": "Application Server",
+            },
+        }
+
+        patch_resp = await client.patch(f"/api/v1/devices/{dev_id}", json=patch_payload)
+        assert patch_resp.status_code == 200
+        updated = patch_resp.json()
+
+        assert updated["id"] == dev_id
+        assert updated["name"] == patch_payload["name"]
+        assert updated["manufacturer"] == "Dell EMC"
+        assert updated["model"] == "PowerEdge R750xs"
+        assert updated["serial_number"] == "DL-TEST-998811"
+        assert updated["custom_fields"]["brand"] == "Dell EMC"
+        assert updated["custom_fields"]["vendor"] == "Dell EMC"
+        # Verify brand_info is resolved dynamically by backend
+        assert updated.get("brand_info") is not None
+        assert updated["brand_info"]["tag"] == "DELL EMC"
+
+        # 3. Restore original fields so test is idempotent
+        restore_payload = {
+            "name": target["name"],
+            "manufacturer": target["manufacturer"],
+            "model": target["model"],
+            "device_type": target["device_type"],
+            "serial_number": target.get("serial_number"),
+            "status": target.get("status", "Active"),
+        }
+        restore_resp = await client.patch(f"/api/v1/devices/{dev_id}", json=restore_payload)
+        assert restore_resp.status_code == 200

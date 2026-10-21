@@ -9,6 +9,7 @@ import type {
   UnassignedHostsOverview,
   DeviceAssignFromZabbix,
   DeviceStatusUpdate,
+  DeviceSpecUpdate,
   Subnet,
   SubnetCreate,
   SubnetIPDetail,
@@ -125,6 +126,22 @@ export async function updateDeviceInventory(
     body: JSON.stringify(payload),
   })
   if (!res.ok) throw new Error('Failed to update device inventory')
+  return res.json()
+}
+
+export async function updateDeviceSpec(
+  deviceId: number,
+  payload: DeviceSpecUpdate
+): Promise<Device> {
+  const res = await fetch(`${API_BASE}/devices/${deviceId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to update device hardware spec')
+  }
   return res.json()
 }
 

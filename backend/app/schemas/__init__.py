@@ -40,6 +40,17 @@ class DeviceCreate(DeviceBase):
     rack_id: int
 
 
+class DeviceUpdate(BaseModel):
+    name: Optional[str] = None
+    device_type: Optional[str] = None
+    model: Optional[str] = None
+    manufacturer: Optional[str] = None
+    serial_number: Optional[str] = None
+    status: Optional[str] = None
+    custom_fields: Optional[Dict[str, Any]] = None
+    tags: Optional[Dict[str, Any]] = None
+
+
 class BrandInfo(BaseModel):
     name: str
     tag: str
