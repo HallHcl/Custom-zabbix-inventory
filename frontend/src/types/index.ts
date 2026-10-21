@@ -290,4 +290,54 @@ export interface SubnetIPDetail {
   is_gateway: boolean
 }
 
+// ─── AI Copilot & Placement Optimizer Types ───────────────────
+
+export interface PlacementRecommendation {
+  rack_id: string
+  rack_name: string
+  row_name: string
+  recommended_start_u: number
+  u_height: number
+  composite_score: number
+  power_headroom_watts: number
+  power_score: number
+  thermal_score: number
+  ru_zone_score: number
+  inlet_temp_c: number
+  reasoning: string
+  available_slots: number[]
+}
+
+export interface CopilotAction {
+  type: 'FLY_TO_RACK' | 'SET_HEATMAP' | 'SET_PERSONA' | 'OPEN_BLAST_RADIUS' | 'OPEN_PROVISIONING_WIZARD' | string
+  label: string
+  payload: Record<string, any>
+}
+
+export interface KnowledgeSnippet {
+  id: string
+  title: string
+  doc_type: string
+  content_preview?: string
+  content?: string
+}
+
+export interface CopilotCommandResponse {
+  intent: string
+  message: string
+  actions: CopilotAction[]
+  recommendations: PlacementRecommendation[]
+  knowledge_snippet?: KnowledgeSnippet | null
+}
+
+export interface PlacementRequestPayload {
+  u_height?: number
+  power_watts?: number
+  category?: string
+  preferred_row?: string
+  weight_kg?: number
+  requires_dual_feed?: boolean
+}
+
+
 

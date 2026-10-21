@@ -67,6 +67,12 @@ interface TwinStoreState {
   openWizard: (wizard: "ONBOARDING" | "FLOOR_BUILDER" | "MAINTENANCE_SIMULATOR") => void;
   setWizardStep: (step: number) => void;
   closeWizard: () => void;
+
+  // 8. Agentic AI Copilot Drawer State
+  isCopilotOpen: boolean;
+  openCopilot: () => void;
+  closeCopilot: () => void;
+  toggleCopilot: () => void;
 }
 
 let socketInstance: WebSocket | null = null;
@@ -307,4 +313,10 @@ export const useTwinStore = create<TwinStoreState>((set, get) => ({
   openWizard: (activeWizard) => set({ activeWizard, wizardStep: 1 }),
   setWizardStep: (wizardStep) => set({ wizardStep }),
   closeWizard: () => set({ activeWizard: null, wizardStep: 1 }),
+
+  // 8. Agentic AI Copilot State
+  isCopilotOpen: false,
+  openCopilot: () => set({ isCopilotOpen: true }),
+  closeCopilot: () => set({ isCopilotOpen: false }),
+  toggleCopilot: () => set((state) => ({ isCopilotOpen: !state.isCopilotOpen })),
 }));

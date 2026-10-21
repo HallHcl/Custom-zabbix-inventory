@@ -319,5 +319,50 @@ class DeviceTemplate(BaseModel):
     brand_info: Optional[BrandInfo] = None
 
 
+class PlacementRequest(BaseModel):
+    u_height: int = Field(default=2, ge=1, le=10)
+    power_watts: int = Field(default=450, ge=50, le=10000)
+    category: str = Field(default="SERVER")  # SERVER, STORAGE, SWITCH, UPS, PDU
+    preferred_row: Optional[str] = None      # e.g. "Row A", "Row B"
+    weight_kg: Optional[float] = 18.0
+    requires_dual_feed: bool = True
+
+
+class PlacementRecommendation(BaseModel):
+    rack_id: str
+    rack_name: str
+    row_name: str
+    recommended_start_u: int
+    u_height: int
+    composite_score: float
+    power_headroom_watts: int
+    power_score: float
+    thermal_score: float
+    ru_zone_score: float
+    inlet_temp_c: float
+    reasoning: str
+    available_slots: List[int] = []
+
+
+class CopilotAction(BaseModel):
+    type: str  # FLY_TO_RACK, SET_HEATMAP, SET_PERSONA, OPEN_BLAST_RADIUS, OPEN_PROVISIONING_WIZARD
+    label: str
+    payload: Dict[str, Any]
+
+
+class CopilotCommandRequest(BaseModel):
+    query: str
+    context: Optional[Dict[str, Any]] = None
+
+
+class CopilotCommandResponse(BaseModel):
+    intent: str
+    message: str
+    actions: List[CopilotAction] = []
+    recommendations: List[PlacementRecommendation] = []
+    knowledge_snippet: Optional[Dict[str, Any]] = None
+
+
+
 
 

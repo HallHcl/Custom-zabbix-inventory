@@ -13,6 +13,10 @@ import type {
   Subnet,
   SubnetCreate,
   SubnetIPDetail,
+  PlacementRecommendation,
+  CopilotCommandResponse,
+  PlacementRequestPayload,
+  KnowledgeSnippet,
 } from '../types'
 
 const API_BASE = '/api/v1'
@@ -311,5 +315,47 @@ export async function fetchSubnetIPs(subnetId: number): Promise<SubnetIPDetail[]
   if (!res.ok) throw new Error(`Failed to fetch IP grid for subnet ${subnetId}`)
   return res.json()
 }
+
+// ─── AI Copilot & Placement Optimizer API ─────────────────────
+
+export async function executeCopilotCommand(
+  query: string,
+  context?: Record<string, any>,
+): Promise<CopilotCommandResponse> {
+  const res = await fetch(`${API_BASE}/ai/command`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, context }),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to execute copilot command')
+  }
+  return res.json()
+}
+
+export async function optimizePlacement(
+  payload: PlacementRequestPayload,
+  limit: number = 3,
+): Promise<PlacementRecommendation[]> {
+  const res = await fetch(`${API_BASE}/ai/optimize-placement?limit=${limit}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || 'Failed to calculate optimal placement')
+  }
+  return res.json()
+}
+
+export async function fetchKnowledgeDocuments(docType?: string): Promise<KnowledgeSnippet[]> {
+  const qs = docType ? `?doc_type=${encodeURIComponent(docType)}` : ''
+  const res = await fetch(`${API_BASE}/ai/knowledge${qs}`)
+  if (!res.ok) return []
+  return res.json()
+}
+
 
 

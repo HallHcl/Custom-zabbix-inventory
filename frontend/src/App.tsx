@@ -18,6 +18,7 @@ import { MountDeviceModal } from './components/rack/MountDeviceModal'
 import { EditDeviceSpecModal } from './components/rack/EditDeviceSpecModal'
 import { DecommissionModal } from './components/rack/DecommissionModal'
 import { BlastRadiusModal } from './components/analytics/BlastRadiusModal'
+import { SpatialCopilotDrawer } from './components/ai/SpatialCopilotDrawer'
 import { UnassignedHostsDrawer } from './components/rack/UnassignedHostsDrawer'
 
 // Dedicated Tab Views
@@ -166,12 +167,12 @@ export function App() {
   }
 
   // Navigate to Rack Elevation View
-  const handleViewRackElevation = (rack: RackSummary) => {
+  const handleViewRackElevation = useCallback((rack: RackSummary) => {
     setReturnNav(activeNav)
     setActiveRackId(rack.id)
     loadRackElevation(rack.id)
     setCurrentView('rack_elevation')
-  }
+  }, [activeNav, loadRackElevation])
 
   // Navigate back to floor plan / racks / overview
   const handleBack = useCallback(() => {
@@ -241,6 +242,34 @@ export function App() {
       setIsBlastRadiusModalOpen(true)
     }
   }, [rackElevation])
+
+  // Copilot Action Dispatchers
+  const handleCopilotNavigateToRack = useCallback((rackNameOrId: string) => {
+    if (!overview?.racks) return
+    const match = overview.racks.find(
+      (r) => r.name.toLowerCase() === rackNameOrId.toLowerCase() || String(r.id) === String(rackNameOrId)
+    )
+    if (match) {
+      handleViewRackElevation(match)
+    }
+  }, [overview?.racks, handleViewRackElevation])
+
+  const handleCopilotOpenProvisioning = useCallback((rackIdOrName: number | string, startU: number) => {
+    let targetRackId = activeRackId
+    if (overview?.racks) {
+      const match = overview.racks.find(
+        (r) => r.name.toLowerCase() === String(rackIdOrName).toLowerCase() || String(r.id) === String(rackIdOrName)
+      )
+      if (match) {
+        targetRackId = match.id
+        setActiveRackId(match.id)
+      }
+    }
+    if (targetRackId) {
+      setMountTargetU(startU)
+      setIsMountModalOpen(true)
+    }
+  }, [activeRackId, overview?.racks])
 
   // Open Mount Modal on empty slot click
   const handleEmptySlotClick = (u: number) => {
@@ -677,6 +706,14 @@ export function App() {
           loadUnassignedCount()
           if (activeRackId) loadRackElevation(activeRackId)
         }}
+      />
+
+      {/* NexusTwin Spatial AI Copilot Floating Drawer */}
+      <SpatialCopilotDrawer
+        onNavigateToRack={handleCopilotNavigateToRack}
+        onOpenProvisioningWizard={handleCopilotOpenProvisioning}
+        onOpenBlastRadius={handleOpenBlastRadius}
+        onNavigateToTab={(tab) => handleSelectTab(tab as NavTab)}
       />
 
       {/* Global Spotlight Command Bar (Ctrl+K or ⌘K) */}
