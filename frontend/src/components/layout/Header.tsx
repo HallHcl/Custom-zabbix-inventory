@@ -38,7 +38,7 @@ export function Header({
                 {crumb.label}
               </button>
             ) : (
-              <span className="text-[#caedde] font-semibold">{crumb.label}</span>
+              <span className="text-[#eeeeee] font-semibold">{crumb.label}</span>
             )}
           </div>
         ))}
@@ -54,14 +54,14 @@ export function Header({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search racks, hosts, IPs..."
-            className="w-full bg-[#273139] text-xs text-[#caedde] placeholder:text-[#85a6b1] pl-8 pr-3 py-1.5 rounded-[3px] border border-[#394650] focus:outline-none focus:border-[#8bd7d1] transition-colors font-mono"
+            className="w-full bg-[#273139] text-xs text-[#eeeeee] placeholder:text-[#85a6b1] pl-8 pr-3 py-1.5 rounded-[3px] border border-[#394650] focus:outline-none focus:border-[#7aa5d2] transition-colors font-mono"
           />
         </div>
 
         {/* Live Telemetry Heartbeat */}
         <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-[#273139] border border-[#394650] text-[11px] font-mono">
-          <Radio className={`w-3.5 h-3.5 ${isLive ? 'text-[#8bd7d1] animate-pulse' : 'text-[#85a6b1]'}`} />
-          <span className="text-[#caedde]">
+          <Radio className={`w-3.5 h-3.5 ${isLive ? 'text-[#7aa5d2] animate-pulse' : 'text-[#85a6b1]'}`} />
+          <span className="text-[#eeeeee]">
             {isLive ? 'TELEMETRY LIVE' : 'TELEMETRY PAUSED'}
           </span>
         </div>
@@ -71,13 +71,13 @@ export function Header({
           <button
             type="button"
             onClick={onOpenUnassigned}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#8bd7d1] text-xs text-[#caedde] hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#7aa5d2] text-xs text-[#eeeeee] hover:text-white transition-colors cursor-pointer"
             title="Open Zabbix Unassigned Hosts Ingestion Queue"
           >
-            <Inbox className="w-3.5 h-3.5 text-[#8bd7d1]" />
+            <Inbox className="w-3.5 h-3.5 text-[#7aa5d2]" />
             <span className="text-[11px] font-mono hidden sm:inline">Unassigned</span>
             {typeof unassignedCount === 'number' && unassignedCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-[2px] bg-cyan-950 border border-cyan-700 text-[10px] font-mono text-cyan-300 font-bold">
+              <span className="px-1.5 py-0.2 rounded-[2px] bg-[#303841] border border-[#7aa5d2] text-[10px] font-mono text-[#7aa5d2] font-bold">
                 {unassignedCount}
               </span>
             )}
@@ -89,7 +89,7 @@ export function Header({
           <button
             type="button"
             onClick={onToggleTheme}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-xs text-[#caedde] hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-xs text-[#eeeeee] hover:text-white transition-colors cursor-pointer"
             title={theme === 'dark' ? 'Switch to Precision Light Blueprint' : 'Switch to Tactical Dark NOC'}
           >
             {theme === 'dark' ? (
@@ -99,7 +99,7 @@ export function Header({
               </>
             ) : (
               <>
-                <Moon className="w-3.5 h-3.5 text-[#8bd7d1]" />
+                <Moon className="w-3.5 h-3.5 text-[#7aa5d2]" />
                 <span className="text-[11px] font-mono hidden sm:inline">Dark</span>
               </>
             )}

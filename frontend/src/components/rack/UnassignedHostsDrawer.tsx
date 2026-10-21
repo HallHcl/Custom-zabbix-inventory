@@ -195,15 +195,15 @@ export function UnassignedHostsDrawer({
         {/* Header */}
         <div className="px-5 py-4 border-b border-[#394650] bg-[#20282f] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[3px] bg-[#34424b] border border-[#50626f] flex items-center justify-center text-[#8bd7d1]">
+            <div className="w-8 h-8 rounded-[3px] bg-[#34424b] border border-[#50626f] flex items-center justify-center text-[#7aa5d2]">
               <Layers className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold tracking-wider text-white font-sans uppercase">
+                <h3 className="text-sm font-bold tracking-wider text-[#eeeeee] font-sans uppercase">
                   Zabbix Ingestion Queue
                 </h3>
-                <span className="px-1.5 py-0.2 rounded-[2px] bg-cyan-950/80 border border-cyan-700/80 text-[10px] font-mono text-cyan-300">
+                <span className="px-1.5 py-0.2 rounded-[2px] bg-[#303841] border border-[#7aa5d2] text-[10px] font-mono text-[#7aa5d2] font-bold">
                   {hosts.length} UNASSIGNED
                 </span>
               </div>
@@ -221,7 +221,7 @@ export function UnassignedHostsDrawer({
               title="Refresh unassigned hosts"
               className="p-1.5 rounded-[3px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#85a6b1] hover:text-[#caedde] transition-colors cursor-pointer disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#8bd7d1]' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#7aa5d2]' : ''}`} />
             </button>
             <button
               type="button"
@@ -250,7 +250,7 @@ export function UnassignedHostsDrawer({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search unassigned hosts by name or IP..."
-              className="w-full bg-[#273139] border border-[#394650] rounded-[3px] pl-9 pr-3 py-1.5 text-xs text-[#caedde] placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1] font-mono"
+              className="w-full bg-[#273139] border border-[#394650] rounded-[3px] pl-9 pr-3 py-1.5 text-xs text-[#caedde] placeholder:text-[#85a6b1] focus:outline-none focus:border-[#7aa5d2] font-mono"
             />
           </div>
 
@@ -266,7 +266,7 @@ export function UnassignedHostsDrawer({
                   onClick={() => setSelectedType(t)}
                   className={`px-2.5 py-1 rounded-[3px] border transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 text-[11px] ${
                     active
-                      ? 'bg-[#34424b] border-[#8bd7d1] text-[#8bd7d1] font-semibold'
+                      ? 'bg-[#34424b] border-[#7aa5d2] text-[#7aa5d2] font-semibold'
                       : 'bg-[#273139] border-[#394650] text-[#85a6b1] hover:text-[#caedde]'
                   }`}
                 >
@@ -283,7 +283,7 @@ export function UnassignedHostsDrawer({
           <div className="p-4 border-b border-[#50626f] bg-[#222d36] shadow-inner shrink-0">
             <div className="flex items-center justify-between pb-2 border-b border-[#394650] mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#8bd7d1] font-mono uppercase">
+                <span className="text-xs font-bold text-[#7aa5d2] font-mono uppercase">
                   Slotting Host: {slottingHost.name}
                 </span>
                 <span className={`px-1.5 py-0.2 rounded-[2px] border text-[9px] font-mono ${getTypeBadgeClass(slottingHost.inferred_type)}`}>
@@ -385,7 +385,7 @@ export function UnassignedHostsDrawer({
                 <button
                   type="submit"
                   disabled={assigning}
-                  className="px-3 py-1.5 rounded-[2px] bg-[#34424b] hover:bg-[#435561] border border-[#8bd7d1] text-[#8bd7d1] hover:text-white font-semibold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-[2px] bg-[#34424b] hover:bg-[#435561] border border-[#7aa5d2] text-[#7aa5d2] hover:text-white font-semibold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   {assigning ? (
                     <>
@@ -408,7 +408,7 @@ export function UnassignedHostsDrawer({
         <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
           {loading && hosts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-[#85a6b1] font-mono text-xs space-y-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-[#8bd7d1]" />
+              <RefreshCw className="w-6 h-6 animate-spin text-[#7aa5d2]" />
               <span>Querying live Zabbix API &amp; CMDB state...</span>
             </div>
           ) : error ? (
@@ -418,8 +418,8 @@ export function UnassignedHostsDrawer({
             </div>
           ) : filteredHosts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-[#85a6b1] font-mono text-xs space-y-2 text-center">
-              <CheckCircle2 className="w-8 h-8 text-[#8bd7d1] opacity-75" />
-              <span className="text-white font-medium">All Zabbix hosts are allocated!</span>
+              <CheckCircle2 className="w-8 h-8 text-[#7aa5d2] opacity-75" />
+              <span className="text-[#eeeeee] font-medium">All Zabbix hosts are allocated!</span>
               <span className="text-[11px] text-[#85a6b1]">No unassigned hosts match your current filter.</span>
             </div>
           ) : (
@@ -430,14 +430,14 @@ export function UnassignedHostsDrawer({
                   key={host.hostid}
                   className={`p-3 rounded-[3px] border transition-all ${
                     isSelected
-                      ? 'bg-[#27333d] border-[#8bd7d1] shadow-md'
+                      ? 'bg-[#27333d] border-[#7aa5d2] shadow-md'
                       : 'bg-[#20282f] border-[#394650] hover:border-[#50626f]'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-white text-xs tracking-tight truncate">
+                        <span className="font-bold text-[#eeeeee] text-xs tracking-tight truncate">
                           {host.name}
                         </span>
                         <span className={`px-1.5 py-0.2 rounded-[2px] border text-[9px] font-mono flex items-center gap-1 ${getTypeBadgeClass(host.inferred_type)}`}>
@@ -467,9 +467,9 @@ export function UnassignedHostsDrawer({
                     <button
                       type="button"
                       onClick={() => handleOpenSlotForm(host)}
-                      className="px-2.5 py-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#8bd7d1] text-xs font-mono text-[#caedde] hover:text-white transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#7aa5d2] text-xs font-mono text-[#caedde] hover:text-white transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
                     >
-                      <ArrowRight className="w-3.5 h-3.5 text-[#8bd7d1]" />
+                      <ArrowRight className="w-3.5 h-3.5 text-[#7aa5d2]" />
                       <span>Slot</span>
                     </button>
                   </div>

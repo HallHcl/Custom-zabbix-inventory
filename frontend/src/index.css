@@ -2,24 +2,24 @@
 
 @layer base {
   :root {
-    /* Slate & Seafoam NOC Design System Tokens (Custom Palette) */
-    --noc-bg-base: #161c20;
-    --noc-bg-surface: #20282f;
-    --noc-bg-panel: #273139;
-    --noc-bg-elevated: #34424b;
-    --noc-bg-chassis: #414a50;
+    /* Custom Darkmode 4-Color Palette: #303841, #47555E, #7AA5D2, #EEEEEE */
+    --noc-bg-base: #303841;       /* Dark Charcoal / Slate Gray (Primary Background) */
+    --noc-bg-surface: #37414b;    /* Surface Container Background */
+    --noc-bg-panel: #47555e;      /* Steel Slate (Panels, Cards, Headers) */
+    --noc-bg-elevated: #53636f;   /* Elevated Controls, Hover Buttons */
+    --noc-bg-chassis: #3f4c55;    /* Chassis Cabinet Background */
 
     /* Hairline Precision Borders (1px) */
-    --noc-border-subtle: #2b363e;
-    --noc-border-base: #394650;
-    --noc-border-strong: #50626f;
-    --noc-border-focus: #8bd7d1;
+    --noc-border-subtle: #3f4c55;
+    --noc-border-base: #47555e;
+    --noc-border-strong: #5c6e7a;
+    --noc-border-focus: #7aa5d2;
 
     /* Palette Telemetry Accents */
-    --noc-slate: #414a50;
-    --noc-steel: #85a6b1;
-    --noc-seafoam: #8bd7d1;
-    --noc-mint: #caedde;
+    --noc-slate: #47555e;
+    --noc-steel: #9bb7d4;
+    --noc-blue: #7aa5d2;         /* Ice Blue Signature Accent */
+    --noc-white: #eeeeee;        /* Crisp Off-White */
 
     /* Safety Alarm Accents */
     --noc-emerald: #10b981;
@@ -27,10 +27,10 @@
     --noc-rose: #f43f5e;
 
     /* Text Tiers */
-    --noc-text-bright: #f3f8f6;
-    --noc-text-primary: #caedde;
-    --noc-text-secondary: #85a6b1;
-    --noc-text-muted: #627781;
+    --noc-text-bright: #ffffff;
+    --noc-text-primary: #eeeeee;  /* Main High-Contrast Text */
+    --noc-text-secondary: #9bb7d4;/* Secondary / Telemetry Text */
+    --noc-text-muted: #788998;    /* Muted Labels */
   }
 }
 
@@ -39,8 +39,8 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #161c20;
-  color: #caedde;
+  background-color: #303841;
+  color: #eeeeee;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -58,37 +58,122 @@ html, body, #root {
   height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #161c20;
+  background: #303841;
 }
 ::-webkit-scrollbar-thumb {
-  background: #414a50;
+  background: #47555e;
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #50626f;
+  background: #7aa5d2;
 }
 
 /* Tactical NOC Reusable Components */
 .noc-panel {
-  background-color: #20282f;
-  border: 1px solid #394650;
+  background-color: #37414b;
+  border: 1px solid #47555e;
   border-radius: 3px;
 }
 
 .noc-panel-header {
-  background-color: #273139;
-  border-bottom: 1px solid #394650;
+  background-color: #47555e;
+  border-bottom: 1px solid #5c6e7a;
   padding: 0.5rem 0.875rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #caedde;
+  color: #eeeeee;
   letter-spacing: 0.025em;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* Clean High-Contrast Light Theme Overrides (Precision Engineering Look) */
+/* ── Darkmode Universal Palette Color Mapping ─────────────────────── */
+/* Base & Surface Backgrounds */
+.bg-\[\#161c20\],
+.bg-\[\#0c1116\] {
+  background-color: #303841 !important;
+}
+
+.bg-\[\#1a2127\],
+.bg-\[\#20282f\],
+.bg-\[\#161f26\]\/90,
+.bg-\[\#1a2329\] {
+  background-color: #37414b !important;
+}
+
+.bg-\[\#273139\] {
+  background-color: #47555e !important;
+}
+
+.bg-\[\#34424b\] {
+  background-color: #53636f !important;
+}
+
+.bg-\[\#414a50\] {
+  background-color: #3f4c55 !important;
+}
+
+/* Borders */
+.border-\[\#2b363e\] {
+  border-color: #3f4c55 !important;
+}
+
+.border-\[\#394650\],
+.border-\[\#223240\],
+.border-\[\#304250\] {
+  border-color: #47555e !important;
+}
+
+.border-\[\#50626f\] {
+  border-color: #5c6e7a !important;
+}
+
+.border-\[\#8bd7d1\] {
+  border-color: #7aa5d2 !important;
+}
+
+/* Text Colors */
+.text-\[\#caedde\] {
+  color: #eeeeee !important;
+}
+
+.text-\[\#85a6b1\] {
+  color: #9bb7d4 !important;
+}
+
+.text-\[\#8bd7d1\] {
+  color: #7aa5d2 !important;
+}
+
+/* Focus and Active States */
+.focus\:border-\[\#8bd7d1\]:focus {
+  border-color: #7aa5d2 !important;
+}
+
+/* Background Accents & Hovers */
+.bg-\[\#8bd7d1\] {
+  background-color: #7aa5d2 !important;
+}
+
+.hover\:bg-\[\#caedde\]:hover {
+  background-color: #eeeeee !important;
+}
+
+.hover\:bg-\[\#252f36\]:hover,
+.hover\:bg-\[\#273139\]:hover {
+  background-color: #47555e !important;
+}
+
+.hover\:bg-\[\#34424b\]:hover {
+  background-color: #53636f !important;
+}
+
+.hover\:border-\[\#8bd7d1\]:hover {
+  border-color: #7aa5d2 !important;
+}
+
+/* ── Clean High-Contrast Light Theme Overrides ─────────────────────── */
 .light-theme {
   background-color: #f1f6f5 !important;
   color: #1b262c !important;

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import type { Device, RackElevation as RackElevationType } from '../../types'
 import { DeviceBezel } from './DeviceBezel'
@@ -21,6 +21,29 @@ export function RackElevation({
   searchFilter = '',
 }: RackElevationProps) {
   const [face, setFace] = useState<'Front' | 'Rear'>('Front')
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
+
+  // Compute available brands in this rack with device counts
+  const availableBrands = useMemo(() => {
+    const brandMap = new Map<string, { name: string; tag: string; color: string; count: number }>()
+    rack.devices.forEach((d) => {
+      if (d.brand_info) {
+        const key = d.brand_info.name.toLowerCase()
+        const existing = brandMap.get(key)
+        if (existing) {
+          existing.count += 1
+        } else {
+          brandMap.set(key, {
+            name: d.brand_info.name,
+            tag: d.brand_info.tag,
+            color: d.brand_info.color,
+            count: 1,
+          })
+        }
+      }
+    })
+    return Array.from(brandMap.values()).sort((a, b) => b.count - a.count)
+  }, [rack.devices])
 
   // Filter devices
   const visibleDevices = rack.devices.filter((d) => {
@@ -53,6 +76,10 @@ export function RackElevation({
     if (isCoveredByHigherU) continue
 
     if (dev) {
+      const isDimmed =
+        selectedBrand !== null &&
+        dev.brand_info?.name.toLowerCase() !== selectedBrand.toLowerCase()
+
       uRows.push(
         <div key={`device-${dev.id}`} className="flex items-center w-full">
           {/* Left U Rail Number */}
@@ -69,6 +96,7 @@ export function RackElevation({
               device={dev}
               isSelected={selectedDeviceId === dev.id}
               onClick={() => onSelectDevice(dev)}
+              isDimmed={isDimmed}
             />
           </div>
           {/* Right Rack Ear Screw */}
@@ -95,12 +123,12 @@ export function RackElevation({
           {/* Empty Slot Bay */}
           <div
             onClick={() => onEmptySlotClick(u)}
-            className="flex-1 h-7 border-y border-dashed border-[#34424b] bg-[#1a2127] hover:bg-[#252f36] hover:border-[#8bd7d1]/50 transition-colors cursor-pointer flex items-center justify-center text-transparent hover:text-[#caedde] text-[10px] font-mono"
+            className="flex-1 h-7 border-y border-dashed border-[#34424b] bg-[#1a2127] hover:bg-[#252f36] hover:border-[#7aa5d2]/50 transition-colors cursor-pointer flex items-center justify-center text-transparent hover:text-[#caedde] text-[10px] font-mono"
             title={`Mount hardware unit at U${u}`}
           >
             <div className="flex items-center gap-1.5 opacity-0 group-hover/slot:opacity-100 transition-opacity">
-              <Plus className="w-3 h-3 text-[#8bd7d1]" />
-              <span className="tracking-tight text-[#8bd7d1]">U{u} VACANT SLOT</span>
+              <Plus className="w-3 h-3 text-[#7aa5d2]" />
+              <span className="tracking-tight text-[#7aa5d2]">U{u} VACANT SLOT</span>
             </div>
           </div>
           {/* Right Rail Mounting Hole */}
@@ -121,7 +149,7 @@ export function RackElevation({
       {/* Front / Rear & Standard EIA-310 Header */}
       <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-[#394650] max-w-[460px]">
         <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#85a6b1]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#8bd7d1]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#7aa5d2]" />
           <span>EIA-310-D 19&quot; SPEC</span>
         </div>
 
@@ -132,7 +160,7 @@ export function RackElevation({
             onClick={() => setFace('Front')}
             className={`px-3 py-1 rounded-[2px] text-xs font-mono font-bold transition-colors cursor-pointer ${
               face === 'Front'
-                ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f]'
+                ? 'bg-[#34424b] text-[#7aa5d2] border border-[#50626f]'
                 : 'text-[#85a6b1] hover:text-[#caedde]'
             }`}
           >
@@ -143,7 +171,7 @@ export function RackElevation({
             onClick={() => setFace('Rear')}
             className={`px-3 py-1 rounded-[2px] text-xs font-mono font-bold transition-colors cursor-pointer ${
               face === 'Rear'
-                ? 'bg-[#34424b] text-[#8bd7d1] border border-[#50626f]'
+                ? 'bg-[#34424b] text-[#7aa5d2] border border-[#50626f]'
                 : 'text-[#85a6b1] hover:text-[#caedde]'
             }`}
           >
@@ -151,6 +179,53 @@ export function RackElevation({
           </button>
         </div>
       </div>
+
+      {/* Quick Brand Filter Chip Bar */}
+      {availableBrands.length > 0 && (
+        <div className="w-full max-w-[460px] mb-2 p-1.5 rounded-[3px] bg-[#1a2127] border border-[#394650] flex items-center gap-1.5 overflow-x-auto text-xs font-mono shadow-xs">
+          <span className="text-[9px] text-[#85a6b1] font-bold uppercase shrink-0 px-1">
+            Brand:
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedBrand(null)}
+            className={`px-2 py-0.5 rounded-[2px] text-[10px] font-bold transition-all shrink-0 cursor-pointer ${
+              selectedBrand === null
+                ? 'bg-[#34424b] text-[#7aa5d2] border border-[#7aa5d2]/60 shadow-xs'
+                : 'bg-[#20282f] text-[#85a6b1] hover:text-[#caedde] border border-[#394650]'
+            }`}
+          >
+            ALL ({rack.devices.length})
+          </button>
+          {availableBrands.map((b) => {
+            const isActive = selectedBrand?.toLowerCase() === b.name.toLowerCase()
+            return (
+              <button
+                key={b.name}
+                type="button"
+                onClick={() => setSelectedBrand(isActive ? null : b.name)}
+                className={`flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] text-[10px] font-bold transition-all shrink-0 cursor-pointer ${
+                  isActive
+                    ? 'bg-[#252f36] border text-white shadow-xs'
+                    : 'bg-[#20282f] text-[#85a6b1] hover:text-[#caedde] border border-[#394650]'
+                }`}
+                style={{
+                  borderColor: isActive ? b.color : undefined,
+                  boxShadow: isActive ? `0 0 8px ${b.color}44` : undefined,
+                }}
+                title={`Filter by ${b.name} (${b.count} units)`}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0 shadow-xs"
+                  style={{ backgroundColor: b.color }}
+                />
+                <span>{b.tag || b.name}</span>
+                <span className="text-[8.5px] opacity-75 font-normal">({b.count})</span>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* 42U Heavy-Duty Equipment Rack Cabinet Frame */}
       <div className="w-[460px] p-2.5 rounded-[3px] bg-[#1a2127] border-2 border-[#394650] shadow-2xl relative">

@@ -44,8 +44,8 @@ export function RackDetailCard({ rack, onViewRackElevation }: RackDetailCardProp
       case 'healthy':
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-[#1a3835] text-[#8bd7d1] border border-[#2b5d58]">
-            <CheckCircle2 className="w-3 h-3" />
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-[#37414b] text-[#7aa5d2] border border-[#47555e]">
+            <CheckCircle2 className="w-3 h-3 text-[#7aa5d2]" />
             NOMINAL
           </span>
         )
@@ -58,7 +58,7 @@ export function RackDetailCard({ rack, onViewRackElevation }: RackDetailCardProp
         {/* Header Title & Status */}
         <div className="flex items-center justify-between mb-1 pb-2 border-b border-[#394650]">
           <div>
-            <h2 className="text-base font-bold text-white font-mono tracking-tight">{rack.name}</h2>
+            <h2 className="text-base font-bold text-[#eeeeee] font-mono tracking-tight">{rack.name}</h2>
             <span className="text-[10px] text-[#85a6b1] font-mono">ROW {rack.row} / COL {rack.col}</span>
           </div>
           {getStatusBadge()}
@@ -95,10 +95,10 @@ export function RackDetailCard({ rack, onViewRackElevation }: RackDetailCardProp
           {/* Inlet Temperature */}
           <div className="flex items-center justify-between p-2 rounded-[2px] bg-[#273139] border border-[#394650]">
             <div className="flex items-center gap-2 text-[#85a6b1]">
-              <Thermometer className="w-3.5 h-3.5 text-[#8bd7d1]" />
+              <Thermometer className="w-3.5 h-3.5 text-[#7aa5d2]" />
               <span>Inlet Sensor</span>
             </div>
-            <span className="font-bold text-[#8bd7d1]">{rack.inlet_temp_c}°C</span>
+            <span className="font-bold text-[#7aa5d2]">{rack.inlet_temp_c}°C</span>
           </div>
 
           {/* Devices Count */}
@@ -116,10 +116,10 @@ export function RackDetailCard({ rack, onViewRackElevation }: RackDetailCardProp
       <button
         type="button"
         onClick={() => onViewRackElevation(rack)}
-        className="w-full py-2 px-3 rounded-[2px] font-mono font-bold text-xs bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+        className="w-full py-2 px-3 rounded-[2px] font-mono font-bold text-xs bg-[#47555e] hover:bg-[#53636f] border border-[#5c6e7a] text-[#eeeeee] hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
       >
         <span>Inspect 42U Elevation</span>
-        <ChevronRight className="w-3.5 h-3.5" />
+        <ChevronRight className="w-3.5 h-3.5 text-[#7aa5d2]" />
       </button>
     </div>
   )

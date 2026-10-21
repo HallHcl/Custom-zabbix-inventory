@@ -42,15 +42,15 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
         {/* Brand Console Header */}
         <div className="px-4 py-4 border-b border-[#394650] bg-[#20282f]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[3px] bg-[#34424b] border border-[#50626f] flex items-center justify-center text-[#8bd7d1]">
+            <div className="w-8 h-8 rounded-[3px] bg-[#34424b] border border-[#50626f] flex items-center justify-center text-[#7aa5d2]">
               <Activity className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold tracking-wider text-white text-sm font-sans">
+                <span className="font-bold tracking-wider text-[#eeeeee] text-sm font-sans">
                   DC VISION
                 </span>
-                <span className="px-1 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[9px] font-mono text-[#8bd7d1]">
+                <span className="px-1 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[9px] font-mono text-[#7aa5d2]">
                   NOC
                 </span>
               </div>
@@ -78,17 +78,17 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
                   onClick={() => onSelectTab(item.id)}
                   className={`w-full flex items-center justify-between px-2.5 py-2 rounded-[3px] text-xs font-medium transition-colors cursor-pointer relative ${
                     isActive
-                      ? 'bg-[#34424b] text-[#caedde] border border-[#50626f]'
-                      : 'text-[#85a6b1] hover:text-[#caedde] hover:bg-[#252f36] border border-transparent'
+                      ? 'bg-[#34424b] text-[#eeeeee] border border-[#50626f]'
+                      : 'text-[#85a6b1] hover:text-[#eeeeee] hover:bg-[#252f36] border border-transparent'
                   }`}
                 >
                   {/* Left Accent Pip */}
                   {isActive && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-[#8bd7d1] rounded-r-xs" />
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-[#7aa5d2] rounded-r-xs" />
                   )}
 
                   <div className="flex items-center gap-2.5 ml-1">
-                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#8bd7d1]' : 'text-[#85a6b1]'}`} />
+                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#7aa5d2]' : 'text-[#85a6b1]'}`} />
                     <span className="tracking-tight">{item.label}</span>
                   </div>
 
@@ -108,7 +108,7 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
       <div className="p-3 border-t border-[#394650] bg-[#20282f]">
         <div className="flex items-center justify-between text-[11px] text-[#85a6b1] font-mono">
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#8bd7d1] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7aa5d2] animate-pulse" />
             <span>Zabbix JSON-RPC</span>
           </div>
           <span className="text-[10px] text-[#85a6b1]">30s SYNC</span>

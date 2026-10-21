@@ -955,8 +955,8 @@ export function IsometricRoom({
             <pattern id="floorTilesGrid" width="40" height="20" patternUnits="userSpaceOnUse">
               <path
                 d="M 20 0 L 40 10 L 20 20 L 0 10 Z"
-                fill="#0d0d0d"
-                stroke="#1c1c1c"
+                fill="#283038"
+                stroke="#37414b"
                 strokeWidth="0.7"
               />
             </pattern>
@@ -965,8 +965,8 @@ export function IsometricRoom({
             <pattern id="aisleTiles" width="40" height="20" patternUnits="userSpaceOnUse">
               <path
                 d="M 20 0 L 40 10 L 20 20 L 0 10 Z"
-                fill="#161616"
-                stroke="#2b2b2b"
+                fill="#303841"
+                stroke="#47555e"
                 strokeWidth="0.8"
               />
             </pattern>
@@ -985,8 +985,8 @@ export function IsometricRoom({
             <polygon
               key={`back-wall-${idx}`}
               points={pts}
-              fill={idx % 2 === 0 ? '#141414' : '#0f0f0f'}
-              stroke="#222222"
+              fill={idx % 2 === 0 ? '#303841' : '#283038'}
+              stroke="#47555e"
               strokeWidth="1"
             />
           ))}
@@ -995,7 +995,7 @@ export function IsometricRoom({
           <polygon
             points={roomGeometry.floorPoints}
             fill="url(#floorTilesGrid)"
-            stroke={isEditMode ? '#0891b2' : '#222222'}
+            stroke={isEditMode ? '#7aa5d2' : '#47555e'}
             strokeWidth={isEditMode ? '1.5' : '1'}
           />
 
@@ -1004,7 +1004,7 @@ export function IsometricRoom({
             points={roomGeometry.aislePoints}
             fill="url(#aisleTiles)"
             opacity="0.85"
-            stroke="#2b2b2b"
+            stroke="#47555e"
             strokeWidth="0.8"
           />
 
@@ -1029,19 +1029,19 @@ export function IsometricRoom({
                       isHovered
                         ? isReadyToPlace
                           ? 'rgba(16, 185, 129, 0.3)'
-                          : 'rgba(6, 182, 212, 0.25)'
+                          : 'rgba(122, 165, 210, 0.25)'
                         : isReadyToPlace
                         ? 'rgba(16, 185, 129, 0.12)'
-                        : 'rgba(255, 255, 255, 0.03)'
+                        : 'rgba(71, 85, 94, 0.15)'
                     }
                     stroke={
                       isHovered
                         ? isReadyToPlace
                           ? '#10b981'
-                          : '#06b6d4'
+                          : '#7aa5d2'
                         : isReadyToPlace
                         ? '#10b981'
-                        : '#3f3f46'
+                        : '#47555e'
                     }
                     strokeWidth={isHovered || isReadyToPlace ? '2' : '1'}
                     strokeDasharray={isReadyToPlace ? '4 3' : '3 3'}
@@ -1058,16 +1058,16 @@ export function IsometricRoom({
                           width={slotW}
                           height={slotH}
                           rx={Math.max(3, Math.round(4 * autoScale))}
-                          fill={isHovered ? '#0891b2' : '#141414'}
+                          fill={isHovered ? '#7aa5d2' : '#303841'}
                           fillOpacity="0.85"
-                          stroke={isReadyToPlace ? '#10b981' : '#333333'}
+                          stroke={isReadyToPlace ? '#10b981' : '#47555e'}
                           strokeWidth="1"
                         />
                         <text
                           x={slotW / 2}
                           y={slotH * 0.72}
                           textAnchor="middle"
-                          fill={isHovered ? '#ffffff' : isReadyToPlace ? '#34d399' : '#a1a1aa'}
+                          fill={isHovered ? '#303841' : isReadyToPlace ? '#34d399' : '#9bb7d4'}
                           fontSize={slotFont}
                           fontFamily="monospace"
                           fontWeight="bold"
@@ -1125,9 +1125,9 @@ export function IsometricRoom({
                         cy={floorY + Math.round(8 * autoScale)}
                         rx={Math.round(30 * autoScale)}
                         ry={Math.round(14 * autoScale)}
-                        fill="#06b6d4"
+                        fill="#7aa5d2"
                         fillOpacity="0.3"
-                        stroke="#22d3ee"
+                        stroke="#7aa5d2"
                         strokeWidth="2"
                         strokeDasharray="4 2"
                         filter="url(#beaconGlow)"
@@ -1138,7 +1138,7 @@ export function IsometricRoom({
                         y1={floorY + Math.round(6 * autoScale)}
                         x2={x}
                         y2={y + Math.round(6 * autoScale)}
-                        stroke="#22d3ee"
+                        stroke="#7aa5d2"
                         strokeWidth="2"
                         strokeDasharray="3 3"
                         filter="url(#beaconGlow)"
@@ -1151,7 +1151,7 @@ export function IsometricRoom({
                       cy={y + Math.round(8 * autoScale)}
                       rx={Math.round(24 * autoScale)}
                       ry={Math.round(11 * autoScale)}
-                      fill="#000000"
+                      fill="#1e242b"
                       fillOpacity="0.8"
                     />
                   )}
@@ -1163,9 +1163,9 @@ export function IsometricRoom({
                       cy={y + Math.round(10 * autoScale)}
                       rx={Math.round(34 * autoScale)}
                       ry={Math.round(16 * autoScale)}
-                      fill={isPickedUp ? '#06b6d4' : '#ffffff'}
-                      fillOpacity={isPickedUp ? 0.25 : 0.1}
-                      stroke={isPickedUp ? '#22d3ee' : '#ffffff'}
+                      fill="#7aa5d2"
+                      fillOpacity={isPickedUp ? 0.25 : 0.15}
+                      stroke="#7aa5d2"
                       strokeWidth="2"
                       filter="url(#beaconGlow)"
                     />
@@ -1179,22 +1179,18 @@ export function IsometricRoom({
                       fill={
                         isPickedUp
                           ? fIdx === 0
-                            ? '#0e7490'
-                            : '#083344'
+                            ? '#47555e'
+                            : '#37414b'
                           : isSelected
                           ? fIdx === 0
-                            ? '#2e2e2e'
-                            : '#222222'
+                            ? '#47555e'
+                            : '#37414b'
                           : face.shade
                       }
                       stroke={
-                        isPickedUp
-                          ? '#22d3ee'
-                          : isHovered
-                          ? '#06b6d4'
-                          : isSelected
-                          ? '#ffffff'
-                          : '#333333'
+                        isPickedUp || isHovered || isSelected
+                          ? '#7aa5d2'
+                          : '#47555e'
                       }
                       strokeWidth={isPickedUp || isHovered || isSelected ? '2' : '1'}
                     />
@@ -1205,19 +1201,15 @@ export function IsometricRoom({
                     points={topPolygon}
                     fill={
                       isPickedUp
-                        ? '#0891b2'
+                        ? '#53636f'
                         : isSelected
-                        ? '#3f3f46'
-                        : '#262626'
+                        ? '#53636f'
+                        : '#37414b'
                     }
                     stroke={
-                      isPickedUp
-                        ? '#67e8f9'
-                        : isHovered
-                        ? '#06b6d4'
-                        : isSelected
-                        ? '#ffffff'
-                        : '#404040'
+                      isPickedUp || isHovered || isSelected
+                        ? '#7aa5d2'
+                        : '#47555e'
                     }
                     strokeWidth={isPickedUp || isHovered || isSelected ? '2' : '1'}
                   />
@@ -1227,7 +1219,7 @@ export function IsometricRoom({
                     cx={x + Math.round(4 * autoScale)}
                     cy={y - rackHeight + Math.round(7 * autoScale)}
                     r={Math.max(3, Math.round((isSelected || isPickedUp ? 5 : 3.8) * autoScale))}
-                    fill={isPickedUp ? '#22d3ee' : statusColor}
+                    fill={isPickedUp ? '#7aa5d2' : statusColor}
                     filter="url(#beaconGlow)"
                     className="animate-pulse"
                   />
@@ -1249,22 +1241,20 @@ export function IsometricRoom({
                           rx={Math.max(4, Math.round(6 * autoScale))}
                           fill={
                             isPickedUp
-                              ? '#06b6d4'
+                              ? '#7aa5d2'
                               : isSelected
-                              ? '#ffffff'
-                              : '#141414'
+                              ? '#7aa5d2'
+                              : '#303841'
                           }
                           fillOpacity="0.95"
                           stroke={
-                            isPickedUp
-                              ? '#67e8f9'
-                              : isSelected
-                              ? '#ffffff'
+                            isPickedUp || isSelected
+                              ? '#7aa5d2'
                               : rack.status === 'critical'
-                              ? '#e82127'
+                              ? '#ef4444'
                               : rack.status === 'warning'
                               ? '#f59e0b'
-                              : '#333333'
+                              : '#47555e'
                           }
                           strokeWidth="1"
                         />
@@ -1272,7 +1262,7 @@ export function IsometricRoom({
                           x={badgeW / 2}
                           y={badgeH * 0.72}
                           textAnchor="middle"
-                          fill={isPickedUp ? '#000000' : isSelected ? '#000000' : '#ffffff'}
+                          fill={isPickedUp || isSelected ? '#303841' : '#eeeeee'}
                           fontSize={badgeFont}
                           fontWeight="700"
                           letterSpacing="0.5"
