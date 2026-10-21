@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ArrowLeft, Pencil, Box, LayoutGrid } from 'lucide-react'
 import type { RoomOverview, RackSummary, RackElevation as RackElevationType, Device } from './types'
-import { fetchRoomOverview, fetchRackElevation, unmountDevice, fetchUnassignedHosts } from './api/client'
+import { fetchRoomOverview, fetchRackElevation, fetchUnassignedHosts, fetchDevices } from './api/client'
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
 import { TopGlassmorphicHUD } from './components/layout/TopGlassmorphicHUD'
 import { SpotlightCommandBar } from './components/layout/SpotlightCommandBar'
@@ -16,6 +16,8 @@ import { RackElevation } from './components/rack/RackElevation'
 import { DeviceDetailPanel } from './components/rack/DeviceDetailPanel'
 import { MountDeviceModal } from './components/rack/MountDeviceModal'
 import { EditDeviceSpecModal } from './components/rack/EditDeviceSpecModal'
+import { DecommissionModal } from './components/rack/DecommissionModal'
+import { BlastRadiusModal } from './components/analytics/BlastRadiusModal'
 import { UnassignedHostsDrawer } from './components/rack/UnassignedHostsDrawer'
 
 // Dedicated Tab Views
@@ -74,6 +76,15 @@ export function App() {
   // Edit Hardware Spec & Brand Modal State
   const [editingDevice, setEditingDevice] = useState<Device | null>(null)
   const [isEditSpecModalOpen, setIsEditSpecModalOpen] = useState(false)
+
+  // Decommission & Hardware Replacement Wizard Modal State
+  const [isDecommissionModalOpen, setIsDecommissionModalOpen] = useState(false)
+  const [decommissionTargetDevice, setDecommissionTargetDevice] = useState<Device | null>(null)
+
+  // Incident Blast-Radius Simulator Modal State
+  const [isBlastRadiusModalOpen, setIsBlastRadiusModalOpen] = useState(false)
+  const [blastTargetDeviceId, setBlastTargetDeviceId] = useState<number | null>(null)
+  const [blastTargetDeviceName, setBlastTargetDeviceName] = useState<string>('')
 
   // Full Device Page Modal State (Latest Data + Custom Inventory)
   const [devicePageId, setDevicePageId] = useState<number | null>(null)
@@ -183,17 +194,53 @@ export function App() {
     setCurrentView('device_page')
   }
 
-  // Unmount device
-  const handleUnmountDevice = async (deviceId: number) => {
-    if (!confirm('Are you sure you want to unmount this device from the rack?')) return
-    try {
-      await unmountDevice(deviceId)
-      if (activeRackId) loadRackElevation(activeRackId)
-      setSelectedDevice(null)
-    } catch (err: any) {
-      alert(err.message || 'Failed to unmount device')
+  // Open Decommission & Hardware Replacement Wizard
+  const handleUnmountDevice = (deviceId: number) => {
+    const dev = rackElevation?.devices.find((d) => d.id === deviceId) || selectedDevice
+    if (dev) {
+      setDecommissionTargetDevice(dev)
+      setIsDecommissionModalOpen(true)
     }
   }
+
+  // Open Incident Blast-Radius Simulator Modal
+  const handleOpenBlastRadius = useCallback(async (deviceIdOrHost: number | string, fallbackName?: string) => {
+    if (typeof deviceIdOrHost === 'number') {
+      setBlastTargetDeviceId(deviceIdOrHost)
+      setBlastTargetDeviceName(fallbackName || `Device #${deviceIdOrHost}`)
+      setIsBlastRadiusModalOpen(true)
+    } else {
+      const hostName = deviceIdOrHost
+      let foundId: number | null = null
+      let foundName = hostName
+      if (rackElevation) {
+        const match = rackElevation.devices.find(
+          (d) => d.name.toLowerCase() === hostName.toLowerCase() || d.ip_address === hostName
+        )
+        if (match) {
+          foundId = match.id
+          foundName = match.name
+        }
+      }
+      if (!foundId) {
+        try {
+          const allDevices = await fetchDevices()
+          const match = allDevices.find(
+            (d) => d.name.toLowerCase() === hostName.toLowerCase() || d.ip_address === hostName
+          )
+          if (match) {
+            foundId = match.id
+            foundName = match.name
+          }
+        } catch (err) {
+          console.warn('Could not resolve device by hostname:', err)
+        }
+      }
+      setBlastTargetDeviceId(foundId || 1)
+      setBlastTargetDeviceName(foundName)
+      setIsBlastRadiusModalOpen(true)
+    }
+  }, [rackElevation])
 
   // Open Mount Modal on empty slot click
   const handleEmptySlotClick = (u: number) => {
@@ -330,6 +377,7 @@ export function App() {
                   onSelectDevice={(dev) => setSelectedDevice(dev)}
                   onUnmountDevice={handleUnmountDevice}
                   onOpenDevicePage={handleOpenDevicePage}
+                  onInspectBlastRadius={(devId, devName) => handleOpenBlastRadius(devId, devName)}
                   onEditSpec={(dev) => {
                     setEditingDevice(dev)
                     setIsEditSpecModalOpen(true)
@@ -548,7 +596,10 @@ export function App() {
             <IPAMView />
           ) : activeNav === 'alerts' ? (
             /* TAB 6: Live Zabbix Alerts View */
-            <AlertsView alerts={overview?.recent_alerts || []} />
+            <AlertsView
+              alerts={overview?.recent_alerts || []}
+              onInspectBlastRadius={handleOpenBlastRadius}
+            />
           ) : activeNav === 'reports' ? (
             /* TAB 7: Reports & Datacenter Analytics */
             <ReportsView overview={overview} />
@@ -584,6 +635,38 @@ export function App() {
         }}
       />
 
+      {/* Decommission & Hardware Replacement Wizard Modal */}
+      <DecommissionModal
+        device={decommissionTargetDevice}
+        isOpen={isDecommissionModalOpen}
+        onClose={() => {
+          setIsDecommissionModalOpen(false)
+          setDecommissionTargetDevice(null)
+        }}
+        onSuccess={() => {
+          if (activeRackId) loadRackElevation(activeRackId)
+          setSelectedDevice(null)
+          loadOverview()
+        }}
+      />
+
+      {/* Incident Blast-Radius & Post-Mortem Exporter Modal */}
+      <BlastRadiusModal
+        deviceId={blastTargetDeviceId}
+        deviceName={blastTargetDeviceName}
+        isOpen={isBlastRadiusModalOpen}
+        onClose={() => {
+          setIsBlastRadiusModalOpen(false)
+          setBlastTargetDeviceId(null)
+        }}
+        onNavigateToDevice={(devId) => {
+          setIsBlastRadiusModalOpen(false)
+          if (activeRackId) {
+            loadRackElevation(activeRackId, devId)
+          }
+        }}
+      />
+
       {/* Zabbix Unassigned Hosts Ingestion Drawer */}
       <UnassignedHostsDrawer
         isOpen={isUnassignedDrawerOpen}
@@ -602,6 +685,7 @@ export function App() {
         onNavigateToRackElevation={handleViewRackElevation}
         onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
         onNavigateToTab={(tab) => handleSelectTab(tab as NavTab)}
+        onOpenBlastRadius={() => handleOpenBlastRadius(1, 'SW-CORE-01')}
       />
     </div>
   )

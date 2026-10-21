@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Activity,
   Settings2,
+  ShieldAlert,
 } from 'lucide-react'
 import type { Device, DeviceMetrics } from '../../types'
 import { fetchDeviceMetrics } from '../../api/client'
@@ -21,6 +22,7 @@ interface DeviceDetailPanelProps {
   onUnmountDevice: (deviceId: number) => void
   onOpenDevicePage?: (deviceId: number) => void
   onEditSpec?: (device: Device) => void
+  onInspectBlastRadius?: (deviceId: number, deviceName: string) => void
 }
 
 export function DeviceDetailPanel({
@@ -30,6 +32,7 @@ export function DeviceDetailPanel({
   onUnmountDevice,
   onOpenDevicePage,
   onEditSpec,
+  onInspectBlastRadius,
 }: DeviceDetailPanelProps) {
   const [metrics, setMetrics] = useState<DeviceMetrics | null>(null)
 
@@ -336,13 +339,25 @@ export function DeviceDetailPanel({
             )}
 
             <div className="flex gap-2">
+              {onInspectBlastRadius && (
+                <button
+                  type="button"
+                  onClick={() => onInspectBlastRadius(device.id, device.name)}
+                  className="flex-1 py-1.5 px-2 rounded-[2px] border border-sky-800/80 bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  title="Simulate blast radius & cascade failure"
+                >
+                  <ShieldAlert className="w-3 h-3 text-sky-400" />
+                  <span>Blast Radius</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => onUnmountDevice(device.id)}
-                className="flex-1 py-1.5 px-2 rounded-[2px] border border-rose-800/60 bg-rose-950/30 hover:bg-rose-900/40 text-rose-300 text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                className="flex-1 py-1.5 px-2 rounded-[2px] border border-amber-800/80 bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                title="Open Decommission & Hardware Replacement Wizard"
               >
-                <Trash2 className="w-3 h-3" />
-                <span>Unmount Slot</span>
+                <Trash2 className="w-3 h-3 text-amber-400" />
+                <span>Decommission</span>
               </button>
               <a
                 href={`http://192.168.1.85:8080/zabbix.php?action=latest.view&filter_hostids%5B%5D=${device.zabbix_host_id || ''}&filter_set=1`}

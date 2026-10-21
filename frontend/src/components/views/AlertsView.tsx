@@ -6,14 +6,16 @@ import {
   Info,
   ExternalLink,
   Filter,
+  Activity,
 } from 'lucide-react'
 import type { RecentAlert } from '../../types'
 
 interface AlertsViewProps {
   alerts: RecentAlert[]
+  onInspectBlastRadius?: (hostName: string) => void
 }
 
-export function AlertsView({ alerts }: AlertsViewProps) {
+export function AlertsView({ alerts, onInspectBlastRadius }: AlertsViewProps) {
   const [search, setSearch] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
 
@@ -125,15 +127,28 @@ export function AlertsView({ alerts }: AlertsViewProps) {
                   </div>
                 </div>
 
-                <a
-                  href={`http://192.168.1.190/zabbix.php?action=problem.view&filter_name=${encodeURIComponent(alert.description)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-2.5 py-1 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#caedde] hover:text-white text-xs font-mono flex items-center gap-1.5 transition-colors"
-                >
-                  <span>Investigate</span>
-                  <ExternalLink className="w-3 h-3 text-[#8bd7d1]" />
-                </a>
+                <div className="flex items-center gap-2">
+                  {onInspectBlastRadius && (
+                    <button
+                      type="button"
+                      onClick={() => onInspectBlastRadius(alert.host_name)}
+                      className="px-2.5 py-1 rounded-[2px] bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/80 text-rose-300 hover:text-white text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Analyze blast radius & impact cascade"
+                    >
+                      <Activity className="w-3 h-3 text-rose-400" />
+                      <span>Blast Radius</span>
+                    </button>
+                  )}
+                  <a
+                    href={`http://192.168.1.190/zabbix.php?action=problem.view&filter_name=${encodeURIComponent(alert.description)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#caedde] hover:text-white text-xs font-mono flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>Investigate</span>
+                    <ExternalLink className="w-3 h-3 text-[#8bd7d1]" />
+                  </a>
+                </div>
               </div>
             )
           })

@@ -101,6 +101,33 @@ export async function unmountDevice(deviceId: number): Promise<void> {
   if (!res.ok) throw new Error(`Failed to unmount device ${deviceId}`)
 }
 
+export async function fetchDeviceBlastRadius(deviceId: number): Promise<any> {
+  const res = await fetch(`${API_BASE}/devices/${deviceId}/blast-radius`)
+  if (!res.ok) throw new Error(`Failed to fetch blast radius for device ${deviceId}`)
+  return res.json()
+}
+
+export async function decommissionDevice(
+  deviceId: number,
+  payload: {
+    action: 'DECOMMISSION' | 'HOT_SWAP' | 'PERMANENT_REMOVE'
+    maintenance_mode?: boolean
+    maintenance_duration_hours?: number
+    loto_completed?: boolean
+  }
+): Promise<any> {
+  const res = await fetch(`${API_BASE}/devices/${deviceId}/decommission`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(errorData.detail || `Failed to decommission device ${deviceId}`)
+  }
+  return res.json()
+}
+
 export async function fetchDeviceOverview(deviceId: number): Promise<import('../types').DeviceOverview> {
   const res = await fetch(`${API_BASE}/devices/${deviceId}/overview`)
   if (!res.ok) throw new Error(`Failed to fetch device overview for ID ${deviceId}`)

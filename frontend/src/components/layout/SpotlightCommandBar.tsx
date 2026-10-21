@@ -37,6 +37,7 @@ interface SpotlightCommandBarProps {
   onNavigateToRackElevation?: (rack: RackSummary) => void;
   onOpenUnassigned?: () => void;
   onNavigateToTab?: (tab: string) => void;
+  onOpenBlastRadius?: () => void;
 }
 
 export const SpotlightCommandBar: React.FC<SpotlightCommandBarProps> = ({
@@ -44,6 +45,7 @@ export const SpotlightCommandBar: React.FC<SpotlightCommandBarProps> = ({
   onNavigateToRackElevation,
   onOpenUnassigned,
   onNavigateToTab,
+  onOpenBlastRadius,
 }) => {
   const {
     isSpotlightOpen,
@@ -241,6 +243,18 @@ export const SpotlightCommandBar: React.FC<SpotlightCommandBarProps> = ({
         action: () => {
           closeSpotlight();
           if (onNavigateToTab) onNavigateToTab("reports");
+        },
+      },
+      {
+        id: "tool-blast-radius",
+        category: "Tools",
+        title: "Incident Blast-Radius Simulator",
+        subtitle: "Interactive 3-tier cascade failure graph & post-mortem exporter",
+        icon: ShieldAlert,
+        badge: "Simulator",
+        action: () => {
+          closeSpotlight();
+          if (onOpenBlastRadius) onOpenBlastRadius();
         },
       },
     ];

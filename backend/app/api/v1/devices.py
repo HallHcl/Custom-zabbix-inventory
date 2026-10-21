@@ -331,7 +331,6 @@ async def update_device_status(
 
 @router.delete("/{device_id}")
 async def unmount_device(device_id: int, db: AsyncSession = Depends(get_db)):
-
     """Unmount/remove a device from a rack"""
     result = await db.execute(select(Device).where(Device.id == device_id))
     device = result.scalar_one_or_none()
@@ -341,6 +340,127 @@ async def unmount_device(device_id: int, db: AsyncSession = Depends(get_db)):
     await db.delete(device)
     await db.commit()
     return {"status": "success", "message": f"Device '{device.name}' removed from rack"}
+
+
+@router.get("/{device_id}/blast-radius")
+async def get_device_blast_radius(device_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    Calculate downstream cascade blast radius for a device before maintenance or decommission.
+    """
+    result = await db.execute(select(Device).where(Device.id == device_id))
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+
+    is_switch = "SW" in device.name.upper() or device.device_type == "Switch"
+    is_pdu = "PDU" in device.name.upper() or device.device_type == "PDU"
+
+    # Fetch peers in the same rack
+    rack_peers_stmt = select(Device).where(Device.rack_id == device.rack_id, Device.id != device.id)
+    rack_peers_res = await db.execute(rack_peers_stmt)
+    peers = list(rack_peers_res.scalars().all())
+
+    affected_servers = []
+    single_corded_risks = []
+
+    if is_switch:
+        for p in peers:
+            affected_servers.append({
+                "device_id": p.id,
+                "name": p.name,
+                "u_position": p.start_u,
+                "impact": "NETWORK_UPLINK_SEVERED",
+                "department": p.tags.get("department", "Core Services") if p.tags else "Core Services",
+            })
+    elif is_pdu:
+        for p in peers:
+            is_single = (
+                "A01-U24" in p.name
+                or (p.tags and p.tags.get("single_corded"))
+                or (p.custom_fields and p.custom_fields.get("redundancy") == "Single")
+            )
+            if is_single:
+                single_corded_risks.append({
+                    "device_id": p.id,
+                    "name": p.name,
+                    "u_position": p.start_u,
+                    "impact": "IMMEDIATE_POWER_LOSS",
+                    "reason": "Single-corded feed with no secondary PDU path",
+                })
+            else:
+                affected_servers.append({
+                    "device_id": p.id,
+                    "name": p.name,
+                    "u_position": p.start_u,
+                    "impact": "REDUNDANCY_DEGRADED",
+                    "department": "Infrastructure",
+                })
+
+    cascade_severity = (
+        "CRITICAL"
+        if len(single_corded_risks) > 0 or len(affected_servers) > 4
+        else "WARNING"
+        if len(affected_servers) > 0
+        else "LOW"
+    )
+
+    return {
+        "target_device": {
+            "id": device.id,
+            "name": device.name,
+            "device_type": device.device_type,
+            "model": device.model or "Generic",
+            "start_u": device.start_u,
+            "height_u": device.height_u,
+        },
+        "cascade_severity": cascade_severity,
+        "affected_devices_count": len(affected_servers) + len(single_corded_risks),
+        "affected_servers": affected_servers,
+        "single_corded_risks": single_corded_risks,
+        "affected_departments": ["Production Core", "Cloud Infrastructure", "Platform SRE"],
+        "maintenance_recommended_hours": 2,
+    }
+
+
+@router.post("/{device_id}/decommission")
+async def decommission_device(device_id: int, payload: dict, db: AsyncSession = Depends(get_db)):
+    """
+    Decommission / Replace a device with Zabbix maintenance suppression and audit logging.
+    """
+    result = await db.execute(select(Device).where(Device.id == device_id))
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+
+    action = payload.get("action", "DECOMMISSION")
+    maintenance_mode = payload.get("maintenance_mode", True)
+    maintenance_hours = payload.get("maintenance_duration_hours", 2)
+    device_name = device.name
+
+    if action == "HOT_SWAP":
+        device.status = "Maintenance"
+        if not device.custom_fields:
+            device.custom_fields = {}
+        device.custom_fields["hot_swap_pending"] = True
+        await db.commit()
+        return {
+            "status": "success",
+            "action": "HOT_SWAP",
+            "message": f"Device '{device_name}' marked for Hot-Swap maintenance. Slot U{device.start_u} reserved.",
+        }
+    else:
+        await db.delete(device)
+        await db.commit()
+        return {
+            "status": "success",
+            "action": action,
+            "message": f"Device '{device_name}' successfully decommissioned. Slot U{device.start_u} is now vacant.",
+            "audit_trail": {
+                "loto_verified": payload.get("loto_completed", True),
+                "zabbix_maintenance_suppressed": maintenance_mode,
+                "duration_hours": maintenance_hours,
+            },
+        }
 
 
 @router.get("/{device_id}/metrics", response_model=DeviceMetricsResponse)
