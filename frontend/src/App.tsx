@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, Box, LayoutGrid } from 'lucide-react'
 import type { RoomOverview, RackSummary, RackElevation as RackElevationType, Device } from './types'
 import { fetchRoomOverview, fetchRackElevation, unmountDevice, fetchUnassignedHosts } from './api/client'
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
 import { Header } from './components/layout/Header'
 import { IsometricRoom } from './components/floorplan/IsometricRoom'
+import { DataCenter3DView } from './components/floorplan/DataCenter3DView'
 import { RackDetailCard } from './components/floorplan/RackDetailCard'
 import { RecentAlerts } from './components/floorplan/RecentAlerts'
 import { RackInventoryNav } from './components/rack/RackInventoryNav'
@@ -51,6 +52,7 @@ export function App() {
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null)
   const [rackTypeFilter, setRackTypeFilter] = useState<string | null>(null)
   const [rackSearchFilter, setRackSearchFilter] = useState('')
+  const [floorPlanMode, setFloorPlanMode] = useState<'3d_twin' | 'isometric'>('3d_twin')
 
   // Mount modal state
   const [isMountModalOpen, setIsMountModalOpen] = useState(false)
@@ -440,82 +442,127 @@ export function App() {
             /* TAB 2: Dedicated 2.5D Isometric Floor Plan View */
             <div className="max-w-[1600px] mx-auto space-y-5">
               {/* Floor Plan Sub-header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#394650]">
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                  <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2 font-mono">
                     <span>Data Center Floor Plan</span>
-                    <span className="text-xs font-mono font-semibold text-zinc-400 bg-zinc-900 px-2.5 py-0.5 rounded-full border border-zinc-800">
+                    <span className="text-xs font-mono font-semibold text-[#8bd7d1] bg-[#1a2329] px-2.5 py-0.5 rounded-[2px] border border-[#394650]">
                       ROOM A • {overview?.total_racks || 12} RACKS
                     </span>
                   </h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    2.5D spatial layout • Click any rack box to inspect telemetry and slot capacity
+                  <p className="text-xs text-[#85a6b1] mt-0.5 font-mono">
+                    {floorPlanMode === '3d_twin'
+                      ? 'WebGL 3D Digital Twin • Drag to orbit 360° • Click rack to open 42U Elevation'
+                      : '2.5D spatial layout • Click any rack box to inspect telemetry and slot capacity'}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Mode Toggle: 3D Digital Twin vs 2D Isometric */}
+                  <div className="flex items-center p-0.5 rounded-[2px] bg-[#1a2329] border border-[#394650]">
+                    <button
+                      type="button"
+                      onClick={() => setFloorPlanMode('3d_twin')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono transition-all cursor-pointer ${
+                        floorPlanMode === '3d_twin'
+                          ? 'bg-[#34424b] text-[#8bd7d1] font-bold border border-[#50626f] shadow-md'
+                          : 'text-[#85a6b1] hover:text-white'
+                      }`}
+                    >
+                      <Box className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>3D Digital Twin</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFloorPlanMode('isometric')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono transition-all cursor-pointer ${
+                        floorPlanMode === 'isometric'
+                          ? 'bg-[#34424b] text-[#8bd7d1] font-bold border border-[#50626f] shadow-md'
+                          : 'text-[#85a6b1] hover:text-white'
+                      }`}
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5 text-[#8bd7d1]" />
+                      <span>Isometric 2D</span>
+                    </button>
+                  </div>
+
                   {/* Edit Floor Plan Button */}
                   <button
                     type="button"
                     onClick={() => setCurrentView('floor_plan_editor')}
-                    className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white px-3.5 py-2 rounded-xl bg-[#141414] border border-[#262626] hover:border-cyan-600 hover:bg-cyan-950/20 transition-all cursor-pointer"
+                    className="flex items-center gap-2 text-xs font-mono font-semibold text-[#caedde] hover:text-white px-3 py-1.5 rounded-[2px] bg-[#273139] border border-[#394650] hover:border-[#8bd7d1] transition-all cursor-pointer"
                   >
-                    <Pencil className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Edit 3D Layout</span>
+                    <Pencil className="w-3.5 h-3.5 text-[#8bd7d1]" />
+                    <span>Edit 2D Layout</span>
                   </button>
+                </div>
+              </div>
 
-                  <div className="flex items-center gap-4 text-xs font-mono">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                      <span className="text-zinc-400">Healthy ({overview?.status_counts.healthy || 0})</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                      <span className="text-zinc-400">Warning ({overview?.status_counts.warning || 0})</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                      <span className="text-zinc-400">Critical ({overview?.status_counts.critical || 0})</span>
-                    </div>
+              {/* Main Content Area: 3D WebGL Digital Twin vs 2D Isometric Plan */}
+              {floorPlanMode === '3d_twin' ? (
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-start">
+                  {/* Three.js 3D WebGL Digital Twin (3 cols) */}
+                  <div className="xl:col-span-3">
+                    <DataCenter3DView
+                      racks={filteredRacks}
+                      selectedRackId={selectedRackSummary?.id || null}
+                      onSelectRack={(rack) => setSelectedRackSummary(rack)}
+                      onViewRackElevation={handleViewRackElevation}
+                      gridRows={3}
+                      gridCols={4}
+                      roomTempTarget={overview?.room_temp_c || 24.5}
+                    />
+                  </div>
+
+                  {/* Right Column: Selected Rack Card + Recent Alerts */}
+                  <div className="space-y-4">
+                    <RackDetailCard
+                      rack={selectedRackSummary}
+                      onViewRackElevation={handleViewRackElevation}
+                    />
+                    <RecentAlerts
+                      alerts={overview?.recent_alerts || []}
+                      onViewAll={() => handleSelectTab('alerts')}
+                      onSelectAlert={() => handleSelectTab('alerts')}
+                    />
                   </div>
                 </div>
-              </div>
-
-              {/* Main Grid: 2.5D Isometric Room (Left 2 cols) + Detail Card & Alerts (Right) */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-                {/* 2.5D Isometric Room Canvas (2 cols) */}
-                <div className="xl:col-span-2">
-                  <IsometricRoom
-                    racks={filteredRacks}
-                    selectedRackId={selectedRackSummary?.id || null}
-                    onSelectRack={(rack) => setSelectedRackSummary(rack)}
-                    statusCounts={
-                      overview?.status_counts || {
-                        healthy: 10,
-                        warning: 1,
-                        critical: 1,
-                        offline: 0,
+              ) : (
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                  {/* 2.5D Isometric Room Canvas (2 cols) */}
+                  <div className="xl:col-span-2">
+                    <IsometricRoom
+                      racks={filteredRacks}
+                      selectedRackId={selectedRackSummary?.id || null}
+                      onSelectRack={(rack) => setSelectedRackSummary(rack)}
+                      statusCounts={
+                        overview?.status_counts || {
+                          healthy: 10,
+                          warning: 1,
+                          critical: 1,
+                          offline: 0,
+                        }
                       }
-                    }
-                    roomId={1}
-                    onLayoutSaved={() => loadOverview()}
-                    onViewRackElevation={handleViewRackElevation}
-                  />
-                </div>
+                      roomId={1}
+                      onLayoutSaved={() => loadOverview()}
+                      onViewRackElevation={handleViewRackElevation}
+                    />
+                  </div>
 
-                {/* Right Column: Selected Rack Card + Recent Alerts */}
-                <div className="space-y-6">
-                  <RackDetailCard
-                    rack={selectedRackSummary}
-                    onViewRackElevation={handleViewRackElevation}
-                  />
-                  <RecentAlerts
-                    alerts={overview?.recent_alerts || []}
-                    onViewAll={() => handleSelectTab('alerts')}
-                    onSelectAlert={() => handleSelectTab('alerts')}
-                  />
+                  {/* Right Column: Selected Rack Card + Recent Alerts */}
+                  <div className="space-y-6">
+                    <RackDetailCard
+                      rack={selectedRackSummary}
+                      onViewRackElevation={handleViewRackElevation}
+                    />
+                    <RecentAlerts
+                      alerts={overview?.recent_alerts || []}
+                      onViewAll={() => handleSelectTab('alerts')}
+                      onSelectAlert={() => handleSelectTab('alerts')}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : activeNav === 'racks' ? (
             /* TAB 3: All Racks 12-Grid View */

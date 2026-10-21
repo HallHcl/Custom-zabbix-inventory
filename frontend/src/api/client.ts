@@ -4,6 +4,7 @@ import type {
   DeviceMetrics,
   ZabbixHostOption,
   Device,
+  DeviceTemplate,
   RoomLayout,
   UnassignedHostsOverview,
   DeviceAssignFromZabbix,
@@ -41,6 +42,17 @@ export async function fetchDevices(params?: { rack_id?: number; device_type?: st
 
   const res = await fetch(`${API_BASE}/devices${qs}`)
   if (!res.ok) throw new Error('Failed to fetch devices')
+  return res.json()
+}
+
+export async function fetchDeviceTemplates(params?: { brand?: string; device_type?: string }): Promise<DeviceTemplate[]> {
+  const query = new URLSearchParams()
+  if (params?.brand) query.append('brand', params.brand)
+  if (params?.device_type) query.append('device_type', params.device_type)
+  const qs = query.toString() ? `?${query.toString()}` : ''
+
+  const res = await fetch(`${API_BASE}/devices/templates${qs}`)
+  if (!res.ok) throw new Error('Failed to fetch hardware templates')
   return res.json()
 }
 

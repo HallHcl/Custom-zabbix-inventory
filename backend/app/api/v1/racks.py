@@ -12,7 +12,9 @@ from backend.app.schemas import (
     RackElevationResponse,
     DeviceResponse,
     ZabbixStatusSummary,
+    BrandInfo,
 )
+from backend.app.services.brand_service import resolve_brand_metadata
 
 router = APIRouter()
 
@@ -109,6 +111,14 @@ async def get_rack_elevation(rack_id: int, db: AsyncSession = Depends(get_db)):
             raw = zabbix_summaries[dev.zabbix_host_id]
             z_status = ZabbixStatusSummary(**raw)
 
+        b_meta = resolve_brand_metadata(
+            model=dev.model,
+            manufacturer=dev.manufacturer,
+            name=dev.name,
+            tags=dev.tags,
+            custom_fields=dev.custom_fields,
+        )
+
         enriched_devices.append(
             DeviceResponse(
                 id=dev.id,
@@ -123,8 +133,11 @@ async def get_rack_elevation(rack_id: int, db: AsyncSession = Depends(get_db)):
                 ip_address=dev.ip_address,
                 serial_number=dev.serial_number,
                 zabbix_host_id=dev.zabbix_host_id,
+                status=getattr(dev, "status", "Active"),
                 tags=dev.tags,
+                custom_fields=dev.custom_fields,
                 zabbix_status=z_status,
+                brand_info=BrandInfo(**b_meta) if b_meta else None,
             )
         )
 
