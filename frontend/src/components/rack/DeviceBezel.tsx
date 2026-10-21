@@ -1,11 +1,12 @@
-import { AlertTriangle, AlertOctagon, Shield } from 'lucide-react'
+import { AlertTriangle, AlertOctagon, Shield, Zap, Radio, Terminal } from 'lucide-react'
 import type { Device, BrandInfo } from '../../types'
 
-interface DeviceBezelProps {
+export interface DeviceBezelProps {
   device: Device
   isSelected: boolean
   onClick: () => void
   isDimmed?: boolean
+  face?: 'Front' | 'Rear'
 }
 
 /**
@@ -68,7 +69,7 @@ function DellHoneycombMesh({ opacity = 0.22 }: { opacity?: number }) {
 }
 
 /**
- * HPE ProLiant Signature Emerald Green Bezel Stripe
+ * HPE ProLiant Signature Emerald Green Bezel Stripe & UID LED
  */
 function HpeProLiantAccent({ heightU }: { heightU: number }) {
   return (
@@ -77,15 +78,18 @@ function HpeProLiantAccent({ heightU }: { heightU: number }) {
         className="w-1.5 rounded-xs bg-[#01a982] shadow-[0_0_8px_rgba(1,169,130,0.8)]"
         style={{ height: heightU >= 2 ? '28px' : '16px' }}
       />
-      <div className="w-3.5 h-3.5 border border-[#01a982] bg-[#0d2b24] rounded-[1px] flex items-center justify-center shadow-[0_0_6px_rgba(1,169,130,0.4)]">
-        <span className="w-1.5 h-1.5 bg-[#01a982] rounded-xs" />
+      <div
+        className="w-3.5 h-3.5 border border-[#01a982] bg-[#0d2b24] rounded-[1px] flex items-center justify-center shadow-[0_0_6px_rgba(1,169,130,0.4)] cursor-pointer"
+        title="HPE UID (Unit ID) Blue/Green LED"
+      >
+        <span className="w-1.5 h-1.5 bg-[#01a982] rounded-xs animate-pulse" />
       </div>
     </div>
   )
 }
 
 /**
- * Realistic Drive Caddy Array with Activity LEDs
+ * Realistic Drive Caddy Array with Activity LEDs (Front Chassis)
  */
 function RealisticDriveCaddyArray({ count = 8, brandColor = '#85a6b1', heightU = 1 }: { count?: number; brandColor?: string; heightU?: number }) {
   const is2U = heightU >= 2
@@ -104,7 +108,7 @@ function RealisticDriveCaddyArray({ count = 8, brandColor = '#85a6b1', heightU =
             className="w-1 h-1 rounded-full shadow-2xs animate-pulse"
             style={{
               backgroundColor: i % 3 === 0 ? '#10b981' : brandColor,
-              animationDuration: `${1.2 + (i * 0.2)}s`,
+              animationDuration: `${0.8 + ((i * 0.3) % 1.5)}s`,
             }}
           />
           {/* Drive Eject Latch Line */}
@@ -135,9 +139,10 @@ function RealisticSwitchPortArray({ portCount = 10, brandColor = '#00bceb', isHu
           >
             {/* Link/Activity LED */}
             <span
-              className="w-1 h-1 rounded-full shadow-xs"
+              className="w-1 h-1 rounded-full shadow-xs animate-pulse"
               style={{
                 backgroundColor: i % 4 === 0 ? '#34d399' : (isHuawei ? '#f43f5e' : brandColor),
+                animationDuration: `${0.6 + ((i * 0.25) % 1.2)}s`,
               }}
             />
             {/* Metal connector pins */}
@@ -168,7 +173,7 @@ function RealisticSwitchPortArray({ portCount = 10, brandColor = '#00bceb', isHu
 }
 
 /**
- * APC Digital LCD Power Readout
+ * APC Digital LCD Power Readout (Front Chassis)
  */
 function RealisticApcLcdDisplay({ heightU = 4 }: { heightU: number }) {
   return (
@@ -201,13 +206,155 @@ function RealisticApcLcdDisplay({ heightU = 4 }: { heightU: number }) {
   )
 }
 
-export function DeviceBezel({ device, isSelected, onClick, isDimmed = false }: DeviceBezelProps) {
+/**
+ * Photorealistic Dual Hot-Swap PSUs for Rear Server Chassis
+ */
+function RearPsuCluster({ isSingleCorded = false, heightU = 1 }: { isSingleCorded?: boolean; heightU: number }) {
+  const is2U = heightU >= 2
+  return (
+    <div className="flex items-center gap-1 bg-[#12161a] border border-[#2d3740] rounded-[2px] px-1 py-0.5 shadow-inner shrink-0">
+      {/* PSU 1 (Feed A - Active Primary) */}
+      <div
+        className={`bg-[#182026] border border-[#394650] rounded-[1px] p-1 flex flex-col justify-between ${
+          is2U ? 'w-9 h-11' : 'w-8 h-5.5'
+        }`}
+        title="PSU-1: 800W Platinum (Feed A) - ONLINE AC OK"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-[6px] font-mono font-bold text-sky-400">P1</span>
+          <span className="w-1 h-1 rounded-full bg-emerald-400 shadow-[0_0_4px_#10b981]" />
+        </div>
+        {/* C14 Inlet Socket Prongs */}
+        <div className="w-full flex items-center justify-center my-0.5">
+          <div className="w-3.5 h-2 bg-[#0d1114] border border-[#2a343d] rounded-2xs flex items-center justify-around px-0.5">
+            <span className="w-0.5 h-1 bg-[#71808d] rounded-3xs" />
+            <span className="w-0.5 h-1 bg-[#71808d] rounded-3xs" />
+            <span className="w-0.5 h-0.5 bg-[#71808d] rounded-3xs" />
+          </div>
+        </div>
+        <div className="w-full h-0.5 bg-sky-500/80 rounded-3xs" title="Feed A PDU Cable" />
+      </div>
+
+      {/* PSU 2 (Feed B - Redundant Secondary or Single-Corded Warning) */}
+      <div
+        className={`bg-[#182026] border rounded-[1px] p-1 flex flex-col justify-between ${
+          isSingleCorded ? 'border-amber-500/60 bg-amber-950/20' : 'border-[#394650]'
+        } ${is2U ? 'w-9 h-11' : 'w-8 h-5.5'}`}
+        title={
+          isSingleCorded
+            ? 'PSU-2: UNPLUGGED - Single-Corded Power Risk!'
+            : 'PSU-2: 800W Platinum (Feed B) - STANDBY NOMINAL'
+        }
+      >
+        <div className="flex items-center justify-between">
+          <span className={`text-[6px] font-mono font-bold ${isSingleCorded ? 'text-amber-400' : 'text-rose-400'}`}>
+            P2
+          </span>
+          <span
+            className={`w-1 h-1 rounded-full ${
+              isSingleCorded
+                ? 'bg-amber-400 shadow-[0_0_4px_#f59e0b] animate-ping'
+                : 'bg-emerald-400 shadow-[0_0_4px_#10b981]'
+            }`}
+          />
+        </div>
+        {/* C14 Inlet Socket Prongs */}
+        <div className="w-full flex items-center justify-center my-0.5">
+          <div className="w-3.5 h-2 bg-[#0d1114] border border-[#2a343d] rounded-2xs flex items-center justify-around px-0.5">
+            <span className="w-0.5 h-1 bg-[#71808d] rounded-3xs" />
+            <span className="w-0.5 h-1 bg-[#71808d] rounded-3xs" />
+            <span className="w-0.5 h-0.5 bg-[#71808d] rounded-3xs" />
+          </div>
+        </div>
+        <div
+          className={`w-full h-0.5 rounded-3xs ${
+            isSingleCorded ? 'bg-amber-500 animate-pulse' : 'bg-rose-500/80'
+          }`}
+          title={isSingleCorded ? 'Missing Feed B Cord' : 'Feed B PDU Cable'}
+        />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Photorealistic Rear PCIe Riser & Optical Port Bank
+ */
+function RearPcieExpansionBank({ heightU = 1 }: { heightU: number }) {
+  const is2U = heightU >= 2
+  return (
+    <div className="flex items-center gap-1 shrink-0">
+      {/* Dual SFP28/SFP+ 10/25GbE Optical Ports */}
+      <div className="flex flex-col gap-0.5 bg-[#14191d] border border-[#34404a] p-1 rounded-[1px]">
+        <div className="flex items-center gap-1">
+          <span className="text-[6px] font-mono text-[#85a6b1]">NIC-1</span>
+          <span className="w-1 h-1 rounded-full bg-[#10b981] animate-pulse" />
+        </div>
+        <div className="flex gap-0.5">
+          <div className="w-3 h-2.5 bg-[#0e1317] border border-cyan-700/70 rounded-3xs flex items-center justify-center">
+            <span className="w-1.5 h-1 bg-cyan-400/80 rounded-3xs" />
+          </div>
+          <div className="w-3 h-2.5 bg-[#0e1317] border border-cyan-700/70 rounded-3xs flex items-center justify-center">
+            <span className="w-1.5 h-1 bg-cyan-400/80 rounded-3xs" />
+          </div>
+        </div>
+      </div>
+
+      {/* Vented Hex Cooling Exhaust Slots */}
+      <div
+        className={`flex flex-col justify-around bg-[#101418] border border-[#2b353d] px-1 py-0.5 rounded-[1px] opacity-70 ${
+          is2U ? 'h-11 w-10' : 'h-5.5 w-8'
+        }`}
+      >
+        {[...Array(is2U ? 4 : 2)].map((_, i) => (
+          <div key={i} className="w-full h-0.5 bg-[#3a4752] rounded-full" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Out-of-Band Management & LOM RJ45 Ports (Rear)
+ */
+function RearOobMgmtBlock() {
+  return (
+    <div className="flex items-center gap-1 bg-[#13191d] border border-[#323d47] px-1 py-0.5 rounded-[1px] shrink-0">
+      <div className="flex flex-col items-center">
+        <div className="flex items-center gap-0.5 text-[6px] font-mono text-emerald-400">
+          <Terminal className="w-2 h-2" />
+          <span>OOB</span>
+        </div>
+        <div
+          className="w-3 h-3 bg-[#0a0d10] border border-emerald-600/60 rounded-3xs flex items-center justify-center mt-0.5"
+          title="Dedicated 1GbE iDRAC / iLO Management Port"
+        >
+          <span className="w-1 h-1 bg-emerald-400 rounded-3xs animate-ping" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function DeviceBezel({
+  device,
+  isSelected,
+  onClick,
+  isDimmed = false,
+  face = 'Front',
+}: DeviceBezelProps) {
   const heightPx = device.height_u * 28 // 28px standard per 1U
   const status = device.zabbix_status?.status || 'ok'
   const brandInfo = device.brand_info
   const brandColor = brandInfo?.color || '#50626f'
   const brandName = (brandInfo?.name || device.manufacturer || '').toLowerCase()
   const modelDisplayName = brandInfo?.model_family || device.model || device.name
+
+  // Detect single-corded risk (e.g. tag or name match for redundancy test)
+  const isSingleCorded =
+    device.name.includes('A01-U24') ||
+    device.tags?.single_corded === true ||
+    device.custom_fields?.redundancy === 'Single'
 
   // High-visibility status LED
   const getStatusLed = () => {
@@ -230,15 +377,219 @@ export function DeviceBezel({ device, isSelected, onClick, isDimmed = false }: D
       default:
         return (
           <span
-            className="w-2 h-2 rounded-full bg-[#7aa5d2] shadow-[0_0_6px_rgba(122,165,210,0.8)] shrink-0"
+            className="w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_6px_rgba(16,185,129,0.8)] shrink-0"
             title="Zabbix: Nominal"
           />
         )
     }
   }
 
-  // Render specific faceplate based on device type & brand
-  const renderFaceplate = () => {
+  // Render Photorealistic REAR Chassis
+  const renderRearFaceplate = () => {
+    switch (device.device_type) {
+      case 'Patch Panel':
+        return (
+          <div className="w-full h-full bg-[#181e23] border-y border-[#2d3740] px-2.5 flex items-center justify-between relative overflow-hidden">
+            <div className="flex items-center gap-2 min-w-0 z-10">
+              <span className="px-1.5 py-0.5 rounded-[2px] bg-[#101418] border border-[#3b4752] text-[7.5px] font-mono text-[#85a6b1] font-bold">
+                REAR IDC PUNCH-DOWN
+              </span>
+              <span className="text-[9.5px] font-mono text-[#caedde] font-semibold truncate max-w-[120px]">
+                {device.name}
+              </span>
+            </div>
+            {/* Rear 110 Punch-down Wire Termination Pairs */}
+            <div className="flex gap-1 shrink-0 z-10">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-4 h-4.5 bg-[#0f1316] border border-[#303c46] rounded-2xs flex flex-col justify-around px-0.5"
+                  title={`Block ${i + 1}: 4-Pair T568B Structured Cabling`}
+                >
+                  <div className="flex justify-between">
+                    <span className="w-1 h-0.5 bg-blue-400 rounded-3xs" />
+                    <span className="w-1 h-0.5 bg-orange-400 rounded-3xs" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="w-1 h-0.5 bg-emerald-400 rounded-3xs" />
+                    <span className="w-1 h-0.5 bg-amber-600 rounded-3xs" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+
+      case 'Switch': {
+        const isHuawei = brandName.includes('huawei')
+        return (
+          <div className="w-full h-full bg-[#1c2329] border-y border-[#323d47] px-2 flex items-center justify-between relative overflow-hidden">
+            <div className="flex items-center gap-2 min-w-0 z-10">
+              {getStatusLed()}
+              <BrandPillBadge brandInfo={brandInfo} fallback={isHuawei ? 'HUAWEI' : 'SWITCH'} />
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[10px] font-mono font-black text-white tracking-tight truncate max-w-[100px]">
+                    {device.name}
+                  </span>
+                  <span className="px-1 py-0.2 rounded-[2px] bg-[#12161a] border border-[#3a4753] text-[7.5px] font-mono text-[#85a6b1]">
+                    REAR I/O
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rear Switch Components: Dual Fan Trays + Dual Modular PSUs + MGMT */}
+            <div className="flex items-center gap-2 z-10 shrink-0">
+              {/* Dual Fan Module Assemblies */}
+              <div className="flex gap-0.5 bg-[#12161a] border border-[#2d3740] p-0.5 rounded-[1px]">
+                <div
+                  className="w-3.5 h-5 bg-[#182026] border border-[#394650] rounded-2xs flex flex-col items-center justify-between p-0.5"
+                  title="FAN-1: 14,000 RPM Nominal"
+                >
+                  <Radio className="w-2 h-2 text-cyan-400 animate-spin" />
+                  <span className="w-1 h-0.5 bg-cyan-400" />
+                </div>
+                <div
+                  className="w-3.5 h-5 bg-[#182026] border border-[#394650] rounded-2xs flex flex-col items-center justify-between p-0.5"
+                  title="FAN-2: 14,000 RPM Nominal"
+                >
+                  <Radio className="w-2 h-2 text-cyan-400 animate-spin" />
+                  <span className="w-1 h-0.5 bg-cyan-400" />
+                </div>
+              </div>
+
+              {/* Rear Hot-Swap Dual PSUs */}
+              <RearPsuCluster isSingleCorded={isSingleCorded} heightU={device.height_u} />
+
+              {/* Console & Out-of-band MGMT */}
+              <RearOobMgmtBlock />
+            </div>
+          </div>
+        )
+      }
+
+      case 'Firewall':
+        return (
+          <div className="w-full h-full bg-[#24171e] border-y border-[#3d2331] px-2 flex items-center justify-between relative overflow-hidden">
+            <div className="flex items-center gap-2 min-w-0 z-10">
+              {getStatusLed()}
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] font-mono font-black text-rose-100 tracking-tight truncate max-w-[110px]">
+                  {device.name}
+                </span>
+                <span className="text-[7.5px] font-mono text-rose-400/80">REAR HA / POWER</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 z-10 shrink-0">
+              {/* Dedicated HA1 & HA2 Heartbeat SFP+ Ports */}
+              <div className="flex gap-1 bg-[#180e14] border border-rose-900/60 p-1 rounded-[1px]">
+                <div className="flex flex-col items-center">
+                  <span className="text-[6px] font-mono text-rose-300">HA-1</span>
+                  <div className="w-3 h-2.5 bg-[#10090d] border border-rose-700/80 rounded-3xs flex items-center justify-center">
+                    <span className="w-1 h-1 bg-rose-400 rounded-full animate-ping" />
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-[6px] font-mono text-rose-300">HA-2</span>
+                  <div className="w-3 h-2.5 bg-[#10090d] border border-rose-700/80 rounded-3xs flex items-center justify-center">
+                    <span className="w-1 h-1 bg-rose-400 rounded-full" />
+                  </div>
+                </div>
+              </div>
+
+              <RearPsuCluster isSingleCorded={isSingleCorded} heightU={device.height_u} />
+            </div>
+          </div>
+        )
+
+      case 'UPS':
+        return (
+          <div className="w-full h-full bg-[#17211b] border-y border-[#2a3a30] px-2 flex items-center justify-between relative overflow-hidden">
+            <div className="flex items-center gap-2 min-w-0 z-10">
+              <span className="px-1.5 py-0.5 rounded-[2px] bg-[#0d1410] border border-teal-600/70 text-[7.5px] font-mono font-black text-teal-300">
+                UPS REAR DISTRIBUTION
+              </span>
+              <span className="text-[10px] font-mono font-bold text-[#caedde] truncate max-w-[120px]">
+                {device.name}
+              </span>
+            </div>
+
+            {/* Rear Outlet Banks & NMC3 Card */}
+            <div className="flex items-center gap-2 z-10 shrink-0">
+              {/* C13 / C19 Outlets Bank */}
+              <div className="flex gap-1 bg-[#0f1612] border border-teal-800/80 p-1 rounded-[1px]">
+                <div className="flex flex-col items-center">
+                  <span className="text-[6px] font-mono text-teal-300">BANK 1 (C13)</span>
+                  <div className="flex gap-0.5 mt-0.5">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="w-2.5 h-3 bg-[#16221c] border border-teal-700/60 rounded-3xs" />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-[6px] font-mono text-teal-300">BANK 2 (C19)</span>
+                  <div className="flex gap-0.5 mt-0.5">
+                    {[...Array(2)].map((_, i) => (
+                      <div key={i} className="w-3 h-3 bg-[#16221c] border border-teal-700/60 rounded-3xs" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* NMC3 Network Management Card */}
+              <div className="bg-[#0f1612] border border-teal-600/70 p-1 rounded-[1px] flex flex-col items-center">
+                <span className="text-[6px] font-mono text-teal-300 font-bold">NMC3</span>
+                <div className="w-3.5 h-3 bg-[#15231c] border border-teal-500 rounded-3xs flex items-center justify-center mt-0.5">
+                  <span className="w-1 h-1 bg-teal-300 rounded-3xs animate-ping" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'Server':
+      default:
+        return (
+          <div className="w-full h-full bg-[#1a2127] border-y border-[#2f3b45] px-2 flex items-center justify-between relative overflow-hidden">
+            <div className="flex items-center gap-2 min-w-0 z-10">
+              {getStatusLed()}
+              <BrandPillBadge brandInfo={brandInfo} fallback="SERVER" />
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[10px] font-mono font-black text-white tracking-tight truncate max-w-[110px]">
+                    {device.name}
+                  </span>
+                  <span className="text-[8px] font-mono text-[#85a6b1] truncate">
+                    {modelDisplayName}
+                  </span>
+                  {isSingleCorded && (
+                    <span
+                      className="px-1 py-0.2 rounded-[2px] bg-amber-500/20 border border-amber-500/80 text-[7px] font-mono text-amber-300 font-bold animate-pulse flex items-center gap-0.5"
+                      title="Single-corded power supply hazard! Feed B unpowered."
+                    >
+                      <Zap className="w-2 h-2 text-amber-400" />
+                      1x PSU
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Rear Chassis Clusters: Dual PSUs + PCIe Risers + OOB MGMT */}
+            <div className="flex items-center gap-2 z-10 shrink-0">
+              <RearPsuCluster isSingleCorded={isSingleCorded} heightU={device.height_u} />
+              <RearPcieExpansionBank heightU={device.height_u} />
+              <RearOobMgmtBlock />
+            </div>
+          </div>
+        )
+    }
+  }
+
+  // Render Photorealistic FRONT Chassis
+  const renderFrontFaceplate = () => {
     switch (device.device_type) {
       case 'Patch Panel':
         return (
@@ -273,7 +624,7 @@ export function DeviceBezel({ device, isSelected, onClick, isDimmed = false }: D
         const isCisco = brandName.includes('cisco')
         return (
           <div className="w-full h-full bg-[#222c33] border-y border-[#384550] px-2.5 flex items-center justify-between relative overflow-hidden">
-            {/* Subtle ventilation line pattern */}
+            {/* Ventilation slits pattern */}
             <div className="absolute inset-y-0 right-32 w-12 opacity-15 pointer-events-none flex gap-1 items-center">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="w-0.5 h-4 bg-[#caedde] rounded-full" />
@@ -398,7 +749,6 @@ export function DeviceBezel({ device, isSelected, onClick, isDimmed = false }: D
         const isDell = brandName.includes('dell')
         return (
           <div className="w-full h-full bg-[#1c242a] border-y border-[#323f48] px-2.5 flex items-center justify-between relative overflow-hidden">
-            {/* Dell Honeycomb Background if Dell Storage */}
             {isDell && <DellHoneycombMesh opacity={0.18} />}
 
             <div className="flex items-center gap-2 min-w-0 z-10">
@@ -448,7 +798,7 @@ export function DeviceBezel({ device, isSelected, onClick, isDimmed = false }: D
       case 'UPS':
         return (
           <div className="w-full h-full bg-[#1b2520] border-y border-[#2f4236] px-2.5 flex items-center justify-between relative overflow-hidden">
-            {/* Heavy-Duty Industrial Louvers */}
+            {/* Industrial Louvers */}
             <div className="absolute inset-y-0 left-48 right-32 opacity-25 pointer-events-none flex flex-col justify-around py-1">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="w-full h-0.5 bg-teal-300 rounded-full" />
@@ -492,16 +842,13 @@ export function DeviceBezel({ device, isSelected, onClick, isDimmed = false }: D
 
         return (
           <div className="w-full h-full bg-[#212930] border-y border-[#36434d] px-2.5 flex items-center justify-between relative overflow-hidden">
-            {/* Signature Texture Overlays */}
             {isDell && <DellHoneycombMesh opacity={0.24} />}
 
             <div className="flex items-center gap-2 min-w-0 z-10">
               {getStatusLed()}
 
-              {/* HPE ProLiant Iconic Green Accent Stripe */}
               {isHpe && <HpeProLiantAccent heightU={device.height_u} />}
 
-              {/* Signature Brand Pill Badge */}
               <BrandPillBadge
                 brandInfo={brandInfo}
                 fallback={isDell ? 'DELL EMC' : isHpe ? 'HPE' : isCisco ? 'CISCO' : isSupermicro ? 'SUPERMICRO' : 'SERVER'}
@@ -579,7 +926,7 @@ export function DeviceBezel({ device, isSelected, onClick, isDimmed = false }: D
         isDimmed ? 'opacity-25 grayscale hover:opacity-80 transition-opacity' : ''
       }`}
     >
-      {renderFaceplate()}
+      {face === 'Rear' ? renderRearFaceplate() : renderFrontFaceplate()}
     </div>
   )
 }
