@@ -137,6 +137,7 @@ class RoomOverviewResponse(BaseModel):
     total_capacity_u: int = 0
     status_counts: Dict[str, int]
     severity_counts: Dict[str, int] = {}
+    device_type_counts: Dict[str, int] = {}
     grid_rows: int = 4
     grid_cols: int = 6
     racks: List[RackSummary]

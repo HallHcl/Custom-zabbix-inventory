@@ -46,9 +46,12 @@ async def get_room_overview(
     all_racks = [rack for row in room.rows for rack in row.racks] if room.rows else []
     all_zabbix_ids = set()
     total_devices_count = 0
+    device_type_counts: Dict[str, int] = {}
     for rack in all_racks:
         total_devices_count += len(rack.devices)
         for dev in rack.devices:
+            dtype = dev.device_type or "Server"
+            device_type_counts[dtype] = device_type_counts.get(dtype, 0) + 1
             if dev.zabbix_host_id:
                 all_zabbix_ids.add(dev.zabbix_host_id)
 
@@ -169,6 +172,7 @@ async def get_room_overview(
         total_capacity_u=total_cap_u,
         status_counts=status_counts,
         severity_counts=severity_counts,
+        device_type_counts=device_type_counts,
         grid_rows=room.grid_rows,
         grid_cols=room.grid_cols,
         racks=racks_summary,

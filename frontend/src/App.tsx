@@ -497,7 +497,10 @@ export function App() {
             />
           ) : activeNav === 'reports' ? (
             /* TAB 7: Reports & Datacenter Analytics */
-            <ReportsView overview={overview} />
+            <ReportsView
+              overview={overview}
+              onSelectRack={handleViewRackElevation}
+            />
           ) : null}
         </main>
       </div>

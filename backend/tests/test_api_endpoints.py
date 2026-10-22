@@ -17,6 +17,13 @@ async def test_api_overview():
         assert len(data["racks"]) >= 12
         assert "status_counts" in data
         assert "recent_alerts" in data
+        assert "device_type_counts" in data
+        assert isinstance(data["device_type_counts"], dict)
+        assert sum(data["device_type_counts"].values()) == data["total_devices"]
+        assert data["total_capacity_u"] >= data["total_used_u"]
+        assert data["total_capacity_u"] > 0
+        assert data["zabbix_status"] is not None
+        assert data["zabbix_status"]["status"] in ["CONNECTED", "STALE", "DISCONNECTED", "ERROR"]
 
 
 @pytest.mark.asyncio

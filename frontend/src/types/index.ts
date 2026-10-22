@@ -103,6 +103,18 @@ export interface RecentAlert {
   lastchange?: string
 }
 
+export interface ZabbixConnectionStatus {
+  status: 'CONNECTED' | 'STALE' | 'DISCONNECTED' | 'ERROR'
+  last_sync_time?: string | null
+  seconds_since_last_sync?: number | null
+  version?: string | null
+  monitored_hosts_count: number
+  active_problems_count: number
+  zabbix_url: string
+  zabbix_web_console_url: string
+  message: string
+}
+
 export interface RoomOverview {
   room_id?: string | number
   site_name: string
@@ -130,8 +142,10 @@ export interface RoomOverview {
     info: number
     unclassified: number
   }
+  device_type_counts?: Record<string, number>
   racks: RackSummary[]
   recent_alerts: RecentAlert[]
+  zabbix_status?: ZabbixConnectionStatus | null
 }
 
 export interface MetricHistoryPoint {
