@@ -292,3 +292,21 @@ async def get_zabbix_status():
     status_data = await sync_service.get_sync_status()
     return ZabbixConnectionStatus(**status_data)
 
+
+@router.post("/auto-provision")
+async def trigger_auto_provision(
+    wipe_mock_devices: bool = Query(True, description="Wipe old demo mock devices before provisioning"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Auto-provision real Zabbix 7.0 hosts into CMDB:
+    - Cleans out mock demo devices
+    - Ensures proper hardware DeviceModels exist
+    - Slots hosts into Racks based on Zabbix Location tags
+    - Registers virtual/container hosts
+    """
+    from backend.app.services.zabbix_provision_service import auto_provision_zabbix_hosts
+    result = await auto_provision_zabbix_hosts(db, wipe_mock_devices=wipe_mock_devices)
+    return result
+
+

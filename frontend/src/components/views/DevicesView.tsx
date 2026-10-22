@@ -152,7 +152,7 @@ export function DevicesView({
               </tr>
             ) : (
               filteredDevices.map((d) => {
-                const rackName = rackMap[d.rack_id] || `Rack #${d.rack_id}`
+                const rackName = d.rack_id ? (rackMap[d.rack_id] || 'Rack') : 'Unracked / Virtual'
                 const status = d.zabbix_status?.status || 'ok'
 
                 return (
@@ -184,10 +184,14 @@ export function DevicesView({
                     <td className="py-2 px-3">
                       <div>
                         <span className="font-bold text-[#caedde] block text-xs">{rackName}</span>
-                        <span className="text-[10px] text-[#85a6b1] font-mono">
-                          U{d.start_u}
-                          {d.height_u > 1 ? `-U${d.start_u + d.height_u - 1}` : ''} ({d.height_u}U)
-                        </span>
+                        {d.rack_id && d.start_u ? (
+                          <span className="text-[10px] text-[#85a6b1] font-mono">
+                            U{d.start_u}
+                            {d.height_u > 1 ? `-U${d.start_u + d.height_u - 1}` : ''} ({d.height_u}U)
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-cyan-400/80 font-mono">Virtual / Container</span>
+                        )}
                       </div>
                     </td>
 
@@ -235,14 +239,16 @@ export function DevicesView({
                             <span>Device Page</span>
                           </button>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => onOpenDeviceInRack(d.rack_id, d.id)}
-                          className="px-2 py-1 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1"
-                        >
-                          <span>Rack</span>
-                          <ChevronRight className="w-3 h-3" />
-                        </button>
+                        {d.rack_id && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenDeviceInRack(d.rack_id, d.id)}
+                            className="px-2 py-1 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1"
+                          >
+                            <span>Rack</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
+                        )}
                         {d.zabbix_host_id && (
                           <a
                             href={`http://192.168.1.85:8080/zabbix.php?action=latest.view&hostids%5B%5D=${d.zabbix_host_id}`}
