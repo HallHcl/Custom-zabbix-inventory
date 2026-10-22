@@ -6,7 +6,6 @@ import {
   Layers,
   ShieldAlert,
   ChevronRight,
-  Maximize2,
   ArrowRight,
 } from "lucide-react";
 import { useTwinStore } from "../../store/useTwinStore";
@@ -34,7 +33,6 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
     viewportMode,
     activeOverlay,
     setActiveOverlay,
-    toggleViewportMode,
     activeAlarms,
     racksTelemetry,
   } = useTwinStore();
@@ -89,34 +87,8 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
     setActiveOverlay(map[newMode] || "STATUS");
   };
 
-  const viewportControlElement = (
-    <div className="flex items-center p-1 rounded-xl glass-panel-elevated shadow-lg">
-      <button
-        type="button"
-        onClick={() => viewportMode !== "3D" && toggleViewportMode()}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
-          viewportMode === "3D"
-            ? "bg-[var(--accent-primary)] text-white shadow-sm"
-            : "text-[var(--text-secondary)] hover:text-[var(--text-bright)]"
-        }`}
-      >
-        <Maximize2 className="w-3.5 h-3.5" />
-        <span>3D Spatial Twin</span>
-      </button>
-      <button
-        type="button"
-        onClick={() => viewportMode !== "2D" && toggleViewportMode()}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
-          viewportMode === "2D"
-            ? "bg-[var(--accent-primary)] text-white shadow-sm"
-            : "text-[var(--text-secondary)] hover:text-[var(--text-bright)]"
-        }`}
-      >
-        <Layers className="w-3.5 h-3.5" />
-        <span>2.5D Isometric</span>
-      </button>
-    </div>
-  );
+  // Deferred 3D spatial twin toggle hidden as part of DC Vision scope
+  const viewportControlElement = null;
 
   const telemetryElement = (
     <div className="px-3 py-1.5 rounded-xl glass-panel-elevated shadow-lg text-xs font-mono flex items-center gap-2">
