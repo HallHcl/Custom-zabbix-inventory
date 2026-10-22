@@ -87,11 +87,18 @@ class RedisService:
     async def get_active_problems(self) -> Optional[List[Dict[str, Any]]]:
         return await self.get_json("zabbix:active_problems")
 
+    async def delete(self, key: str):
+        client = self.get_client()
+        await client.delete(key)
+
     async def cache_unassigned_hosts(self, data: Dict[str, Any], ttl: int = 60):
         await self.set_json("zabbix:unassigned_hosts", data, ttl=ttl)
 
     async def get_unassigned_hosts(self) -> Optional[Dict[str, Any]]:
         return await self.get_json("zabbix:unassigned_hosts")
+
+    async def invalidate_unassigned_hosts(self):
+        await self.delete("zabbix:unassigned_hosts")
 
     # ========================================================================
     # Digital Twin Real-Time Telemetry Methods
