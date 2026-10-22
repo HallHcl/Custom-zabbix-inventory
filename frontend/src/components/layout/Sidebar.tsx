@@ -6,11 +6,10 @@ import {
   Bell,
   FileText,
   Activity,
-  Network,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-export type NavTab = 'overview' | 'floor_plan' | 'racks' | 'devices' | 'ipam' | 'alerts' | 'reports'
+export type NavTab = 'overview' | 'floor_plan' | 'racks' | 'devices' | 'alerts' | 'reports'
 
 interface NavItem {
   id: NavTab
@@ -31,7 +30,6 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
     { id: 'floor_plan', label: 'DC Floor Plan', icon: Map },
     { id: 'racks', label: 'Rack Cabinets', icon: Server },
     { id: 'devices', label: 'Device Inventory', icon: Monitor },
-    { id: 'ipam', label: 'IPAM Subnets', icon: Network },
     { id: 'alerts', label: 'Active Alerts', icon: Bell, badge: alertCount },
     { id: 'reports', label: 'Telemetry Reports', icon: FileText },
   ]

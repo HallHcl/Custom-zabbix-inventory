@@ -13,7 +13,6 @@ import {
   Inbox,
   ChevronDown,
   Command,
-  Sparkles,
 } from "lucide-react";
 import { useTwinStore } from "../../store/useTwinStore";
 import { useTheme, NEXUS_THEMES } from "../../lib/theme";
@@ -40,8 +39,6 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
     wsConnecting,
     connectWebSocket,
     openSpotlight,
-    isCopilotOpen,
-    toggleCopilot,
   } = useTwinStore();
 
   const { theme, setTheme, themeMeta } = useTheme();
@@ -63,25 +60,20 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Keyboard shortcut listener for Cmd/Ctrl + K (Spotlight) and Cmd/Ctrl + J (Copilot)
+  // Keyboard shortcut listener for Cmd/Ctrl + K (Spotlight)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         openSpotlight();
-      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
-        e.preventDefault();
-        toggleCopilot();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [openSpotlight, toggleCopilot]);
+  }, [openSpotlight]);
 
   // Derived Telemetry Values with Graceful Fallbacks
   const itLoadKw = facilityTelemetry?.total_it_load_kw ?? 142.5;
-  const livePue = facilityTelemetry?.pue ?? 1.18;
-  const pueRating = facilityTelemetry?.pue_efficiency_rating ?? "EXCELLENT";
   const problemCount = activeAlarms.filter((a) => a.event_status === "PROBLEM").length;
 
   const themeList = Object.values(NEXUS_THEMES);
@@ -264,26 +256,6 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
             </span>
           </div>
 
-          {/* Live PUE Gauge Pill */}
-          <div
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--bg-elevated)]/80 border border-[var(--border-subtle)] text-xs font-mono"
-            title={`Power Usage Effectiveness: ${livePue.toFixed(2)} (${pueRating})`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                livePue < 1.3
-                  ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
-                  : livePue < 1.6
-                  ? "bg-amber-400"
-                  : "bg-rose-400"
-              }`}
-            />
-            <span className="text-[var(--text-secondary)]">PUE:</span>
-            <span className="font-bold text-[var(--text-bright)]">
-              {livePue.toFixed(2)}
-            </span>
-          </div>
-
           {/* Active Alarms Pill */}
           <div
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-mono transition-colors ${
@@ -359,25 +331,6 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
             )}
           </button>
         )}
-
-        {/* 4.5 Agentic AI Copilot Button (Cmd/Ctrl + J Trigger) */}
-        <button
-          type="button"
-          onClick={toggleCopilot}
-          className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-mono transition-all cursor-pointer ${
-            isCopilotOpen
-              ? "bg-[var(--accent-primary)] text-[var(--bg-base)] border-[var(--accent-primary)] font-bold shadow-md shadow-[var(--accent-primary)]/20"
-              : "bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] border-[var(--border-subtle)] hover:border-[var(--accent-primary)] text-[var(--accent-primary)]"
-          }`}
-          title="Open NexusTwin Spatial AI Copilot (Ctrl+J or ⌘J)"
-        >
-          <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-          <span className="hidden md:inline">Copilot</span>
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-base)]/80 border border-[var(--border-subtle)] rounded shadow-inner">
-            <Command className="w-2.5 h-2.5" />
-            <span>J</span>
-          </kbd>
-        </button>
 
         {/* 5. Spotlight Search Button (Cmd/Ctrl + K Trigger) */}
         <button

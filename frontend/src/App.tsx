@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { ArrowLeft, Pencil, Box, LayoutGrid } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import type { RoomOverview, RackSummary, RackElevation as RackElevationType, Device } from './types'
-import { fetchRoomOverview, fetchRackElevation, fetchUnassignedHosts, fetchDevices } from './api/client'
+import { fetchRoomOverview, fetchRackElevation, fetchUnassignedHosts } from './api/client'
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
 import { TopGlassmorphicHUD } from './components/layout/TopGlassmorphicHUD'
 import { SpotlightCommandBar } from './components/layout/SpotlightCommandBar'
 import { PersonaViewContainer } from './components/persona/PersonaViewContainer'
 import { useTwinStore } from './store/useTwinStore'
 import { IsometricRoom } from './components/floorplan/IsometricRoom'
-import { DataCenter3DView, type ColorMode } from './components/floorplan/DataCenter3DView'
+import type { ColorMode } from './components/floorplan/DataCenter3DView'
 import { RackDetailCard } from './components/floorplan/RackDetailCard'
 import { RecentAlerts } from './components/floorplan/RecentAlerts'
 import { RackInventoryNav } from './components/rack/RackInventoryNav'
@@ -17,8 +17,6 @@ import { DeviceDetailPanel } from './components/rack/DeviceDetailPanel'
 import { MountDeviceModal } from './components/rack/MountDeviceModal'
 import { EditDeviceSpecModal } from './components/rack/EditDeviceSpecModal'
 import { DecommissionModal } from './components/rack/DecommissionModal'
-import { BlastRadiusModal } from './components/analytics/BlastRadiusModal'
-import { SpatialCopilotDrawer } from './components/ai/SpatialCopilotDrawer'
 import { UnassignedHostsDrawer } from './components/rack/UnassignedHostsDrawer'
 
 // Dedicated Tab Views
@@ -27,9 +25,8 @@ import { DevicesView } from './components/views/DevicesView'
 import { AlertsView } from './components/views/AlertsView'
 import { ReportsView } from './components/views/ReportsView'
 import { DevicePageView } from './components/views/DevicePageView'
-import { IPAMView } from './components/views/IPAMView'
 
-const VALID_TABS: NavTab[] = ['overview', 'floor_plan', 'racks', 'devices', 'ipam', 'alerts', 'reports']
+const VALID_TABS: NavTab[] = ['overview', 'floor_plan', 'racks', 'devices', 'alerts', 'reports']
 
 export function App() {
   const [activeNav, setActiveNav] = useState<NavTab>(() => {
@@ -67,7 +64,6 @@ export function App() {
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null)
   const [rackTypeFilter, setRackTypeFilter] = useState<string | null>(null)
   const [rackSearchFilter, setRackSearchFilter] = useState('')
-  const [floorPlanMode, setFloorPlanMode] = useState<'3d_twin' | 'isometric'>('isometric')
   const [floorPlanMetricMode, setFloorPlanMetricMode] = useState<ColorMode>('status')
 
   // Mount modal state
@@ -81,11 +77,6 @@ export function App() {
   // Decommission & Hardware Replacement Wizard Modal State
   const [isDecommissionModalOpen, setIsDecommissionModalOpen] = useState(false)
   const [decommissionTargetDevice, setDecommissionTargetDevice] = useState<Device | null>(null)
-
-  // Incident Blast-Radius Simulator Modal State
-  const [isBlastRadiusModalOpen, setIsBlastRadiusModalOpen] = useState(false)
-  const [blastTargetDeviceId, setBlastTargetDeviceId] = useState<number | null>(null)
-  const [blastTargetDeviceName, setBlastTargetDeviceName] = useState<string>('')
 
   // Full Device Page Modal State (Latest Data + Custom Inventory)
   const [devicePageId, setDevicePageId] = useState<number | null>(null)
@@ -203,73 +194,6 @@ export function App() {
       setIsDecommissionModalOpen(true)
     }
   }
-
-  // Open Incident Blast-Radius Simulator Modal
-  const handleOpenBlastRadius = useCallback(async (deviceIdOrHost: number | string, fallbackName?: string) => {
-    if (typeof deviceIdOrHost === 'number') {
-      setBlastTargetDeviceId(deviceIdOrHost)
-      setBlastTargetDeviceName(fallbackName || `Device #${deviceIdOrHost}`)
-      setIsBlastRadiusModalOpen(true)
-    } else {
-      const hostName = deviceIdOrHost
-      let foundId: number | null = null
-      let foundName = hostName
-      if (rackElevation) {
-        const match = rackElevation.devices.find(
-          (d) => d.name.toLowerCase() === hostName.toLowerCase() || d.ip_address === hostName
-        )
-        if (match) {
-          foundId = match.id
-          foundName = match.name
-        }
-      }
-      if (!foundId) {
-        try {
-          const allDevices = await fetchDevices()
-          const match = allDevices.find(
-            (d) => d.name.toLowerCase() === hostName.toLowerCase() || d.ip_address === hostName
-          )
-          if (match) {
-            foundId = match.id
-            foundName = match.name
-          }
-        } catch (err) {
-          console.warn('Could not resolve device by hostname:', err)
-        }
-      }
-      setBlastTargetDeviceId(foundId || 1)
-      setBlastTargetDeviceName(foundName)
-      setIsBlastRadiusModalOpen(true)
-    }
-  }, [rackElevation])
-
-  // Copilot Action Dispatchers
-  const handleCopilotNavigateToRack = useCallback((rackNameOrId: string) => {
-    if (!overview?.racks) return
-    const match = overview.racks.find(
-      (r) => r.name.toLowerCase() === rackNameOrId.toLowerCase() || String(r.id) === String(rackNameOrId)
-    )
-    if (match) {
-      handleViewRackElevation(match)
-    }
-  }, [overview?.racks, handleViewRackElevation])
-
-  const handleCopilotOpenProvisioning = useCallback((rackIdOrName: number | string, startU: number) => {
-    let targetRackId = activeRackId
-    if (overview?.racks) {
-      const match = overview.racks.find(
-        (r) => r.name.toLowerCase() === String(rackIdOrName).toLowerCase() || String(r.id) === String(rackIdOrName)
-      )
-      if (match) {
-        targetRackId = match.id
-        setActiveRackId(match.id)
-      }
-    }
-    if (targetRackId) {
-      setMountTargetU(startU)
-      setIsMountModalOpen(true)
-    }
-  }, [activeRackId, overview?.racks])
 
   // Open Mount Modal on empty slot click
   const handleEmptySlotClick = (u: number) => {
@@ -406,7 +330,6 @@ export function App() {
                   onSelectDevice={(dev) => setSelectedDevice(dev)}
                   onUnmountDevice={handleUnmountDevice}
                   onOpenDevicePage={handleOpenDevicePage}
-                  onInspectBlastRadius={(devId, devName) => handleOpenBlastRadius(devId, devName)}
                   onEditSpec={(dev) => {
                     setEditingDevice(dev)
                     setIsEditSpecModalOpen(true)
@@ -495,41 +418,11 @@ export function App() {
                     </span>
                   </h2>
                   <p className="text-xs text-[#85a6b1] mt-0.5 font-mono">
-                    {floorPlanMode === '3d_twin'
-                      ? 'WebGL 3D Digital Twin • Drag to orbit 360° • Click rack to open 42U Elevation'
-                      : '2.5D spatial layout • Click any rack box to inspect telemetry and slot capacity'}
+                    2.5D spatial layout • Click any rack cabinet to inspect telemetry and 42U elevation
                   </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  {/* Mode Toggle: 3D Digital Twin vs 2D Isometric */}
-                  <div className="flex items-center p-0.5 rounded-[2px] bg-[#1a2329] border border-[#394650]">
-                    <button
-                      type="button"
-                      onClick={() => setFloorPlanMode('3d_twin')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono transition-all cursor-pointer ${
-                        floorPlanMode === '3d_twin'
-                          ? 'bg-[#34424b] text-[#8bd7d1] font-bold border border-[#50626f] shadow-md'
-                          : 'text-[#85a6b1] hover:text-white'
-                      }`}
-                    >
-                      <Box className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>3D Digital Twin</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFloorPlanMode('isometric')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono transition-all cursor-pointer ${
-                        floorPlanMode === 'isometric'
-                          ? 'bg-[#34424b] text-[#8bd7d1] font-bold border border-[#50626f] shadow-md'
-                          : 'text-[#85a6b1] hover:text-white'
-                      }`}
-                    >
-                      <LayoutGrid className="w-3.5 h-3.5 text-[#8bd7d1]" />
-                      <span>Isometric 2D</span>
-                    </button>
-                  </div>
-
                   {/* Edit Floor Plan Button */}
                   <button
                     type="button"
@@ -542,40 +435,7 @@ export function App() {
                 </div>
               </div>
 
-              {/* Main Content Area: 3D WebGL Digital Twin vs 2D Isometric Plan */}
-              {floorPlanMode === '3d_twin' ? (
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-start">
-                  {/* Three.js 3D WebGL Digital Twin (3 cols) */}
-                  <div className="xl:col-span-3">
-                    <DataCenter3DView
-                      racks={filteredRacks}
-                      selectedRackId={selectedRackSummary?.id || null}
-                      onSelectRack={(rack) => setSelectedRackSummary(rack)}
-                      onViewRackElevation={handleViewRackElevation}
-                      gridRows={overview?.grid_rows || 4}
-                      gridCols={overview?.grid_cols || 6}
-                      roomTempTarget={overview?.room_temp_c || 24.5}
-                      mode={floorPlanMetricMode}
-                      onModeChange={setFloorPlanMetricMode}
-                      roomId={overview?.room_id || 1}
-                      onLayoutUpdated={loadOverview}
-                    />
-                  </div>
-
-                  {/* Right Column: Selected Rack Card + Recent Alerts */}
-                  <div className="space-y-4">
-                    <RackDetailCard
-                      rack={selectedRackSummary}
-                      onViewRackElevation={handleViewRackElevation}
-                    />
-                    <RecentAlerts
-                      alerts={overview?.recent_alerts || []}
-                      onViewAll={() => handleSelectTab('alerts')}
-                      onSelectAlert={() => handleSelectTab('alerts')}
-                    />
-                  </div>
-                </div>
-              ) : (
+              {/* Main Content Area: 2.5D Spatial Layout */}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
                   {/* 2.5D Isometric Room Canvas (2 cols) */}
                   <div className="xl:col-span-2">
@@ -614,7 +474,6 @@ export function App() {
                     />
                   </div>
                 </div>
-              )}
             </div>
           ) : activeNav === 'racks' ? (
             /* TAB 3: All Racks 12-Grid View */
@@ -631,14 +490,10 @@ export function App() {
               onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
               unassignedCount={unassignedCount}
             />
-          ) : activeNav === 'ipam' ? (
-            /* TAB 5: IPAM Lite Subnets & IP Grid View */
-            <IPAMView />
           ) : activeNav === 'alerts' ? (
             /* TAB 6: Live Zabbix Alerts View */
             <AlertsView
               alerts={overview?.recent_alerts || []}
-              onInspectBlastRadius={handleOpenBlastRadius}
             />
           ) : activeNav === 'reports' ? (
             /* TAB 7: Reports & Datacenter Analytics */
@@ -690,23 +545,6 @@ export function App() {
         }}
       />
 
-      {/* Incident Blast-Radius & Post-Mortem Exporter Modal */}
-      <BlastRadiusModal
-        deviceId={blastTargetDeviceId}
-        deviceName={blastTargetDeviceName}
-        isOpen={isBlastRadiusModalOpen}
-        onClose={() => {
-          setIsBlastRadiusModalOpen(false)
-          setBlastTargetDeviceId(null)
-        }}
-        onNavigateToDevice={(devId) => {
-          setIsBlastRadiusModalOpen(false)
-          if (activeRackId) {
-            loadRackElevation(activeRackId, devId)
-          }
-        }}
-      />
-
       {/* Zabbix Unassigned Hosts Ingestion Drawer */}
       <UnassignedHostsDrawer
         isOpen={isUnassignedDrawerOpen}
@@ -719,21 +557,12 @@ export function App() {
         }}
       />
 
-      {/* NexusTwin Spatial AI Copilot Floating Drawer */}
-      <SpatialCopilotDrawer
-        onNavigateToRack={handleCopilotNavigateToRack}
-        onOpenProvisioningWizard={handleCopilotOpenProvisioning}
-        onOpenBlastRadius={handleOpenBlastRadius}
-        onNavigateToTab={(tab) => handleSelectTab(tab as NavTab)}
-      />
-
       {/* Global Spotlight Command Bar (Ctrl+K or ⌘K) */}
       <SpotlightCommandBar
         racks={overview?.racks || []}
         onNavigateToRackElevation={handleViewRackElevation}
         onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
         onNavigateToTab={(tab) => handleSelectTab(tab as NavTab)}
-        onOpenBlastRadius={() => handleOpenBlastRadius(1, 'SW-CORE-01')}
       />
     </div>
   )

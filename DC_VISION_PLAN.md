@@ -132,14 +132,14 @@
   ├── [x] Task 1.2: ตรวจสอบและแก้ไข Item Key Matching สำหรับ CPU/Memory ตามมาตรฐาน Zabbix จริง (เสร็จสิ้น)
   └── [x] Task 1.3: ปรับปรุง Unassigned Hosts Reconciliation (เทียบ Zabbix vs PostgreSQL จริง) (เสร็จสิ้น)
 
-[Phase 2: Rack Operations Workflow]
+[Phase 2: Rack Operations Workflow] (เสร็จสมบูรณ์ 100%)
   ├── [x] Task 2.1: ทดสอบและเสริมความแข็งแกร่งของ Rack Collision Detection & Mount Flow (เสร็จสิ้น)
   ├── [x] Task 2.2: ทำ Deep Links จาก Portal ไปยัง Zabbix Web Console (Host & Problem) (เสร็จสิ้น)
-  └── [ ] Task 2.3: ปรับ Navigation และ Sidebar เพื่อซ่อนฟังก์ชันที่พักไว้ ◄ (ขั้นตอนถัดไป)
+  └── [x] Task 2.3: ปรับ Navigation และ Sidebar เพื่อซ่อนฟังก์ชันที่พักไว้ (เสร็จสิ้น)
 
 [Phase 3: Operational Refinements]
-  ├── Task 3.1: ปรับปรุงหน้า Reports ให้สรุปข้อมูลจริง
-  └── Task 3.2: เพิ่มการแจ้งเตือนเมื่อการเชื่อมต่อ Zabbix ผิดปกติ
+  ├── [ ] Task 3.1: ปรับปรุงหน้า Reports ให้สรุปข้อมูลจริง ◄ (ขั้นตอนถัดไป)
+  └── [ ] Task 3.2: เพิ่มการแจ้งเตือนเมื่อการเชื่อมต่อ Zabbix ผิดปกติ
 ```
 
 ---

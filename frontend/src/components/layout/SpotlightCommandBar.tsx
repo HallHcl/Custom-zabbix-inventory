@@ -5,14 +5,12 @@ import {
   Activity,
   Layers,
   BarChart3,
-  Maximize2,
   Palette,
   ShieldAlert,
   Flame,
   Zap,
   Inbox,
   Server,
-  Globe,
   FileText,
   CornerDownLeft,
   ArrowUpDown,
@@ -37,7 +35,6 @@ interface SpotlightCommandBarProps {
   onNavigateToRackElevation?: (rack: RackSummary) => void;
   onOpenUnassigned?: () => void;
   onNavigateToTab?: (tab: string) => void;
-  onOpenBlastRadius?: () => void;
 }
 
 export const SpotlightCommandBar: React.FC<SpotlightCommandBarProps> = ({
@@ -45,7 +42,6 @@ export const SpotlightCommandBar: React.FC<SpotlightCommandBarProps> = ({
   onNavigateToRackElevation,
   onOpenUnassigned,
   onNavigateToTab,
-  onOpenBlastRadius,
 }) => {
   const {
     isSpotlightOpen,
@@ -130,19 +126,6 @@ export const SpotlightCommandBar: React.FC<SpotlightCommandBarProps> = ({
       },
       // 2. Viewports
       {
-        id: "view-3d",
-        category: "Navigation",
-        title: "3D Spatial Twin View",
-        subtitle: "WebGL Three.js spatial datacenter with orbital camera",
-        icon: Maximize2,
-        badge: "3D Canvas",
-        action: () => {
-          setPersona("NOC");
-          setViewportMode("3D");
-          closeSpotlight();
-        },
-      },
-      {
         id: "view-2d",
         category: "Navigation",
         title: "2.5D Isometric Floor Plan",
@@ -222,18 +205,6 @@ export const SpotlightCommandBar: React.FC<SpotlightCommandBarProps> = ({
         },
       },
       {
-        id: "tool-ipam",
-        category: "Tools",
-        title: "IPAM Subnets & IP Grid",
-        subtitle: "IPv4 subnet allocations, gateway tracking, and IP availability",
-        icon: Globe,
-        badge: "IPAM",
-        action: () => {
-          closeSpotlight();
-          if (onNavigateToTab) onNavigateToTab("ipam");
-        },
-      },
-      {
         id: "tool-reports",
         category: "Tools",
         title: "Datacenter Analytics Reports",
@@ -243,18 +214,6 @@ export const SpotlightCommandBar: React.FC<SpotlightCommandBarProps> = ({
         action: () => {
           closeSpotlight();
           if (onNavigateToTab) onNavigateToTab("reports");
-        },
-      },
-      {
-        id: "tool-blast-radius",
-        category: "Tools",
-        title: "Incident Blast-Radius Simulator",
-        subtitle: "Interactive 3-tier cascade failure graph & post-mortem exporter",
-        icon: ShieldAlert,
-        badge: "Simulator",
-        action: () => {
-          closeSpotlight();
-          if (onOpenBlastRadius) onOpenBlastRadius();
         },
       },
     ];
