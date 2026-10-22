@@ -178,14 +178,14 @@ export async function updateDeviceSpec(
 
 // ─── Floor Plan Editor API ───────────────────────────────────
 
-export async function fetchRoomLayout(roomId: number = 1): Promise<RoomLayout> {
+export async function fetchRoomLayout(roomId: number | string = 1): Promise<RoomLayout> {
   const res = await fetch(`${API_BASE}/rooms/${roomId}/layout`)
   if (!res.ok) throw new Error('Failed to fetch room layout')
   return res.json()
 }
 
 export async function updateRoomLayout(
-  roomId: number,
+  roomId: number | string,
   gridRows: number,
   gridCols: number
 ): Promise<RoomLayout> {
@@ -202,8 +202,8 @@ export async function updateRoomLayout(
 }
 
 export async function batchUpdateRackPositions(
-  roomId: number,
-  positions: { rack_id: number; row: string; col: number }[]
+  roomId: number | string,
+  positions: { rack_id: number | string; row: string; col: number }[]
 ): Promise<void> {
   const res = await fetch(`${API_BASE}/rooms/${roomId}/rack-positions`, {
     method: 'PATCH',
@@ -217,9 +217,9 @@ export async function batchUpdateRackPositions(
 }
 
 export async function createRack(
-  roomId: number,
-  payload: { name: string; row: string; col: number; total_u?: number; room_id: number }
-): Promise<{ id: number; name: string; row: string; col: number; total_u: number; room_id: number }> {
+  roomId: number | string,
+  payload: { name: string; row: string; col: number; total_u?: number; room_id?: number | string }
+): Promise<{ id: any; name: string; row: string; col: number; total_u: number; room_id: number | string }> {
   const res = await fetch(`${API_BASE}/rooms/${roomId}/racks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -232,7 +232,7 @@ export async function createRack(
   return res.json()
 }
 
-export async function deleteRack(roomId: number, rackId: number): Promise<void> {
+export async function deleteRack(roomId: number | string, rackId: number | string): Promise<void> {
   const res = await fetch(`${API_BASE}/rooms/${roomId}/racks/${rackId}`, {
     method: 'DELETE',
   })

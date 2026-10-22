@@ -4,15 +4,12 @@ import {
   BarChart3,
   Layers,
   Zap,
-  Flame,
   ShieldAlert,
   CheckCircle2,
   Search,
-  SlidersHorizontal,
   ChevronRight,
   Home,
   Box,
-  Maximize2,
   Inbox,
   ChevronDown,
   Command,
@@ -21,7 +18,6 @@ import {
 import { useTwinStore } from "../../store/useTwinStore";
 import { useTheme, NEXUS_THEMES } from "../../lib/theme";
 import type { ThemeMetadata } from "../../lib/theme";
-import type { HeatmapOverlay } from "../../types/twin";
 
 interface TopGlassmorphicHUDProps {
   onOpenUnassigned?: () => void;
@@ -38,10 +34,6 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
     spatialBreadcrumb,
     setSpatialLevel,
     resetSpatialSelection,
-    viewportMode,
-    toggleViewportMode,
-    activeOverlay,
-    setActiveOverlay,
     facilityTelemetry,
     activeAlarms,
     wsConnected,
@@ -55,9 +47,7 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
   const { theme, setTheme, themeMeta } = useTheme();
 
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
-  const [isOverlayMenuOpen, setIsOverlayMenuOpen] = useState(false);
   const themeMenuRef = useRef<HTMLDivElement>(null);
-  const overlayMenuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -67,12 +57,6 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
         !themeMenuRef.current.contains(event.target as Node)
       ) {
         setIsThemeMenuOpen(false);
-      }
-      if (
-        overlayMenuRef.current &&
-        !overlayMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsOverlayMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -99,13 +83,6 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
   const livePue = facilityTelemetry?.pue ?? 1.18;
   const pueRating = facilityTelemetry?.pue_efficiency_rating ?? "EXCELLENT";
   const problemCount = activeAlarms.filter((a) => a.event_status === "PROBLEM").length;
-
-  const overlayLabels: Record<HeatmapOverlay, { label: string; icon: typeof Zap }> = {
-    STATUS: { label: "Status (Health)", icon: ShieldAlert },
-    THERMAL: { label: "Thermal (ASHRAE)", icon: Flame },
-    POWER: { label: "Power & Load", icon: Zap },
-    SPACE: { label: "Space (RU Usage)", icon: Layers },
-  };
 
   const themeList = Object.values(NEXUS_THEMES);
 
@@ -365,74 +342,7 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
           </span>
         </button>
 
-        {/* 3. NOC Contextual Overlays & Viewport Controls */}
-        {persona === "NOC" && (
-          <div className="flex items-center gap-1.5">
-            {/* Viewport 2D / 3D Toggle */}
-            <button
-              type="button"
-              onClick={toggleViewportMode}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary)] text-xs font-mono text-[var(--text-secondary)] hover:text-[var(--text-bright)] transition-colors cursor-pointer"
-              title="Toggle between 3D Spatial Twin and 2D Floorplan View"
-            >
-              <Maximize2 className="w-3 h-3 text-[var(--accent-primary)]" />
-              <span>{viewportMode}</span>
-            </button>
-
-            {/* Heatmap Overlay Selector Dropdown */}
-            <div className="relative" ref={overlayMenuRef}>
-              <button
-                type="button"
-                onClick={() => setIsOverlayMenuOpen(!isOverlayMenuOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary)] text-xs text-[var(--text-secondary)] hover:text-[var(--text-bright)] transition-colors cursor-pointer"
-                title="Select Heatmap Telemetry Overlay"
-              >
-                <SlidersHorizontal className="w-3 h-3 text-[var(--accent-primary)]" />
-                <span className="hidden md:inline font-mono">
-                  {overlayLabels[activeOverlay].label.split(" ")[0]}
-                </span>
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              </button>
-
-              {isOverlayMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-xl glass-panel-elevated p-1 shadow-2xl z-50 text-xs animate-in fade-in zoom-in-95 duration-100">
-                  <div className="px-2 py-1 text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
-                    Heatmap Overlay
-                  </div>
-                  {(["STATUS", "THERMAL", "POWER", "SPACE"] as HeatmapOverlay[]).map(
-                    (mode) => {
-                      const Icon = overlayLabels[mode].icon;
-                      const isActive = activeOverlay === mode;
-                      return (
-                        <button
-                          key={mode}
-                          type="button"
-                          onClick={() => {
-                            setActiveOverlay(mode);
-                            setIsOverlayMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left transition-colors cursor-pointer ${
-                            isActive
-                              ? "bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] font-medium"
-                              : "hover:bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-bright)]"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon className="w-3.5 h-3.5" />
-                            <span>{overlayLabels[mode].label}</span>
-                          </div>
-                          {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]" />}
-                        </button>
-                      );
-                    }
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 4. Unassigned Hosts Ingestion Drawer Button */}
+        {/* 3. Unassigned Hosts Ingestion Drawer Button */}
         {onOpenUnassigned && (
           <button
             type="button"

@@ -67,7 +67,7 @@ export function App() {
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null)
   const [rackTypeFilter, setRackTypeFilter] = useState<string | null>(null)
   const [rackSearchFilter, setRackSearchFilter] = useState('')
-  const [floorPlanMode, setFloorPlanMode] = useState<'3d_twin' | 'isometric'>('3d_twin')
+  const [floorPlanMode, setFloorPlanMode] = useState<'3d_twin' | 'isometric'>('isometric')
   const [floorPlanMetricMode, setFloorPlanMetricMode] = useState<ColorMode>('status')
 
   // Mount modal state
@@ -427,6 +427,7 @@ export function App() {
                 setActiveRackId(rackId)
                 setIsMountModalOpen(true)
               }}
+              onLayoutUpdated={loadOverview}
             />
           ) : currentView === 'floor_plan_editor' ? (
             /* 3D Floor Plan Editor View */
@@ -468,7 +469,9 @@ export function App() {
                     offline: 0,
                   }
                 }
-                roomId={1}
+                roomId={overview?.room_id || 1}
+                gridRows={overview?.grid_rows || 5}
+                gridCols={overview?.grid_cols || 6}
                 initialEditMode={true}
                 fullPage={true}
                 onLayoutSaved={() => loadOverview()}
@@ -545,11 +548,13 @@ export function App() {
                       selectedRackId={selectedRackSummary?.id || null}
                       onSelectRack={(rack) => setSelectedRackSummary(rack)}
                       onViewRackElevation={handleViewRackElevation}
-                      gridRows={3}
-                      gridCols={4}
+                      gridRows={overview?.grid_rows || 4}
+                      gridCols={overview?.grid_cols || 6}
                       roomTempTarget={overview?.room_temp_c || 24.5}
                       mode={floorPlanMetricMode}
                       onModeChange={setFloorPlanMetricMode}
+                      roomId={overview?.room_id || 1}
+                      onLayoutUpdated={loadOverview}
                     />
                   </div>
 
@@ -582,7 +587,9 @@ export function App() {
                           offline: 0,
                         }
                       }
-                      roomId={1}
+                      roomId={overview?.room_id || 1}
+                      gridRows={overview?.grid_rows || 5}
+                      gridCols={overview?.grid_cols || 6}
                       mode={floorPlanMetricMode}
                       onModeChange={setFloorPlanMetricMode}
                       onLayoutSaved={() => loadOverview()}

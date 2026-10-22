@@ -167,7 +167,7 @@ export const useTwinStore = create<TwinStoreState>((set, get) => ({
   },
 
   // 3. Viewport & Heatmap Overlays
-  viewportMode: "3D",
+  viewportMode: "2D",
   setViewportMode: (viewportMode) => set({ viewportMode }),
   toggleViewportMode: () => set((state) => ({ viewportMode: state.viewportMode === "3D" ? "2D" : "3D" })),
 

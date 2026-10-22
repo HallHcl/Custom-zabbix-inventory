@@ -15,6 +15,7 @@ import {
   Trash2,
   X,
   Sparkles,
+  Move,
 } from 'lucide-react'
 import type { RackSummary } from '../../types'
 import {
@@ -27,7 +28,7 @@ import {
 
 interface IsometricRoomProps {
   racks: RackSummary[]
-  selectedRackId: number | null
+  selectedRackId: number | string | null
   onSelectRack: (rack: RackSummary) => void
   statusCounts: {
     healthy: number
@@ -35,7 +36,9 @@ interface IsometricRoomProps {
     critical: number
     offline: number
   }
-  roomId?: number
+  roomId?: number | string
+  gridRows?: number
+  gridCols?: number
   initialEditMode?: boolean
   fullPage?: boolean
   onLayoutSaved?: () => void
@@ -52,6 +55,8 @@ export function IsometricRoom({
   onSelectRack,
   statusCounts,
   roomId = 1,
+  gridRows: propGridRows,
+  gridCols: propGridCols,
   initialEditMode = false,
   fullPage = false,
   onLayoutSaved,
@@ -72,15 +77,37 @@ export function IsometricRoom({
 
   // ─── Edit Mode State ─────────────────────────────────────────
   const [isEditMode, setIsEditMode] = useState(initialEditMode)
-  const [gridRows, setGridRows] = useState(3)
-  const [gridCols, setGridCols] = useState(4)
+  const [gridRows, setGridRows] = useState(propGridRows || 5)
+  const [gridCols, setGridCols] = useState(propGridCols || 6)
   const [localRacks, setLocalRacks] = useState<RackSummary[]>(racks)
-  const [pickedUpRackId, setPickedUpRackId] = useState<number | null>(null)
-  const [hoveredRackId, setHoveredRackId] = useState<number | null>(null)
+  const [pickedUpRackId, setPickedUpRackId] = useState<number | string | null>(null)
+  const [hoveredRackId, setHoveredRackId] = useState<number | string | null>(null)
   const [hoveredEmptySlot, setHoveredEmptySlot] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // ─── 2.5D The Sims-Style Direct Drag & Drop State ──────────────
+  const svgRef = useRef<SVGSVGElement | null>(null)
+  const [draggingRack, setDraggingRack] = useState<RackSummary | null>(null)
+  const [dragPointerSvg, setDragPointerSvg] = useState<{ x: number; y: number } | null>(null)
+  const [dragTargetCell, setDragTargetCell] = useState<{
+    rowLetter: string
+    rowIdx: number
+    col: number
+    slotCode: string
+    occupant: RackSummary | null
+    x: number
+    y: number
+  } | null>(null)
+
+  const isRackDraggingRef = useRef(false)
+  const dragRackRef = useRef<RackSummary | null>(null)
+  const dragStartClientPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  const localRacksRef = useRef<RackSummary[]>(localRacks)
+  localRacksRef.current = localRacks
+  const dragTargetCellRef = useRef<typeof dragTargetCell>(null)
+  dragTargetCellRef.current = dragTargetCell
 
   // Modals
   const [showAddModal, setShowAddModal] = useState<{ row: string; col: number } | null>(null)
@@ -97,16 +124,52 @@ export function IsometricRoom({
     }
   }, [racks, hasChanges])
 
+  // Helper to get row letter and index
+  const getRowLetter = (idx: number) => String.fromCharCode(65 + idx)
+  const getRowIndex = (rowStr: string | undefined | null) => {
+    if (!rowStr) return 0
+    const letter = String(rowStr).replace('Row ', '').trim().toUpperCase()
+    return letter ? Math.max(0, letter.charCodeAt(0) - 65) : 0
+  }
+
+  // Derive maximum row and column indices across all active racks to guarantee auto-fit
+  const { maxRackRow, maxRackCol } = useMemo(() => {
+    let mRow = 1
+    let mCol = 1
+    for (const r of localRacks) {
+      const rIdx = getRowIndex(r.row) + 1
+      if (rIdx > mRow) mRow = rIdx
+      if (r.col > mCol) mCol = r.col
+    }
+    return { maxRackRow: mRow, maxRackCol: mCol }
+  }, [localRacks])
+
+  // Effective dimensions automatically enclose all racks without clipping
+  const effectiveRows = Math.max(gridRows, maxRackRow)
+  const effectiveCols = Math.max(gridCols, maxRackCol)
+
   // Load layout from backend on mount to get exact grid dimensions
   useEffect(() => {
     let isMounted = true
     fetchRoomLayout(roomId)
       .then((data) => {
         if (!isMounted) return
-        setGridRows(data.grid_rows || 3)
-        setGridCols(data.grid_cols || 4)
-        if (!hasChanges && data.racks && data.racks.length > 0) {
-          setLocalRacks(data.racks)
+        if (data.racks && data.racks.length > 0) {
+          if (!hasChanges) {
+            setLocalRacks(data.racks)
+          }
+          let mRow = 1
+          let mCol = 1
+          for (const r of data.racks) {
+            const rIdx = getRowIndex(r.row) + 1
+            if (rIdx > mRow) mRow = rIdx
+            if (r.col > mCol) mCol = r.col
+          }
+          setGridRows(Math.max(data.grid_rows || propGridRows || 5, mRow))
+          setGridCols(Math.max(data.grid_cols || propGridCols || 6, mCol))
+        } else {
+          setGridRows(data.grid_rows || propGridRows || 5)
+          setGridCols(data.grid_cols || propGridCols || 6)
         }
       })
       .catch((err) => {
@@ -115,7 +178,7 @@ export function IsometricRoom({
     return () => {
       isMounted = false
     }
-  }, [roomId, hasChanges])
+  }, [roomId, hasChanges, propGridRows, propGridCols])
 
   // Drag-to-rotate state
   const isDraggingRef = useRef(false)
@@ -124,9 +187,9 @@ export function IsometricRoom({
   const hasMovedRef = useRef(false)
   const [isDragging, setIsDragging] = useState(false)
 
-  // Dynamic scaling factor based on grid dimensions so rooms from 3x3 to 8x8 remain balanced and auto-fit
-  const maxDim = Math.max(gridRows, gridCols)
-  const autoScale = Math.min(1.0, 4.4 / Math.max(maxDim, 4.4))
+  // Dynamic scaling factor based on grid dimensions so rooms from 3x3 to 10x12 remain balanced and auto-fit
+  const maxDim = Math.max(effectiveRows, effectiveCols)
+  const autoScale = Math.min(1.0, 4.6 / Math.max(maxDim, 4.6))
 
   // Dynamically scaled isometric units
   const tileW = Math.round(95 * autoScale)
@@ -171,7 +234,7 @@ export function IsometricRoom({
 
   // Mouse drag handlers for 360° free rotation
   const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button, input, select, .no-drag')) return
+    if ((e.target as HTMLElement).closest('button, input, select, .no-drag, .rack-drag-target')) return
     isDraggingRef.current = true
     setIsDragging(true)
     dragStartXRef.current = e.clientX
@@ -220,14 +283,178 @@ export function IsometricRoom({
     setIsDragging(false)
   }
 
+  // ─── 2.5D The Sims Direct Drag & Drop Handlers ───────────────
+  const handleRackPointerDown = (e: React.PointerEvent, rack: RackSummary) => {
+    if (!isEditMode) return
+    if (e.button !== 0) return
+    e.stopPropagation()
+
+    dragRackRef.current = rack
+    dragStartClientPosRef.current = { x: e.clientX, y: e.clientY }
+    isRackDraggingRef.current = false
+  }
+
+  useEffect(() => {
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      if (!dragRackRef.current || !svgRef.current) return
+
+      const dist = Math.hypot(
+        e.clientX - dragStartClientPosRef.current.x,
+        e.clientY - dragStartClientPosRef.current.y
+      )
+
+      if (!isRackDraggingRef.current && dist > 5) {
+        isRackDraggingRef.current = true
+        setDraggingRack(dragRackRef.current)
+        setPickedUpRackId(null)
+      }
+
+      if (isRackDraggingRef.current) {
+        const pt = svgRef.current.createSVGPoint()
+        pt.x = e.clientX
+        pt.y = e.clientY
+        const ctm = svgRef.current.getScreenCTM()
+        if (!ctm) return
+        const svgPt = pt.matrixTransform(ctm.inverse())
+        setDragPointerSvg({ x: svgPt.x, y: svgPt.y })
+
+        let closestCell: any = null
+        let minDistance = Infinity
+
+        for (let r = 0; r < effectiveRows; r++) {
+          const rowLetter = String.fromCharCode(65 + r)
+          for (let c = 1; c <= effectiveCols; c++) {
+            const dr = (effectiveRows - 1 - r) - (effectiveRows - 1) / 2
+            const dc = (c - 1) - (effectiveCols - 1) / 2
+            const rc = dc * cos - dr * sin
+            const rr = dc * sin + dr * cos
+            const cellX = centerIso.x + (rc - rr) * tileW
+            const cellY = centerIso.y + (rc + rr) * tileH
+            const d = Math.hypot(svgPt.x - cellX, svgPt.y - cellY)
+
+            if (d < minDistance) {
+              minDistance = d
+              const occupant = localRacksRef.current.find(
+                (other) =>
+                  other.id !== dragRackRef.current!.id &&
+                  other.row.replace('Row ', '').trim().toUpperCase() === rowLetter &&
+                  other.col === c
+              )
+              closestCell = {
+                rowLetter,
+                rowIdx: r,
+                col: c,
+                slotCode: `${rowLetter}${c < 10 ? '0' + c : c}`,
+                occupant: occupant || null,
+                x: cellX,
+                y: cellY,
+              }
+            }
+          }
+        }
+
+        if (minDistance < tileW * 1.8) {
+          setDragTargetCell(closestCell)
+          dragTargetCellRef.current = closestCell
+        } else {
+          setDragTargetCell(null)
+          dragTargetCellRef.current = null
+        }
+      }
+    }
+
+    const handleGlobalPointerUp = async () => {
+      if (!dragRackRef.current) return
+      const rack = dragRackRef.current
+      const wasDragging = isRackDraggingRef.current
+      const target = dragTargetCellRef.current
+
+      dragRackRef.current = null
+      isRackDraggingRef.current = false
+      setDraggingRack(null)
+      setDragPointerSvg(null)
+      setDragTargetCell(null)
+      dragTargetCellRef.current = null
+
+      if (wasDragging && target) {
+        const targetRowStr = `Row ${target.rowLetter}`
+        const isSamePos =
+          rack.row.replace('Row ', '').trim().toUpperCase() === target.rowLetter &&
+          rack.col === target.col
+
+        if (isSamePos) return
+
+        let updated: RackSummary[] = []
+        let positionsToPersist: { rack_id: number | string; row: string; col: number }[] = []
+        let feedbackText = ''
+
+        if (target.occupant) {
+          // Swap positions
+          const sourceRow = rack.row
+          const sourceCol = rack.col
+          const occupant = target.occupant
+
+          updated = localRacksRef.current.map((r) => {
+            if (r.id === rack.id) {
+              return { ...r, row: targetRowStr, col: target.col, name: `Rack ${target.slotCode}` }
+            }
+            if (r.id === occupant.id) {
+              const cleanSrcLetter = sourceRow.replace('Row ', '').trim().toUpperCase()
+              const srcSlotCode = `${cleanSrcLetter}${sourceCol < 10 ? '0' + sourceCol : sourceCol}`
+              return { ...r, row: sourceRow, col: sourceCol, name: `Rack ${srcSlotCode}` }
+            }
+            return r
+          })
+
+          positionsToPersist = [
+            { rack_id: rack.id, row: targetRowStr, col: target.col },
+            { rack_id: occupant.id, row: sourceRow, col: sourceCol },
+          ]
+          feedbackText = `✓ Swapped ${rack.name} ↔ ${occupant.name}!`
+        } else {
+          // Move to empty cell
+          updated = localRacksRef.current.map((r) => {
+            if (r.id === rack.id) {
+              return { ...r, row: targetRowStr, col: target.col, name: `Rack ${target.slotCode}` }
+            }
+            return r
+          })
+
+          positionsToPersist = [{ rack_id: rack.id, row: targetRowStr, col: target.col }]
+          feedbackText = `✓ Moved ${rack.name} to Row ${target.rowLetter} / Col ${target.col}!`
+        }
+
+        setLocalRacks(updated)
+        try {
+          await batchUpdateRackPositions(roomId, positionsToPersist)
+          setSaveMessage({ type: 'success', text: feedbackText })
+          onLayoutSaved?.()
+          setTimeout(() => setSaveMessage(null), 3000)
+        } catch (err: any) {
+          console.error('Failed to auto-save rack position:', err)
+          setLocalRacks(racks)
+          setSaveMessage({ type: 'error', text: err?.message || 'Failed to update rack position' })
+          setTimeout(() => setSaveMessage(null), 4000)
+        }
+      }
+    }
+
+    window.addEventListener('pointermove', handleGlobalPointerMove)
+    window.addEventListener('pointerup', handleGlobalPointerUp)
+    return () => {
+      window.removeEventListener('pointermove', handleGlobalPointerMove)
+      window.removeEventListener('pointerup', handleGlobalPointerUp)
+    }
+  }, [effectiveRows, effectiveCols, cos, sin, centerIso, tileW, tileH, roomId, racks, onLayoutSaved])
+
   // Calculate rotated floor, cold aisle, and back walls dynamically based on gridRows and gridCols
   const roomGeometry = useMemo(() => {
     // Symmetrical floor boundaries based directly on rack grid coordinates (dc, dr)
     // plus uniform walkway padding around the racks on all 4 sides.
     const padC = 0.85
     const padR = 0.85
-    const halfC = (gridCols - 1) / 2 + padC
-    const halfR = (gridRows - 1) / 2 + padR
+    const halfC = (effectiveCols - 1) / 2 + padC
+    const halfR = (effectiveRows - 1) / 2 + padR
 
     // 4 corners of the room floor in (dc, dr) grid space:
     // Top (Back), Right (East), Bottom (Front), Left (West)
@@ -251,8 +478,8 @@ export function IsometricRoom({
     // Cold Aisle mat centered under the equipment
     const aislePadC = 0.4
     const aislePadR = 0.4
-    const aisleHalfC = (gridCols - 1) / 2 + aislePadC
-    const aisleHalfR = (gridRows - 1) / 2 + aislePadR
+    const aisleHalfC = (effectiveCols - 1) / 2 + aislePadC
+    const aisleHalfR = (effectiveRows - 1) / 2 + aislePadR
 
     const aisleCorners = [
       { dc: -aisleHalfC, dr: -aisleHalfR },
@@ -298,20 +525,10 @@ export function IsometricRoom({
       backWalls,
       frontCurbs,
     }
-  }, [gridRows, gridCols, cos, sin, centerIso, tileW, tileH, wallHeight, curbHeight])
+  }, [effectiveRows, effectiveCols, cos, sin, centerIso, tileW, tileH, wallHeight, curbHeight])
 
-  // Helper to get row letter from index (0 -> 'A', 1 -> 'B')
-  const getRowLetter = (idx: number) => String.fromCharCode(65 + idx)
-  const getRowIndex = (rowStr: string) => {
-    const letter = rowStr.replace('Row ', '').trim().toUpperCase()
-    return letter.charCodeAt(0) - 65
-  }
-
-  // Calculate 3D position and vertices for all grid cells (both occupied racks and empty slots)
-  const { allRacksSorted, emptyCells } = useMemo(() => {
-    const occupiedCoords = new Set<string>()
-
-    // Base corners relative to anchor (u, v) in isometric space, scaled dynamically
+  // Base corners relative to anchor (u, v) in isometric space, scaled dynamically
+  const cornersUV = useMemo(() => {
     const u_front = 12 * autoScale
     const v_front = 12 * autoScale
     const u_w = -23 * autoScale
@@ -319,12 +536,17 @@ export function IsometricRoom({
     const u_d = 1 * autoScale
     const v_d = -29 * autoScale
 
-    const cornersUV = [
+    return [
       { u: u_front, v: v_front },
       { u: u_front + u_d, v: v_front + v_d },
       { u: u_front + u_w + u_d, v: v_front + v_w + v_d },
       { u: u_front + u_w, v: v_front + v_w },
     ]
+  }, [autoScale])
+
+  // Calculate 3D position and vertices for all grid cells (both occupied racks and empty slots)
+  const { allRacksSorted, emptyCells } = useMemo(() => {
+    const occupiedCoords = new Set<string>()
 
     // Compute racks
     const racksComputed = localRacks.map((rack) => {
@@ -333,8 +555,8 @@ export function IsometricRoom({
       const coordKey = `${rIdx}_${rack.col}`
       occupiedCoords.add(coordKey)
 
-      const dr = (gridRows - 1 - rIdx) - (gridRows - 1) / 2
-      const dc = cIdx - (gridCols - 1) / 2
+      const dr = (effectiveRows - 1 - rIdx) - (effectiveRows - 1) / 2
+      const dc = cIdx - (effectiveCols - 1) / 2
 
       const rc = dc * cos - dr * sin
       const rr = dc * sin + dr * cos
@@ -409,13 +631,13 @@ export function IsometricRoom({
       polygon: string
     }[] = []
 
-    for (let r = 0; r < gridRows; r++) {
+    for (let r = 0; r < effectiveRows; r++) {
       const rowLetter = getRowLetter(r)
-      for (let c = 1; c <= gridCols; c++) {
+      for (let c = 1; c <= effectiveCols; c++) {
         const coordKey = `${r}_${c}`
         if (!occupiedCoords.has(coordKey)) {
-          const dr = (gridRows - 1 - r) - (gridRows - 1) / 2
-          const dc = (c - 1) - (gridCols - 1) / 2
+          const dr = (effectiveRows - 1 - r) - (effectiveRows - 1) / 2
+          const dc = (c - 1) - (effectiveCols - 1) / 2
 
           const rc = dc * cos - dr * sin
           const rr = dc * sin + dr * cos
@@ -451,11 +673,11 @@ export function IsometricRoom({
       allRacksSorted: racksComputed,
       emptyCells: emptyCellsComputed,
     }
-  }, [localRacks, gridRows, gridCols, cos, sin, centerIso, pickedUpRackId, autoScale, tileW, tileH, rackHeight])
+  }, [localRacks, effectiveRows, effectiveCols, cos, sin, centerIso, pickedUpRackId, autoScale, tileW, tileH, rackHeight, cornersUV])
 
   // ─── Scale Adjustment Handler ────────────────────────────────
   const handleSetScale = (newRows: number, newCols: number) => {
-    if (newRows < 2 || newCols < 2 || newRows > 8 || newCols > 8) return
+    if (newRows < 2 || newCols < 2 || newRows > 10 || newCols > 12) return
 
     const outOfBoundsRack = localRacks.find((r) => {
       const rIdx = getRowIndex(r.row)
@@ -483,7 +705,7 @@ export function IsometricRoom({
 
   // ─── 3D Pick, Place & Swap Handlers ──────────────────────────
   const handleRackClick = (rack: RackSummary) => {
-    if (hasMovedRef.current) return
+    if (hasMovedRef.current || isRackDraggingRef.current) return
 
     if (!isEditMode) {
       onSelectRack(rack)
@@ -589,7 +811,7 @@ export function IsometricRoom({
       setSaving(true)
       setSaveMessage(null)
 
-      await updateRoomLayout(roomId, gridRows, gridCols)
+      await updateRoomLayout(roomId, effectiveRows, effectiveCols)
 
       const positions = localRacks.map((r) => ({
         rack_id: r.id,
@@ -636,7 +858,7 @@ export function IsometricRoom({
       })
 
       const newRackSummary: RackSummary = {
-        id: res.id,
+        id: res.id as any,
         name: res.name,
         row: res.row,
         col: res.col,
@@ -759,9 +981,11 @@ export function IsometricRoom({
                   { r: 3, c: 3, label: '3×3' },
                   { r: 3, c: 4, label: '3×4' },
                   { r: 4, c: 4, label: '4×4' },
-                  { r: 5, c: 5, label: '5×5' },
+                  { r: 3, c: 6, label: '3×6' },
+                  { r: 4, c: 6, label: '4×6' },
+                  { r: 5, c: 6, label: '5×6' },
                 ].map((p) => {
-                  const isActive = gridRows === p.r && gridCols === p.c
+                  const isActive = effectiveRows === p.r && effectiveCols === p.c
                   return (
                     <button
                       key={p.label}
@@ -786,17 +1010,17 @@ export function IsometricRoom({
                 <span>R:</span>
                 <button
                   type="button"
-                  onClick={() => handleSetScale(gridRows - 1, gridCols)}
-                  disabled={gridRows <= 2}
+                  onClick={() => handleSetScale(effectiveRows - 1, effectiveCols)}
+                  disabled={effectiveRows <= Math.max(2, maxRackRow)}
                   className="px-1.5 py-0.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] disabled:opacity-40 cursor-pointer"
                 >
                   -
                 </button>
-                <span className="font-bold text-[#caedde] px-0.5">{gridRows}</span>
+                <span className="font-bold text-[#caedde] px-0.5">{effectiveRows}</span>
                 <button
                   type="button"
-                  onClick={() => handleSetScale(gridRows + 1, gridCols)}
-                  disabled={gridRows >= 8}
+                  onClick={() => handleSetScale(effectiveRows + 1, effectiveCols)}
+                  disabled={effectiveRows >= 10}
                   className="px-1.5 py-0.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] disabled:opacity-40 cursor-pointer"
                 >
                   +
@@ -805,17 +1029,17 @@ export function IsometricRoom({
                 <span className="ml-1">C:</span>
                 <button
                   type="button"
-                  onClick={() => handleSetScale(gridRows, gridCols - 1)}
-                  disabled={gridCols <= 2}
+                  onClick={() => handleSetScale(effectiveRows, effectiveCols - 1)}
+                  disabled={effectiveCols <= Math.max(2, maxRackCol)}
                   className="px-1.5 py-0.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] disabled:opacity-40 cursor-pointer"
                 >
                   -
                 </button>
-                <span className="font-bold text-[#caedde] px-0.5">{gridCols}</span>
+                <span className="font-bold text-[#caedde] px-0.5">{effectiveCols}</span>
                 <button
                   type="button"
-                  onClick={() => handleSetScale(gridRows, gridCols + 1)}
-                  disabled={gridCols >= 8}
+                  onClick={() => handleSetScale(effectiveRows, effectiveCols + 1)}
+                  disabled={effectiveCols >= 12}
                   className="px-1.5 py-0.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] disabled:opacity-40 cursor-pointer"
                 >
                   +
@@ -934,8 +1158,11 @@ export function IsometricRoom({
               </>
             ) : (
               <>
-                <span className="text-cyan-400 font-bold">3D Move & Swap:</span>
-                <span>Click any rack to lift it, then click an empty slot or another rack to swap.</span>
+                <span className="text-cyan-400 font-bold flex items-center gap-1.5">
+                  <Move className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
+                  Drag & Drop:
+                </span>
+                <span>Press & drag any rack to relocate or swap • Auto-saves instantly!</span>
               </>
             )}
           </div>
@@ -945,7 +1172,7 @@ export function IsometricRoom({
       {/* ─── Main Isometric SVG Room Canvas ─────────────────────────── */}
       <div
         className={`flex-1 w-full h-full flex items-center justify-center overflow-hidden select-none ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+          isDragging || draggingRack ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -956,6 +1183,7 @@ export function IsometricRoom({
         onTouchEnd={handleTouchEnd}
       >
         <svg
+          ref={svgRef}
           viewBox="0 0 1080 620"
           className="w-full h-full transition-transform duration-150"
           style={{ transform: `scale(${zoom})` }}
@@ -1116,14 +1344,17 @@ export function IsometricRoom({
                 badgeText = 'PLACING...'
               }
 
+              const isBeingDragged = draggingRack?.id === rack.id
+
               return (
                 <g
                   key={rack.id}
+                  onPointerDown={(e) => handleRackPointerDown(e, rack)}
                   onClick={() => handleRackClick(rack)}
                   onMouseEnter={() => setHoveredRackId(rack.id)}
                   onMouseLeave={() => setHoveredRackId(null)}
-                  className={`cursor-pointer transition-opacity duration-200 ${
-                    isDimmed ? 'opacity-30' : 'opacity-100'
+                  className={`cursor-pointer transition-opacity duration-200 rack-drag-target ${
+                    isDimmed ? 'opacity-30' : isBeingDragged ? 'opacity-20' : 'opacity-100'
                   }`}
                 >
                   {/* Picked-up 3D Elevation Line & Floor Shadow */}
@@ -1365,6 +1596,146 @@ export function IsometricRoom({
               strokeWidth="1.5"
             />
           ))}
+
+          {/* ─── The Sims-Style 2.5D Dragging Ghost Cabinet ─── */}
+          {draggingRack && dragPointerSvg && (() => {
+            const gx = dragPointerSvg.x
+            const gy = dragPointerSvg.y
+            const lift = Math.round(35 * autoScale)
+
+            const targetX = dragTargetCell ? dragTargetCell.x : gx
+            const targetY = dragTargetCell ? dragTargetCell.y : gy
+            const isSwapping = Boolean(dragTargetCell?.occupant)
+
+            const snapCorners = dragTargetCell
+              ? cornersUV.map((corner) => {
+                  const ur = corner.u * cos - corner.v * sin
+                  const vr = corner.u * sin + corner.v * cos
+                  return {
+                    x: dragTargetCell.x + (ur - vr),
+                    y: dragTargetCell.y + (ur + vr) * 0.5,
+                  }
+                })
+              : []
+
+            return (
+              <g className="pointer-events-none select-none">
+                {/* 1. Target Floor Grid Snap Tile */}
+                {dragTargetCell && snapCorners.length > 0 && (
+                  <g>
+                    <polygon
+                      points={snapCorners.map((p) => `${p.x},${p.y}`).join(' ')}
+                      fill={isSwapping ? '#f59e0b' : '#10b981'}
+                      fillOpacity="0.45"
+                      stroke={isSwapping ? '#fbbf24' : '#34d399'}
+                      strokeWidth="2.5"
+                      strokeDasharray="4 2"
+                      filter="url(#beaconGlow)"
+                    />
+                    <ellipse
+                      cx={targetX}
+                      cy={targetY + Math.round(8 * autoScale)}
+                      rx={Math.round(28 * autoScale)}
+                      ry={Math.round(14 * autoScale)}
+                      fill="none"
+                      stroke={isSwapping ? '#fbbf24' : '#34d399'}
+                      strokeWidth="1.5"
+                      strokeDasharray="3 3"
+                    />
+                  </g>
+                )}
+
+                {/* 2. Vertical Sims Elevation Guideline */}
+                <line
+                  x1={targetX}
+                  y1={targetY + Math.round(8 * autoScale)}
+                  x2={gx}
+                  y2={gy - lift + Math.round(8 * autoScale)}
+                  stroke={isSwapping ? '#fbbf24' : '#38bdf8'}
+                  strokeWidth="2.5"
+                  strokeDasharray="4 3"
+                  filter="url(#beaconGlow)"
+                />
+
+                {/* 3. Drop Shadow under floating cabinet */}
+                <ellipse
+                  cx={gx}
+                  cy={gy}
+                  rx={Math.round(26 * autoScale)}
+                  ry={Math.round(12 * autoScale)}
+                  fill="#000000"
+                  fillOpacity="0.6"
+                />
+
+                {/* 4. Floating Ghost Isometric Cabinet */}
+                <g transform={`translate(${gx - centerIso.x}, ${gy - lift - centerIso.y})`}>
+                  {/* Top face */}
+                  <polygon
+                    points={`${centerIso.x - 18 * autoScale},${centerIso.y - rackHeight} ${centerIso.x},${centerIso.y - 8 * autoScale - rackHeight} ${centerIso.x + 18 * autoScale},${centerIso.y - rackHeight} ${centerIso.x},${centerIso.y + 8 * autoScale - rackHeight}`}
+                    fill={isSwapping ? '#f59e0b' : '#0284c7'}
+                    fillOpacity="0.8"
+                    stroke={isSwapping ? '#fbbf24' : '#38bdf8'}
+                    strokeWidth="2"
+                    filter="url(#beaconGlow)"
+                  />
+                  {/* Left Face */}
+                  <polygon
+                    points={`${centerIso.x - 18 * autoScale},${centerIso.y} ${centerIso.x},${centerIso.y + 8 * autoScale} ${centerIso.x},${centerIso.y + 8 * autoScale - rackHeight} ${centerIso.x - 18 * autoScale},${centerIso.y - rackHeight}`}
+                    fill="#0f172a"
+                    fillOpacity="0.85"
+                    stroke={isSwapping ? '#fbbf24' : '#38bdf8'}
+                    strokeWidth="1.5"
+                  />
+                  {/* Right Face */}
+                  <polygon
+                    points={`${centerIso.x},${centerIso.y + 8 * autoScale} ${centerIso.x + 18 * autoScale},${centerIso.y} ${centerIso.x + 18 * autoScale},${centerIso.y - rackHeight} ${centerIso.x},${centerIso.y + 8 * autoScale - rackHeight}`}
+                    fill="#1e293b"
+                    fillOpacity="0.85"
+                    stroke={isSwapping ? '#fbbf24' : '#38bdf8'}
+                    strokeWidth="1.5"
+                  />
+                  {/* Status Beacon */}
+                  <circle
+                    cx={centerIso.x}
+                    cy={centerIso.y - rackHeight - 6}
+                    r={5 * autoScale}
+                    fill={isSwapping ? '#fbbf24' : '#38bdf8'}
+                    filter="url(#beaconGlow)"
+                  />
+                </g>
+
+                {/* 5. Floating Sims HUD Badge over the dragging cabinet */}
+                <g transform={`translate(${gx}, ${gy - lift - rackHeight - 24})`}>
+                  <rect
+                    x="-90"
+                    y="-16"
+                    width="180"
+                    height="32"
+                    rx="8"
+                    fill={isSwapping ? '#451a03' : '#082f49'}
+                    fillOpacity="0.95"
+                    stroke={isSwapping ? '#f59e0b' : '#38bdf8'}
+                    strokeWidth="1.5"
+                  />
+                  <text
+                    x="0"
+                    y="5"
+                    textAnchor="middle"
+                    fill={isSwapping ? '#fde68a' : '#7dd3fc'}
+                    fontSize="11"
+                    fontFamily="monospace"
+                    fontWeight="bold"
+                  >
+                    {isSwapping
+                      ? `🔄 SWAP WITH ${dragTargetCell?.occupant?.name}`
+                      : dragTargetCell
+                      ? `📍 ROW ${dragTargetCell.rowLetter} / COL ${dragTargetCell.col}`
+                      : `🖐️ ${draggingRack.name}`}
+                  </text>
+                </g>
+              </g>
+            )
+          })()}
         </svg>
       </div>
 

@@ -94,9 +94,12 @@ export interface RecentAlert {
 }
 
 export interface RoomOverview {
+  room_id?: string | number
   site_name: string
   room_name: string
   room_temp_c: number
+  grid_rows?: number
+  grid_cols?: number
   total_racks: number
   total_devices: number
   total_alerts: number
@@ -201,7 +204,7 @@ export interface DeviceOverview {
 
 // Floor Plan Editor Types
 export interface RoomLayout {
-  room_id: number
+  room_id: number | string
   room_name: string
   grid_rows: number
   grid_cols: number

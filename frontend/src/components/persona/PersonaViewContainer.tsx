@@ -13,6 +13,7 @@ interface PersonaViewContainerProps {
   onOpenUnassigned?: () => void;
   unassignedCount?: number;
   onMountDevice?: (rackId: number) => void;
+  onLayoutUpdated?: () => void;
 }
 
 export const PersonaViewContainer: React.FC<PersonaViewContainerProps> = ({
@@ -23,6 +24,7 @@ export const PersonaViewContainer: React.FC<PersonaViewContainerProps> = ({
   onOpenUnassigned,
   unassignedCount = 0,
   onMountDevice,
+  onLayoutUpdated,
 }) => {
   const persona = useTwinStore((state) => state.persona);
 
@@ -34,6 +36,7 @@ export const PersonaViewContainer: React.FC<PersonaViewContainerProps> = ({
           onSelectRack={onSelectRack}
           onViewRackElevation={onViewRackElevation}
           onNavigateToAlerts={onNavigateToAlerts}
+          onLayoutUpdated={onLayoutUpdated}
         />
       )}
 
