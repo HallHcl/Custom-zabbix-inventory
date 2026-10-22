@@ -607,35 +607,24 @@ async def get_device_metrics(device_id: str, db: AsyncSession = Depends(get_db))
 
     if device.zabbix_host_id:
         try:
-            # 1. Fetch live metrics
+            # 1. Fetch live metrics with robust priority resolution
             items = await zabbix_service.get_host_latest_metrics(device.zabbix_host_id)
-            cpu_item_id = None
+            metrics = zabbix_service.resolve_telemetry_metrics(items)
+            cpu_val = metrics.cpu_utilization
+            mem_val = metrics.memory_utilization
+            temp_val = metrics.temperature_c
 
-            for it in items:
-                key = it.get("key_", "").lower()
-                val = it.get("lastvalue")
-                try:
-                    fval = float(val) if val is not None else None
-                except ValueError:
-                    fval = None
-
-                if "cpu" in key and fval is not None and cpu_val is None:
-                    cpu_val = round(fval, 1)
-                    cpu_item_id = it.get("itemid")
-                elif ("memory" in key or "vm.memory" in key) and fval is not None and mem_val is None:
-                    mem_val = round(fval, 1)
-                elif "temp" in key and fval is not None and temp_val is None:
-                    temp_val = round(fval, 1)
-
-            # 2. Fetch history if CPU item exists
-            if cpu_item_id:
-                history_data = await zabbix_service.get_item_history(cpu_item_id, limit=30)
+            # 2. Fetch history if CPU item exists (inverting if idle key was used)
+            if metrics.cpu_item_id:
+                history_data = await zabbix_service.get_item_history(metrics.cpu_item_id, limit=30)
                 for pt in history_data:
                     try:
+                        raw_fval = float(pt["value"])
+                        val = round(max(0.0, min(100.0, 100.0 - raw_fval)), 1) if metrics.cpu_is_idle else round(raw_fval, 1)
                         cpu_history.append(
                             DeviceMetricHistoryPoint(
                                 clock=int(pt["clock"]),
-                                value=round(float(pt["value"]), 1),
+                                value=val,
                             )
                         )
                     except (ValueError, KeyError):
@@ -983,32 +972,23 @@ async def get_device_overview(device_id: str, db: AsyncSession = Depends(get_db)
     if device.zabbix_host_id:
         try:
             # 1. Fetch live metrics
+            # 1. Fetch live metrics with robust priority resolution
             items = await zabbix_service.get_host_latest_metrics(device.zabbix_host_id)
-            cpu_item_id = None
-            for it in items:
-                key = it.get("key_", "").lower()
-                val = it.get("lastvalue")
-                try:
-                    fval = float(val) if val is not None else None
-                except ValueError:
-                    fval = None
+            metrics = zabbix_service.resolve_telemetry_metrics(items)
+            cpu_val = metrics.cpu_utilization
+            mem_val = metrics.memory_utilization
+            temp_val = metrics.temperature_c
 
-                if "cpu" in key and fval is not None and cpu_val is None:
-                    cpu_val = round(fval, 1)
-                    cpu_item_id = it.get("itemid")
-                elif ("memory" in key or "vm.memory" in key) and fval is not None and mem_val is None:
-                    mem_val = round(fval, 1)
-                elif "temp" in key and fval is not None and temp_val is None:
-                    temp_val = round(fval, 1)
-
-            if cpu_item_id:
-                history_data = await zabbix_service.get_item_history(cpu_item_id, limit=30)
+            if metrics.cpu_item_id:
+                history_data = await zabbix_service.get_item_history(metrics.cpu_item_id, limit=30)
                 for pt in history_data:
                     try:
+                        raw_fval = float(pt["value"])
+                        val = round(max(0.0, min(100.0, 100.0 - raw_fval)), 1) if metrics.cpu_is_idle else round(raw_fval, 1)
                         cpu_history.append(
                             DeviceMetricHistoryPoint(
                                 clock=int(pt["clock"]),
-                                value=round(float(pt["value"]), 1),
+                                value=val,
                             )
                         )
                     except (ValueError, KeyError):

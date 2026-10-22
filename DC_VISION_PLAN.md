@@ -129,8 +129,8 @@
 
 [Phase 1: Reliable Zabbix Integration]
   ├── [x] Task 1.1: ปรับปรุง Zabbix Client เชื่อมต่อ 7.0.29 จริง พร้อมสถานะ Connected/Stale/Disconnected (เสร็จสิ้น)
-  ├── [ ] Task 1.2: ตรวจสอบและแก้ไข Item Key Matching สำหรับ CPU/Memory ตามมาตรฐาน Zabbix จริง ◄ (ขั้นตอนถัดไป)
-  └── [ ] Task 1.3: ปรับปรุง Unassigned Hosts Reconciliation (เทียบ Zabbix vs PostgreSQL จริง)
+  ├── [x] Task 1.2: ตรวจสอบและแก้ไข Item Key Matching สำหรับ CPU/Memory ตามมาตรฐาน Zabbix จริง (เสร็จสิ้น)
+  └── [ ] Task 1.3: ปรับปรุง Unassigned Hosts Reconciliation (เทียบ Zabbix vs PostgreSQL จริง) ◄ (ขั้นตอนถัดไป)
 
 [Phase 2: Rack Operations Workflow]
   ├── Task 2.1: ทดสอบและเสริมความแข็งแกร่งของ Rack Collision Detection & Mount Flow

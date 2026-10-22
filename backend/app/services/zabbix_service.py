@@ -9,11 +9,205 @@ from backend.app.services.telemetry_simulator import telemetry_simulator
 logger = logging.getLogger(__name__)
 
 
+class ResolvedDeviceMetrics:
+    def __init__(
+        self,
+        cpu_utilization: Optional[float] = None,
+        memory_utilization: Optional[float] = None,
+        temperature_c: Optional[float] = None,
+        cpu_item_id: Optional[str] = None,
+        cpu_is_idle: bool = False,
+    ):
+        self.cpu_utilization = cpu_utilization
+        self.memory_utilization = memory_utilization
+        self.temperature_c = temperature_c
+        self.cpu_item_id = cpu_item_id
+        self.cpu_is_idle = cpu_is_idle
+
+
 class ZabbixService:
     """
     Async client for Zabbix 7.0 JSON-RPC API with dual-mode fallback to TelemetrySimulator.
     Allows seamless operation with real Zabbix (External/Embedded) and out-of-the-box demo simulation.
     """
+
+    @staticmethod
+    def resolve_telemetry_metrics(items: List[Dict[str, Any]]) -> ResolvedDeviceMetrics:
+        """
+        Resolves CPU, Memory, and Temperature metrics from Zabbix items
+        following official Zabbix 7.0 standard templates (Linux, Windows, SNMP, Docker).
+        """
+        cpu_val: Optional[float] = None
+        cpu_item_id: Optional[str] = None
+        cpu_is_idle: bool = False
+        mem_val: Optional[float] = None
+        temp_val: Optional[float] = None
+
+        # -------------------------------------------------------------
+        # 1. CPU Resolution
+        # -------------------------------------------------------------
+        # P1: Direct utilization item (system.cpu.util, docker.cpu_pct, cpu utilization %)
+        for it in items:
+            k = it.get("key_", "").lower()
+            n = it.get("name_", it.get("name", "")).lower()
+            u = it.get("units", "")
+            v = it.get("lastvalue")
+            try:
+                fval = float(v) if v is not None and v != "" else None
+            except ValueError:
+                fval = None
+            if fval is None or fval < 0.0:
+                continue
+
+            # Must not be an idle, guest, interrupt, context switch, load avg, or core count key
+            excluded_cpu = (
+                "idle", "guest", "interrupt", "iowait", "softirq",
+                "steal", "system", "user", "switches", "intr", "num"
+            )
+            is_direct_zabbix = (
+                k == "system.cpu.util"
+                or (k.startswith("system.cpu.util[") and not any(x in k for x in excluded_cpu))
+            )
+            is_docker = k.startswith("docker.cpu_pct")
+            is_named_util = ("cpu utilization" in n or "cpu usage" in n) and u == "%"
+
+            if is_direct_zabbix or is_docker or is_named_util:
+                if 0.0 <= fval <= 100.0:
+                    cpu_val = round(fval, 1)
+                    cpu_item_id = str(it.get("itemid"))
+                    cpu_is_idle = False
+                    break
+
+        # P2: Inverted idle item (100.0 - idle%)
+        if cpu_val is None:
+            for it in items:
+                k = it.get("key_", "").lower()
+                n = it.get("name_", it.get("name", "")).lower()
+                u = it.get("units", "")
+                v = it.get("lastvalue")
+                try:
+                    fval = float(v) if v is not None and v != "" else None
+                except ValueError:
+                    fval = None
+                if fval is None or fval < 0.0:
+                    continue
+
+                if ("idle" in k and "cpu" in k) or ("cpu idle time" in n and u == "%"):
+                    if 0.0 <= fval <= 100.0:
+                        cpu_val = round(max(0.0, min(100.0, 100.0 - fval)), 1)
+                        cpu_item_id = str(it.get("itemid"))
+                        cpu_is_idle = True
+                        break
+
+        # P3: Combined user + system CPU
+        if cpu_val is None:
+            user_val = None
+            sys_val = None
+            for it in items:
+                k = it.get("key_", "").lower()
+                v = it.get("lastvalue")
+                try:
+                    fval = float(v) if v is not None and v != "" else None
+                except ValueError:
+                    fval = None
+                if fval is not None:
+                    if "system.cpu.util[,user]" in k or "system.cpu.util[all,user]" in k:
+                        user_val = fval
+                    elif "system.cpu.util[,system]" in k or "system.cpu.util[all,system]" in k:
+                        sys_val = fval
+            if user_val is not None and sys_val is not None:
+                cpu_val = round(max(0.0, min(100.0, user_val + sys_val)), 1)
+
+        # -------------------------------------------------------------
+        # 2. Memory Resolution
+        # -------------------------------------------------------------
+        # P1: Direct % item (vm.memory.util, vm.memory.size[pused], memory utilization %)
+        for it in items:
+            k = it.get("key_", "").lower()
+            n = it.get("name_", it.get("name", "")).lower()
+            u = it.get("units", "")
+            v = it.get("lastvalue")
+            try:
+                fval = float(v) if v is not None and v != "" else None
+            except ValueError:
+                fval = None
+            if fval is None or fval < 0.0:
+                continue
+
+            if k in ("vm.memory.util", "vm.memory.size[pused]") or (
+                ("memory utilization" in n or "memory usage" in n) and u == "%"
+            ):
+                if 0.0 <= fval <= 100.0:
+                    mem_val = round(fval, 1)
+                    break
+
+        # P2: Inverted available % (100.0 - pavailable)
+        if mem_val is None:
+            for it in items:
+                k = it.get("key_", "").lower()
+                n = it.get("name_", it.get("name", "")).lower()
+                u = it.get("units", "")
+                v = it.get("lastvalue")
+                try:
+                    fval = float(v) if v is not None and v != "" else None
+                except ValueError:
+                    fval = None
+                if fval is None or fval < 0.0:
+                    continue
+
+                if "pavailable" in k or ("available memory in %" in n and u == "%"):
+                    if 0.0 <= fval <= 100.0:
+                        mem_val = round(max(0.0, min(100.0, 100.0 - fval)), 1)
+                        break
+
+        # P3: Computed from available and total bytes
+        if mem_val is None:
+            avail_bytes = None
+            total_bytes = None
+            for it in items:
+                k = it.get("key_", "").lower()
+                v = it.get("lastvalue")
+                try:
+                    fval = float(v) if v is not None and v != "" else None
+                except ValueError:
+                    fval = None
+                if fval is not None and fval > 0:
+                    if k == "vm.memory.size[available]":
+                        avail_bytes = fval
+                    elif k == "vm.memory.size[total]":
+                        total_bytes = fval
+            if avail_bytes is not None and total_bytes and total_bytes > 0:
+                mem_val = round(max(0.0, min(100.0, (1.0 - (avail_bytes / total_bytes)) * 100.0)), 1)
+
+        # -------------------------------------------------------------
+        # 3. Temperature Resolution
+        # -------------------------------------------------------------
+        for it in items:
+            k = it.get("key_", "").lower()
+            n = it.get("name_", it.get("name", "")).lower()
+            u = it.get("units", "")
+            v = it.get("lastvalue")
+            try:
+                fval = float(v) if v is not None and v != "" else None
+            except ValueError:
+                fval = None
+            if fval is None:
+                continue
+
+            if ("temp" in k or "temp" in n) and ("walk" not in k):
+                # Filter out non-thermal sensors like fan, voltage, psu
+                if not any(x in k for x in ["fan", "voltage", "psu", "power"]):
+                    if -20.0 <= fval <= 150.0:
+                        temp_val = round(fval, 1)
+                        break
+
+        return ResolvedDeviceMetrics(
+            cpu_utilization=cpu_val,
+            memory_utilization=mem_val,
+            temperature_c=temp_val,
+            cpu_item_id=cpu_item_id,
+            cpu_is_idle=cpu_is_idle,
+        )
 
     def __init__(self, url: Optional[str] = None, token: Optional[str] = None):
         self.url = url or settings.zabbix_effective_url
@@ -136,7 +330,7 @@ class ZabbixService:
             "hostids": [host_id],
             "monitored": True,
             "search": {
-                "key_": ["cpu", "memory", "temp"],
+                "key_": ["cpu", "memory", "mem", "temp", "processor", "load", "util"],
             },
             "searchByAny": True,
         }
