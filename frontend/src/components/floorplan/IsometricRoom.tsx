@@ -76,7 +76,7 @@ export function IsometricRoom({
   const [rotationAngle, setRotationAngle] = useState<number>(0) // 0 to 360 degrees
 
   // ─── Edit Mode State ─────────────────────────────────────────
-  const [isEditMode, setIsEditMode] = useState(initialEditMode)
+  const isEditMode = initialEditMode
   const [gridRows, setGridRows] = useState(propGridRows || 5)
   const [gridCols, setGridCols] = useState(propGridCols || 6)
   const [localRacks, setLocalRacks] = useState<RackSummary[]>(racks)
@@ -822,7 +822,9 @@ export function IsometricRoom({
 
       setHasChanges(false)
       setSaveMessage({ type: 'success', text: '✓ 3D Room Layout saved successfully to database!' })
-      onLayoutSaved?.()
+      setTimeout(() => {
+        onLayoutSaved?.()
+      }, 600)
       setTimeout(() => setSaveMessage(null), 3500)
     } catch (err: any) {
       console.error('Failed to save room layout:', err)
@@ -1052,7 +1054,7 @@ export function IsometricRoom({
         {/* Right Side: Edit Mode Actions */}
         <div className="pointer-events-auto flex items-center gap-2">
           {isEditMode && (
-            /* Edit Actions: Save, Reset, Done */
+            /* Edit Actions: Save, Reset */
             <div className="flex items-center gap-1.5 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-2xl">
               {hasChanges && (
                 <button
@@ -1080,18 +1082,6 @@ export function IsometricRoom({
                   <Save className="w-3.5 h-3.5" />
                 )}
                 <span>{saving ? 'Saving...' : 'Save Layout'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsEditMode(false)
-                  setPickedUpRackId(null)
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] text-xs font-mono font-medium bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] transition-colors cursor-pointer"
-              >
-                <Check className="w-3.5 h-3.5 text-[#8bd7d1]" />
-                <span>Done</span>
               </button>
             </div>
           )}

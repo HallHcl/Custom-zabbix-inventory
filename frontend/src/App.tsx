@@ -474,7 +474,11 @@ export function App() {
                 gridCols={overview?.grid_cols || 6}
                 initialEditMode={true}
                 fullPage={true}
-                onLayoutSaved={() => loadOverview()}
+                onLayoutSaved={() => {
+                  loadOverview()
+                  setCurrentView('floor_plan')
+                  setActiveNav('floor_plan')
+                }}
                 onViewRackElevation={handleViewRackElevation}
               />
             </div>
