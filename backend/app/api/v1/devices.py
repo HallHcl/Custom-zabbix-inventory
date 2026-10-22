@@ -300,7 +300,7 @@ async def assign_device_from_zabbix(
         raise HTTPException(status_code=404, detail=f"Rack ID {payload.rack_id} not found")
 
     # 2. Check if Zabbix host is already assigned
-    existing_host = await db.execute(select(Device).where(Device.zabbix_host_id == payload.zabbix_host_id))
+    existing_host = await db.execute(select(Device).where(Device.zabbix_hostid == str(payload.zabbix_host_id)))
     already = existing_host.scalar_one_or_none()
     if already:
         raise HTTPException(
