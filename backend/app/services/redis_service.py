@@ -38,9 +38,19 @@ class RedisService:
         except Exception:
             return False
 
+    @staticmethod
+    def _json_serial(obj):
+        if hasattr(obj, "model_dump"):
+            return obj.model_dump()
+        if hasattr(obj, "dict"):
+            return obj.dict()
+        if hasattr(obj, "isoformat"):
+            return obj.isoformat()
+        return str(obj)
+
     async def set_json(self, key: str, value: Any, ttl: int = 60):
         client = self.get_client()
-        await client.set(key, json.dumps(value), ex=ttl)
+        await client.set(key, json.dumps(value, default=self._json_serial), ex=ttl)
 
     async def get_json(self, key: str) -> Optional[Any]:
         client = self.get_client()

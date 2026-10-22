@@ -5,6 +5,14 @@ export interface ZabbixProblem {
   lastchange?: string
 }
 
+export interface ZabbixWebLinks {
+  base_url: string
+  host_url?: string | null
+  latest_data_url?: string | null
+  problems_url?: string | null
+  graphs_url?: string | null
+}
+
 export interface ZabbixStatusSummary {
   hostid: string
   name: string
@@ -13,6 +21,7 @@ export interface ZabbixStatusSummary {
   highest_severity: number
   problems_count: number
   problems: ZabbixProblem[]
+  zabbix_web_links?: ZabbixWebLinks | null
 }
 
 export interface BrandInfo {
@@ -55,6 +64,7 @@ export interface Device {
   zabbix_status?: ZabbixStatusSummary | null
   status?: 'Active' | 'Planned' | 'Maintenance' | 'Offline'
   brand_info?: BrandInfo | null
+  zabbix_web_links?: ZabbixWebLinks | null
 }
 
 export interface RackSummary {
@@ -200,6 +210,7 @@ export interface DeviceOverview {
   chassis_specs?: ChassisSpecs
   brand_info?: BrandInfo | null
   latest_data_items: ZabbixLatestItem[]
+  zabbix_web_links?: ZabbixWebLinks | null
 }
 
 // Floor Plan Editor Types
@@ -225,6 +236,7 @@ export interface UnassignedHost {
   inferred_type: 'Server' | 'Switch' | 'Firewall' | 'Storage' | 'UPS'
   device_model?: string
   tags: Record<string, string>
+  zabbix_web_links?: ZabbixWebLinks | null
 }
 
 export interface UnassignedHostsOverview {

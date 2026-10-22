@@ -13,6 +13,8 @@ import {
   Activity,
   Edit2,
   Trash2,
+  ExternalLink,
+  AlertTriangle,
 } from 'lucide-react'
 import type { DeviceOverview } from '../../types'
 import { fetchDeviceOverview, updateDeviceInventory } from '../../api/client'
@@ -135,6 +137,36 @@ export function DevicePageModal({ deviceId, onClose, onDeviceUpdated }: DevicePa
           </div>
 
           <div className="flex items-center gap-2">
+            {data?.zabbix_host_id && (
+              <div className="flex items-center gap-1.5 mr-2">
+                <a
+                  href={data.zabbix_web_links?.latest_data_url || `http://192.168.1.85:8080/zabbix.php?action=latest.view&filter_hostids%5B%5D=${data.zabbix_host_id}&filter_set=1`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-2 py-1 rounded-[2px] bg-[#20282f] hover:bg-[#34424b] border border-[#394650] hover:border-[#8bd7d1] text-[#caedde] text-[11px] font-mono flex items-center gap-1 transition-colors"
+                  title="Open in Zabbix Latest Data"
+                >
+                  <Activity className="w-3 h-3 text-[#8bd7d1]" />
+                  <span>Zabbix Latest</span>
+                  <ExternalLink className="w-2.5 h-2.5 text-[#85a6b1]" />
+                </a>
+                <a
+                  href={data.zabbix_web_links?.problems_url || `http://192.168.1.85:8080/zabbix.php?action=problem.view&filter_hostids%5B%5D=${data.zabbix_host_id}&filter_set=1`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`px-2 py-1 rounded-[2px] border text-[11px] font-mono flex items-center gap-1 transition-colors ${
+                    (data.active_alerts?.length || 0) > 0
+                      ? 'bg-rose-950/40 border-rose-700/80 text-rose-300 hover:bg-rose-900/50'
+                      : 'bg-[#20282f] border-[#394650] text-[#caedde] hover:bg-[#34424b] hover:border-[#8bd7d1]'
+                  }`}
+                  title="Open in Zabbix Problems View"
+                >
+                  <AlertTriangle className={`w-3 h-3 ${(data.active_alerts?.length || 0) > 0 ? 'text-rose-400' : 'text-amber-400'}`} />
+                  <span>Problems ({data.active_alerts?.length || 0})</span>
+                  <ExternalLink className="w-2.5 h-2.5 text-[#85a6b1]" />
+                </a>
+              </div>
+            )}
             <button
               onClick={onClose}
               className="p-1 rounded-[2px] text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] transition-colors cursor-pointer"

@@ -14,6 +14,7 @@ from backend.app.schemas import (
 from backend.app.services.zabbix_service import zabbix_service
 from backend.app.services.sync_service import sync_service
 from backend.app.services.redis_service import redis_service
+from backend.app.services.zabbix_url_service import build_zabbix_web_links
 
 router = APIRouter()
 
@@ -201,6 +202,7 @@ async def get_unassigned_hosts(
                 "suggested_height_u": sug_height_u,
                 "status": status,
                 "problems_count": len(host_priorities),
+                "zabbix_web_links": build_zabbix_web_links(hid).model_dump() if build_zabbix_web_links(hid) else None,
             })
 
         # Cache unassigned hosts in Redis (60s TTL)
@@ -229,7 +231,12 @@ async def get_unassigned_hosts(
             if dt == h.get("suggested_device_type", "").lower()
         ]
 
-    # Convert to response objects
+    # Convert to response objects, ensuring zabbix_web_links is populated
+    for h in filtered:
+        if not h.get("zabbix_web_links"):
+            links = build_zabbix_web_links(h.get("hostid"))
+            h["zabbix_web_links"] = links.model_dump() if links else None
+
     items = [UnassignedHostResponse(**h) for h in filtered]
 
     return UnassignedHostsOverview(

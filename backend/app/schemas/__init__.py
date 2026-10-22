@@ -10,6 +10,14 @@ class ZabbixProblemSummary(BaseModel):
     lastchange: Optional[str] = None
 
 
+class ZabbixWebLinks(BaseModel):
+    base_url: str
+    host_url: Optional[str] = None
+    latest_data_url: Optional[str] = None
+    problems_url: Optional[str] = None
+    graphs_url: Optional[str] = None
+
+
 class ZabbixStatusSummary(BaseModel):
     hostid: str
     name: str
@@ -18,6 +26,7 @@ class ZabbixStatusSummary(BaseModel):
     highest_severity: int = 0
     problems_count: int = 0
     problems: List[ZabbixProblemSummary] = []
+    zabbix_web_links: Optional[ZabbixWebLinks] = None
 
 
 class DeviceBase(BaseModel):
@@ -70,6 +79,7 @@ class DeviceResponse(DeviceBase):
     rack_id: Optional[Any] = None
     zabbix_status: Optional[ZabbixStatusSummary] = None
     brand_info: Optional[BrandInfo] = None
+    zabbix_web_links: Optional[ZabbixWebLinks] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -190,6 +200,7 @@ class DeviceOverviewResponse(BaseModel):
     brand_info: Optional[BrandInfo] = None
     # Zabbix Latest Data Items (Full Metric List)
     latest_data_items: List[ZabbixLatestItem] = []
+    zabbix_web_links: Optional[ZabbixWebLinks] = None
 
 
 # ─── Floor Plan Editor Schemas ───────────────────────────────────
@@ -302,6 +313,7 @@ class UnassignedHostResponse(BaseModel):
     suggested_height_u: Optional[int] = None
     status: str = "ok"  # ok, warning, critical
     problems_count: int = 0
+    zabbix_web_links: Optional[ZabbixWebLinks] = None
 
 
 class UnassignedHostsOverview(BaseModel):

@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from backend.app.config import settings
 from backend.app.services.zabbix_service import zabbix_service
 from backend.app.services.redis_service import redis_service
+from backend.app.services.zabbix_url_service import build_zabbix_web_links
 
 
 class SyncService:
@@ -166,6 +167,7 @@ class SyncService:
                     }
                     for p in host_probs
                 ],
+                "zabbix_web_links": build_zabbix_web_links(hid).model_dump() if build_zabbix_web_links(hid) else None,
             }
 
             await redis_service.cache_host_summary(hid, summary, ttl=180)

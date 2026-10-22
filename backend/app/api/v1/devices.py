@@ -23,6 +23,7 @@ from backend.app.schemas import (
 from backend.app.services.zabbix_service import zabbix_service
 from backend.app.services.redis_service import redis_service
 from backend.app.services.brand_service import resolve_brand_metadata
+from backend.app.services.zabbix_url_service import build_zabbix_web_links
 from backend.app.api.v1.zabbix import infer_device_type
 
 
@@ -222,6 +223,7 @@ def build_device_response(d: Device, z_status: Optional[Any] = None) -> DeviceRe
         custom_fields=d.custom_fields,
         zabbix_status=z_status,
         brand_info=BrandInfo(**b_meta) if b_meta else None,
+        zabbix_web_links=build_zabbix_web_links(d.zabbix_host_id),
     )
 
 
@@ -1157,4 +1159,5 @@ async def get_device_overview(device_id: str, db: AsyncSession = Depends(get_db)
         chassis_specs=chassis_specs,
         brand_info=BrandInfo(**b_meta) if b_meta else None,
         latest_data_items=latest_data_items,
+        zabbix_web_links=build_zabbix_web_links(device.zabbix_host_id),
     )

@@ -134,8 +134,8 @@
 
 [Phase 2: Rack Operations Workflow]
   ├── [x] Task 2.1: ทดสอบและเสริมความแข็งแกร่งของ Rack Collision Detection & Mount Flow (เสร็จสิ้น)
-  ├── [ ] Task 2.2: ทำ Deep Links จาก Portal ไปยัง Zabbix Web Console (Host & Problem) ◄ (ขั้นตอนถัดไป)
-  └── [ ] Task 2.3: ปรับ Navigation และ Sidebar เพื่อซ่อนฟังก์ชันที่พักไว้
+  ├── [x] Task 2.2: ทำ Deep Links จาก Portal ไปยัง Zabbix Web Console (Host & Problem) (เสร็จสิ้น)
+  └── [ ] Task 2.3: ปรับ Navigation และ Sidebar เพื่อซ่อนฟังก์ชันที่พักไว้ ◄ (ขั้นตอนถัดไป)
 
 [Phase 3: Operational Refinements]
   ├── Task 3.1: ปรับปรุงหน้า Reports ให้สรุปข้อมูลจริง

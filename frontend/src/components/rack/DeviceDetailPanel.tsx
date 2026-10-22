@@ -359,16 +359,56 @@ export function DeviceDetailPanel({
                 <Trash2 className="w-3 h-3 text-amber-400" />
                 <span>Decommission</span>
               </button>
-              <a
-                href={`http://192.168.1.85:8080/zabbix.php?action=latest.view&filter_hostids%5B%5D=${device.zabbix_host_id || ''}&filter_set=1`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 py-1.5 px-2 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#50626f] text-[#caedde] text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <ExternalLink className="w-3 h-3 text-[#8bd7d1]" />
-                <span>Zabbix (.85)</span>
-              </a>
             </div>
+
+            {/* Direct Zabbix 7.0 Deep Links Action Bar */}
+            {device.zabbix_host_id && (
+              <div className="pt-2 border-t border-[#394650] space-y-1.5">
+                <div className="flex items-center justify-between text-[9px] text-[#85a6b1] font-mono uppercase tracking-wider">
+                  <span>Zabbix 7.0 Console (Host #{device.zabbix_host_id})</span>
+                  <span className="text-[#8bd7d1] font-bold">Live Synced</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 font-mono text-[10.5px]">
+                  <a
+                    href={device.zabbix_web_links?.latest_data_url || `http://192.168.1.85:8080/zabbix.php?action=latest.view&filter_hostids%5B%5D=${device.zabbix_host_id}&filter_set=1`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-1 px-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#50626f] hover:border-[#8bd7d1] text-[#caedde] flex items-center justify-center gap-1 transition-colors"
+                    title="Open Zabbix Latest Data"
+                  >
+                    <Activity className="w-3 h-3 text-[#8bd7d1] shrink-0" />
+                    <span className="truncate">Latest</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-[#85a6b1] shrink-0" />
+                  </a>
+                  <a
+                    href={device.zabbix_web_links?.problems_url || `http://192.168.1.85:8080/zabbix.php?action=problem.view&filter_hostids%5B%5D=${device.zabbix_host_id}&filter_set=1`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`py-1 px-1.5 rounded-[2px] border flex items-center justify-center gap-1 transition-colors ${
+                      (device.zabbix_status?.problems_count || 0) > 0
+                        ? 'bg-rose-950/40 border-rose-700/80 text-rose-300 hover:bg-rose-900/50'
+                        : 'bg-[#273139] border-[#50626f] text-[#caedde] hover:bg-[#34424b] hover:border-[#8bd7d1]'
+                    }`}
+                    title="Open Zabbix Active Problems"
+                  >
+                    <AlertTriangle className={`w-3 h-3 shrink-0 ${(device.zabbix_status?.problems_count || 0) > 0 ? 'text-rose-400' : 'text-amber-400'}`} />
+                    <span className="truncate">Alarms ({device.zabbix_status?.problems_count || 0})</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-[#85a6b1] shrink-0" />
+                  </a>
+                  <a
+                    href={device.zabbix_web_links?.host_url || `http://192.168.1.85:8080/zabbix.php?action=host.edit&hostid=${device.zabbix_host_id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-1 px-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#50626f] hover:border-[#8bd7d1] text-[#caedde] flex items-center justify-center gap-1 transition-colors"
+                    title="Open Zabbix Host Configuration"
+                  >
+                    <Settings2 className="w-3 h-3 text-[#85a6b1] shrink-0" />
+                    <span className="truncate">Config</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-[#85a6b1] shrink-0" />
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Layers,
+  ExternalLink,
 } from 'lucide-react'
 import type { UnassignedHost, RackSummary, DeviceAssignFromZabbix } from '../../types'
 import { fetchUnassignedHosts, assignDeviceFromZabbix } from '../../api/client'
@@ -464,14 +465,25 @@ export function UnassignedHostsDrawer({
                       )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSlotForm(host)}
-                      className="px-2.5 py-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#7aa5d2] text-xs font-mono text-[#caedde] hover:text-white transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
-                    >
-                      <ArrowRight className="w-3.5 h-3.5 text-[#7aa5d2]" />
-                      <span>Slot</span>
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href={host.zabbix_web_links?.latest_data_url || `http://192.168.1.85:8080/zabbix.php?action=latest.view&filter_hostids%5B%5D=${host.hostid}&filter_set=1`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#7aa5d2] text-[#85a6b1] hover:text-[#caedde] transition-colors cursor-pointer"
+                        title="View Host in Zabbix 7.0 Web Console"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenSlotForm(host)}
+                        className="px-2.5 py-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#7aa5d2] text-xs font-mono text-[#caedde] hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <ArrowRight className="w-3.5 h-3.5 text-[#7aa5d2]" />
+                        <span>Slot</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )

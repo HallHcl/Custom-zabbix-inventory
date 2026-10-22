@@ -16,6 +16,7 @@ from backend.app.schemas import (
     BrandInfo,
 )
 from backend.app.services.brand_service import resolve_brand_metadata
+from backend.app.services.zabbix_url_service import build_zabbix_web_links
 
 router = APIRouter()
 
@@ -168,6 +169,7 @@ async def get_rack_elevation(rack_id: str, db: AsyncSession = Depends(get_db)):
                 custom_fields=dev.custom_fields,
                 zabbix_status=z_status,
                 brand_info=BrandInfo(**b_meta) if b_meta else None,
+                zabbix_web_links=build_zabbix_web_links(dev.zabbix_host_id),
             )
         )
 
