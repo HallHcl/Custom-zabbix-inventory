@@ -262,6 +262,11 @@ class Device(Base):
     room_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("rooms.id", ondelete="CASCADE"), nullable=False)
     parent_device_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("devices.id", ondelete="CASCADE"), nullable=True)
 
+    def __init__(self, **kwargs):
+        if "status" not in kwargs or kwargs.get("status") is None:
+            kwargs["status"] = "Active"
+        super().__init__(**kwargs)
+
     # Identity & Zabbix Link
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     hostname: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)

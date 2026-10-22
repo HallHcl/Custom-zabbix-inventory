@@ -28,10 +28,11 @@ async def background_zabbix_poller():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Ensure tables, seed, run initial sync, start background poller
+    # Startup: Ensure tables, optional demo seed, run initial sync, start background poller
     try:
         await init_tables()
-        await seed_initial_data()
+        if settings.AUTO_SEED_DEMO_DATA:
+            await seed_initial_data()
         await poll_once()
     except Exception as e:
         print(f"[Lifespan Startup Error] {e}")
@@ -67,6 +68,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+
+@app.middleware("http")
+async def api_key_perimeter_middleware(request: Request, call_next):
+    """
+    Perimeter Security Middleware:
+    - Disabled by default for internal NOC intranet (zero JWT/session overhead).
+    - When enabled via API_KEY_ENABLED=True, verifies X-API-Key header.
+    - Always allows /health, /api/v1/health, and Swagger/OpenAPI docs for container liveness probes.
+    """
+    if not settings.API_KEY_ENABLED:
+        return await call_next(request)
+
+    path = request.url.path
+    whitelisted_paths = {
+        "/health",
+        f"{settings.API_V1_PREFIX}/health",
+        "/docs",
+        "/redoc",
+        f"{settings.API_V1_PREFIX}/openapi.json",
+        "/openapi.json",
+    }
+    if path in whitelisted_paths or request.method == "OPTIONS":
+        return await call_next(request)
+
+    client_key = request.headers.get("X-API-Key") or request.query_params.get("api_key")
+    if not client_key or client_key != settings.API_KEY:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Unauthorized: Invalid or missing X-API-Key header"},
+        )
+
+    return await call_next(request)
+
+
 from sqlalchemy import text
 from backend.app.db.session import engine
 
@@ -95,11 +133,13 @@ async def health_check():
 
     return {
         "status": "healthy" if is_healthy else "degraded",
-        "app": "NexusTwin DCIM & Digital Twin",
+        "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "database": db_status,
         "redis": redis_status,
         "zabbix_mode": settings.ZABBIX_MODE,
+        "zabbix_effective_url": settings.zabbix_effective_url,
+        "zabbix_web_console_url": settings.zabbix_web_console_url,
         "environment": settings.APP_ENV,
     }
 

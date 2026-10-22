@@ -1,9 +1,12 @@
 import json
+import logging
 import time
 from typing import Any, Dict, List, Optional
 import httpx
 from backend.app.config import settings
 from backend.app.services.telemetry_simulator import telemetry_simulator
+
+logger = logging.getLogger(__name__)
 
 
 class ZabbixService:
@@ -73,7 +76,9 @@ class ZabbixService:
             return await self._call("apiinfo.version", {})
         except Exception as e:
             if settings.SIMULATE_ZABBIX_TELEMETRY:
+                logger.warning(f"[Zabbix] Connection failed. Serving simulated version (SIMULATE_ZABBIX_TELEMETRY=True): {e}")
                 return "7.0.0-mock"
+            logger.error(f"[Zabbix] Error retrieving version from {self.url}: {e}")
             raise e
 
     async def get_all_hosts(self) -> List[Dict[str, Any]]:
@@ -89,6 +94,7 @@ class ZabbixService:
             return await self._call("host.get", params)
         except Exception as e:
             if settings.SIMULATE_ZABBIX_TELEMETRY:
+                logger.warning(f"[Zabbix] Connection failed. Serving simulated host list (SIMULATE_ZABBIX_TELEMETRY=True): {e}")
                 return [
                     {
                         "hostid": "10084",
@@ -98,6 +104,7 @@ class ZabbixService:
                         "interfaces": [{"ip": "127.0.0.1", "port": "10050", "type": "1"}],
                     }
                 ]
+            logger.error(f"[Zabbix] Error retrieving hosts from {self.url}: {e}")
             raise e
 
     async def get_active_problems(self, host_ids: Optional[List[str]] = None) -> List[Dict[str, Any]]:
@@ -117,7 +124,9 @@ class ZabbixService:
             return await self._call("trigger.get", params)
         except Exception as e:
             if settings.SIMULATE_ZABBIX_TELEMETRY:
+                logger.warning(f"[Zabbix] Connection failed. Serving empty problems (SIMULATE_ZABBIX_TELEMETRY=True): {e}")
                 return []
+            logger.error(f"[Zabbix] Error retrieving active problems from {self.url}: {e}")
             raise e
 
     async def get_host_latest_metrics(self, host_id: str) -> List[Dict[str, Any]]:

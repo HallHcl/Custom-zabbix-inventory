@@ -67,8 +67,8 @@ async def get_unassigned_hosts(
         except Exception:
             all_zabbix_hosts = []
 
-        if not all_zabbix_hosts:
-            # Fallback to simulated auto-discovered hosts if Zabbix has none unracked
+        if not all_zabbix_hosts and settings.SIMULATE_ZABBIX_TELEMETRY:
+            # Fallback to simulated auto-discovered hosts ONLY when simulation mode is explicitly enabled
             simulated = zabbix_service.get_unassigned_hosts()
             for sim in simulated:
                 if sim["zabbix_hostid"] not in assigned_ids:

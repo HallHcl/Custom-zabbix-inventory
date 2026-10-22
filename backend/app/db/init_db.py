@@ -40,9 +40,13 @@ async def seed_initial_data(reset_devices: bool = False):
 if __name__ == "__main__":
     import sys
     reset = "--reset" in sys.argv
+    seed = "--seed" in sys.argv or reset
 
     async def main():
         await init_tables()
-        await seed_initial_data(reset_devices=reset)
+        if seed:
+            await seed_initial_data(reset_devices=reset)
+        else:
+            print("[DB Init] Schema initialized. To populate demo data, run with --seed (or --reset to wipe and reseed).")
 
     asyncio.run(main())

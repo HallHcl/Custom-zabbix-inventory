@@ -1,13 +1,20 @@
+import logging
 from pathlib import Path
-from typing import List
+from typing import Any, List
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "POP API"
+    APP_NAME: str = "DC VISION Operations Portal"
     APP_VERSION: str = "0.1.0"
     APP_ENV: str = "development"
     API_V1_PREFIX: str = "/api/v1"
+
+    # Perimeter Security / Optional API Key (Disabled by default for internal NOC intranet)
+    API_KEY_ENABLED: bool = False
+    API_KEY: str = ""
 
     # Database URL direct override (e.g. from Docker Compose)
     DATABASE_URL: str | None = None
@@ -17,7 +24,7 @@ class Settings(BaseSettings):
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "nexustwin_secret"
+    POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = "dcim_db"
 
     # Redis defaults
@@ -29,11 +36,15 @@ class Settings(BaseSettings):
     ZABBIX_MODE: str = "external"  # "external" or "embedded"
     ZABBIX_URL: str = "http://192.168.1.85:8080/api_jsonrpc.php"
     ZABBIX_API_URL: str | None = None
-    ZABBIX_API_TOKEN: str = "9f14f8772b0ddb6d29ebab9f809201c030b3051d3d7f8639ddd4c6fba92c3808"
+    ZABBIX_WEB_URL: str | None = None
+    ZABBIX_API_TOKEN: str = ""
     ZABBIX_USER: str = "Admin"
-    ZABBIX_PASSWORD: str = "zabbix"
+    ZABBIX_PASSWORD: str = ""
     ZABBIX_SYNC_INTERVAL_SECONDS: int = 30
-    SIMULATE_ZABBIX_TELEMETRY: bool = True
+    ZABBIX_STALE_THRESHOLD_SECONDS: int = 120
+    ZABBIX_DISCONNECTED_THRESHOLD_SECONDS: int = 600
+    SIMULATE_ZABBIX_TELEMETRY: bool = False
+    AUTO_SEED_DEMO_DATA: bool = False
 
     # AI & Embeddings
     AI_PROVIDER_API_KEY: str | None = None
@@ -70,6 +81,21 @@ class Settings(BaseSettings):
         if self.ZABBIX_API_URL:
             return self.ZABBIX_API_URL
         return self.ZABBIX_URL
+
+    @property
+    def zabbix_web_console_url(self) -> str:
+        if self.ZABBIX_WEB_URL:
+            return self.ZABBIX_WEB_URL.rstrip("/")
+        effective = self.zabbix_effective_url
+        if effective.endswith("/api_jsonrpc.php"):
+            return effective[:-len("/api_jsonrpc.php")].rstrip("/")
+        return effective.rstrip("/")
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.ZABBIX_API_TOKEN and self.APP_ENV not in ("test", "testing"):
+            logger.warning("ZABBIX_API_TOKEN is empty. Set it in .env or environment variables.")
+        if not self.POSTGRES_PASSWORD and self.APP_ENV not in ("test", "testing"):
+            logger.warning("POSTGRES_PASSWORD is empty. Set it in .env or environment variables.")
 
 
 settings = Settings()
