@@ -292,6 +292,10 @@ class UnassignedHostResponse(BaseModel):
     groups: List[str] = []
     tags: Dict[str, str] = {}
     suggested_device_type: str = "Server"  # Server, Switch, Firewall, Storage, UPS
+    brand: Optional[str] = None
+    suggested_rack_name: Optional[str] = None
+    suggested_start_u: Optional[int] = None
+    suggested_height_u: Optional[int] = None
     status: str = "ok"  # ok, warning, critical
     problems_count: int = 0
 

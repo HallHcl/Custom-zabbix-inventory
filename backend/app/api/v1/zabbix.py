@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Optional
+import re
+from typing import Any, Dict, List, Optional, Tuple
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,18 +18,65 @@ from backend.app.services.redis_service import redis_service
 router = APIRouter()
 
 
+def parse_location_tag(tags: Dict[str, str]) -> Tuple[Optional[str], Optional[int], Optional[int]]:
+    """
+    Extract suggested rack name, start U, and height U from Zabbix Location tag.
+    Example: 'Room A / Rack A01 / U38-U39' -> ('R-A01', 38, 2)
+    """
+    loc_str = tags.get("Location") or tags.get("location") or ""
+    if not loc_str:
+        return None, None, None
+
+    rack_name = None
+    rack_match = re.search(r"Rack\s+([A-Za-z0-9]+)", loc_str, re.IGNORECASE)
+    if rack_match:
+        raw_r = rack_match.group(1).upper()
+        rack_name = f"R-{raw_r}" if not raw_r.startswith("R-") else raw_r
+
+    start_u = None
+    height_u = None
+    u_range = re.search(r"U(\d+)(?:-U?(\d+))?", loc_str, re.IGNORECASE)
+    if u_range:
+        u1 = int(u_range.group(1))
+        u2 = int(u_range.group(2)) if u_range.group(2) else u1
+        start_u = min(u1, u2)
+        height_u = abs(u2 - u1) + 1
+
+    return rack_name, start_u, height_u
+
+
 def infer_device_type(groups: List[str], tags: Dict[str, str], name: str) -> str:
     combined = f"{' '.join(groups)} {' '.join(tags.keys())} {' '.join(tags.values())} {name}".lower()
-    if any(k in combined for k in ["switch", "cisco", "huawei", "arista", "juniper", "nexus"]):
-        return "Switch"
-    if any(k in combined for k in ["firewall", "fortigate", "forti", "fg-", "fw-", "paloalto", "palo", "pa-", "pfsense", "vpn", "router"]):
+
+    # 1. Firewalls
+    if any(k in combined for k in ["firewall", "fortigate", "forti", "fg-", "fw-", "paloalto", "palo", "pa-", "pfsense"]):
         return "Firewall"
-    if any(k in combined for k in ["storage", "san", "nas", "powerstore", "synology", "qnap", "netapp"]):
+
+    # 2. Storage
+    if any(k in combined for k in ["storage", "san-", "nas-", "powerstore", "synology", "qnap", "netapp", "purestorage"]):
         return "Storage"
-    if any(k in combined for k in ["ups", "pdu", "apc", "eaton", "vertiv"]):
+
+    # 3. UPS & PDU
+    if any(k in combined for k in ["smart-ups", "ups-", "pdu", "apc", "eaton", "vertiv", "tripplite"]):
         return "UPS"
-    if any(k in combined for k in ["patch panel", "patch"]):
+
+    # 4. Patch Panels
+    if any(k in combined for k in ["patch panel", "patch-panel", "patch"]):
         return "Patch Panel"
+
+    # 5. Servers (Prioritized before generic switch vendor match to prevent Cisco UCS / HPE / Dell servers from becoming Switch)
+    server_indicators = [
+        "srv-", "server", "k8s", "worker", "master", "node", "compute",
+        "dl380", "r750", "r650", "poweredge", "proliant", "ucs c", "supermicro",
+        "elastic", "pgsql", "database", "win-ad", "ad01", "docker:"
+    ]
+    if any(k in combined for k in server_indicators):
+        return "Server"
+
+    # 6. Switches
+    if any(k in combined for k in ["switch", "cisco", "huawei", "arista", "juniper", "nexus", "tor-", "core-sw", "dist-sw", "ce68"]):
+        return "Switch"
+
     return "Server"
 
 
@@ -103,7 +151,7 @@ async def get_unassigned_hosts(
 
         # Filter out hosts already assigned to a rack
         for h in all_zabbix_hosts:
-            hid = str(h.get("hostid", ""))
+            hid = str(h.get("hostid", "")).strip()
             if not hid or hid in assigned_ids:
                 continue
 
@@ -133,6 +181,8 @@ async def get_unassigned_hosts(
                 status = "ok"
 
             suggested_type = infer_device_type(groups, tags, name)
+            brand = tags.get("Brand") or tags.get("Vendor") or None
+            sug_rack, sug_start_u, sug_height_u = parse_location_tag(tags)
 
             raw_hosts.append({
                 "hostid": hid,
@@ -145,6 +195,10 @@ async def get_unassigned_hosts(
                 "groups": groups,
                 "tags": tags,
                 "suggested_device_type": suggested_type,
+                "brand": brand,
+                "suggested_rack_name": sug_rack,
+                "suggested_start_u": sug_start_u,
+                "suggested_height_u": sug_height_u,
                 "status": status,
                 "problems_count": len(host_priorities),
             })
@@ -157,17 +211,19 @@ async def get_unassigned_hosts(
 
     # 2. Apply filtering if requested
     filtered = raw_hosts
-    if search:
-        s = search.lower()
+    if search and isinstance(search, str):
+        s = search.lower().strip()
         filtered = [
             h for h in filtered
             if s in h.get("name", "").lower()
             or s in h.get("technical_name", "").lower()
             or s in h.get("ip", "").lower()
+            or s in (h.get("suggested_rack_name") or "").lower()
+            or s in (h.get("brand") or "").lower()
         ]
 
-    if device_type:
-        dt = device_type.lower()
+    if device_type and isinstance(device_type, str):
+        dt = device_type.lower().strip()
         filtered = [
             h for h in filtered
             if dt == h.get("suggested_device_type", "").lower()

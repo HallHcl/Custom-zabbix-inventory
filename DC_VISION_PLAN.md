@@ -127,15 +127,15 @@
   ├── [x] Task 0.3: วางขอบเขต Backend Authentication (ไม่ทำ JWT, เปิด /health) (เสร็จสิ้น)
   └── [x] Task 0.4: ปิด Silent Mock Fallbacks และแยก Seeder ออกจาก Production (เสร็จสิ้น)
 
-[Phase 1: Reliable Zabbix Integration]
+[Phase 1: Reliable Zabbix Integration] (เสร็จสมบูรณ์ 100%)
   ├── [x] Task 1.1: ปรับปรุง Zabbix Client เชื่อมต่อ 7.0.29 จริง พร้อมสถานะ Connected/Stale/Disconnected (เสร็จสิ้น)
   ├── [x] Task 1.2: ตรวจสอบและแก้ไข Item Key Matching สำหรับ CPU/Memory ตามมาตรฐาน Zabbix จริง (เสร็จสิ้น)
-  └── [ ] Task 1.3: ปรับปรุง Unassigned Hosts Reconciliation (เทียบ Zabbix vs PostgreSQL จริง) ◄ (ขั้นตอนถัดไป)
+  └── [x] Task 1.3: ปรับปรุง Unassigned Hosts Reconciliation (เทียบ Zabbix vs PostgreSQL จริง) (เสร็จสิ้น)
 
 [Phase 2: Rack Operations Workflow]
-  ├── Task 2.1: ทดสอบและเสริมความแข็งแกร่งของ Rack Collision Detection & Mount Flow
-  ├── Task 2.2: ทำ Deep Links จาก Portal ไปยัง Zabbix Web Console (Host & Problem)
-  └── Task 2.3: ปรับ Navigation และ Sidebar เพื่อซ่อนฟังก์ชันที่พักไว้
+  ├── [ ] Task 2.1: ทดสอบและเสริมความแข็งแกร่งของ Rack Collision Detection & Mount Flow ◄ (ขั้นตอนถัดไป)
+  ├── [ ] Task 2.2: ทำ Deep Links จาก Portal ไปยัง Zabbix Web Console (Host & Problem)
+  └── [ ] Task 2.3: ปรับ Navigation และ Sidebar เพื่อซ่อนฟังก์ชันที่พักไว้
 
 [Phase 3: Operational Refinements]
   ├── Task 3.1: ปรับปรุงหน้า Reports ให้สรุปข้อมูลจริง
