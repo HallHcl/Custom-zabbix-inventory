@@ -16,6 +16,8 @@ import {
   X,
   Sparkles,
   Move,
+  Layers,
+  AlertTriangle,
 } from 'lucide-react'
 import type { RackSummary } from '../../types'
 import {
@@ -25,6 +27,7 @@ import {
   deleteRack,
   fetchRoomLayout,
 } from '../../api/client'
+import { AssetPaletteDrawer, type AssetTemplate } from './AssetPaletteDrawer'
 
 interface IsometricRoomProps {
   racks: RackSummary[]
@@ -45,6 +48,8 @@ interface IsometricRoomProps {
   onViewRackElevation?: (rack: RackSummary) => void
   mode?: ViewMode
   onModeChange?: (mode: ViewMode) => void
+  hideViewModeControls?: boolean
+  hideRotationControls?: boolean
 }
 
 export type ViewMode = '3d' | 'status' | 'temp' | 'power'
@@ -63,6 +68,8 @@ export function IsometricRoom({
   onViewRackElevation,
   mode,
   onModeChange,
+  hideViewModeControls = false,
+  hideRotationControls = false,
 }: IsometricRoomProps) {
   const [internalViewMode, setInternalViewMode] = useState<ViewMode>('3d')
   const viewMode = mode !== undefined ? mode : internalViewMode
@@ -108,6 +115,25 @@ export function IsometricRoom({
   localRacksRef.current = localRacks
   const dragTargetCellRef = useRef<typeof dragTargetCell>(null)
   dragTargetCellRef.current = dragTargetCell
+
+  // ─── Left Asset Palette Drawer State (The Sims Catalog) ──────
+  const [showPaletteDrawer, setShowPaletteDrawer] = useState(true)
+  const [draggedTemplate, setDraggedTemplate] = useState<AssetTemplate | null>(null)
+  const dragTemplateRef = useRef<AssetTemplate | null>(null)
+  const isTemplateDraggingRef = useRef(false)
+  const [stagedRacks, setStagedRacks] = useState<RackSummary[]>([])
+  const [collisionTarget, setCollisionTarget] = useState<{
+    template: AssetTemplate
+    target: {
+      rowLetter: string
+      rowIdx: number
+      col: number
+      slotCode: string
+      occupant: RackSummary
+      x: number
+      y: number
+    }
+  } | null>(null)
 
   // Modals
   const [showAddModal, setShowAddModal] = useState<{ row: string; col: number } | null>(null)
@@ -296,20 +322,26 @@ export function IsometricRoom({
 
   useEffect(() => {
     const handleGlobalPointerMove = (e: PointerEvent) => {
-      if (!dragRackRef.current || !svgRef.current) return
+      const activeRack = dragRackRef.current
+      const activeTemplate = dragTemplateRef.current
+      if ((!activeRack && !activeTemplate) || !svgRef.current) return
 
       const dist = Math.hypot(
         e.clientX - dragStartClientPosRef.current.x,
         e.clientY - dragStartClientPosRef.current.y
       )
 
-      if (!isRackDraggingRef.current && dist > 5) {
+      if (activeRack && !isRackDraggingRef.current && dist > 5) {
         isRackDraggingRef.current = true
-        setDraggingRack(dragRackRef.current)
+        setDraggingRack(activeRack)
+        setPickedUpRackId(null)
+      } else if (activeTemplate && !isTemplateDraggingRef.current && dist > 5) {
+        isTemplateDraggingRef.current = true
+        setDraggedTemplate(activeTemplate)
         setPickedUpRackId(null)
       }
 
-      if (isRackDraggingRef.current) {
+      if (isRackDraggingRef.current || isTemplateDraggingRef.current) {
         const pt = svgRef.current.createSVGPoint()
         pt.x = e.clientX
         pt.y = e.clientY
@@ -336,7 +368,7 @@ export function IsometricRoom({
               minDistance = d
               const occupant = localRacksRef.current.find(
                 (other) =>
-                  other.id !== dragRackRef.current!.id &&
+                  (!activeRack || other.id !== activeRack.id) &&
                   other.row.replace('Row ', '').trim().toUpperCase() === rowLetter &&
                   other.col === c
               )
@@ -363,21 +395,117 @@ export function IsometricRoom({
       }
     }
 
-    const handleGlobalPointerUp = async () => {
-      if (!dragRackRef.current) return
+    const handleGlobalPointerUp = async (e: PointerEvent) => {
       const rack = dragRackRef.current
-      const wasDragging = isRackDraggingRef.current
+      const template = dragTemplateRef.current
+      const wasRackDragging = isRackDraggingRef.current
+      const wasTemplateDragging = isTemplateDraggingRef.current
       const target = dragTargetCellRef.current
 
       dragRackRef.current = null
+      dragTemplateRef.current = null
       isRackDraggingRef.current = false
+      isTemplateDraggingRef.current = false
       setDraggingRack(null)
+      setDraggedTemplate(null)
       setDragPointerSvg(null)
       setDragTargetCell(null)
       dragTargetCellRef.current = null
 
-      if (wasDragging && target) {
+      // Check if existing rack was dragged & dropped over the Left Palette (Staging area)
+      if (wasRackDragging && rack && (!target || e.clientX < 320) && showPaletteDrawer) {
+        const isAlreadyStaged = stagedRacks.some((r) => r.id === rack.id)
+        if (!isAlreadyStaged) {
+          setLocalRacks((prev) => prev.filter((r) => r.id !== rack.id))
+          setStagedRacks((prev) => [...prev, { ...rack, row: '', col: 0 }])
+          setHasChanges(true)
+          setSaveMessage({
+            type: 'success',
+            text: `📦 Staged ${rack.name} into Model Palette inventory!`,
+          })
+          setTimeout(() => setSaveMessage(null), 3000)
+          return
+        }
+      }
+
+      // Case A: Dropping a newly dragged Template from the Asset Palette
+      if (wasTemplateDragging && template && target) {
         const targetRowStr = `Row ${target.rowLetter}`
+        const newRackName = `${template.defaultPrefix} ${target.slotCode}`
+
+        if (!target.occupant) {
+          const tempId = `new-${Date.now()}`
+          const newRackSummary: RackSummary = {
+            id: tempId,
+            name: newRackName,
+            row: targetRowStr,
+            col: target.col,
+            total_u: template.totalU,
+            used_u: 0,
+            usage_percent: 0,
+            power_kw: 1.2,
+            inlet_temp_c: 24.5,
+            device_count: 0,
+            status: 'healthy',
+            highest_severity: 0,
+          }
+          setLocalRacks((prev) => [...prev, newRackSummary])
+          setHasChanges(true)
+          setSaveMessage({
+            type: 'success',
+            text: `✨ Placed ${template.name} at Row ${target.rowLetter} / Col ${target.col}! Click 'Save Layout' to persist.`,
+          })
+          setTimeout(() => setSaveMessage(null), 3500)
+        } else {
+          // Collision Detected! Prompt user with Collision Modal (Shift or Stage)
+          setCollisionTarget({ template, target: target as any })
+        }
+        return
+      }
+
+      // Case B: Dropping an existing Rack on the floor
+      if (wasRackDragging && rack && target) {
+        // Check if rack was dragged from Staging inventory
+        const isFromStaging = stagedRacks.some((r) => r.id === rack.id)
+        const targetRowStr = `Row ${target.rowLetter}`
+
+        if (isFromStaging) {
+          if (!target.occupant) {
+            setStagedRacks((prev) => prev.filter((r) => r.id !== rack.id))
+            const deployedRack: RackSummary = {
+              ...rack,
+              row: targetRowStr,
+              col: target.col,
+              name: `Rack ${target.slotCode}`,
+            }
+            setLocalRacks((prev) => [...prev, deployedRack])
+            setHasChanges(true)
+            setSaveMessage({
+              type: 'success',
+              text: `✨ Deployed ${rack.name} to Row ${target.rowLetter} / Col ${target.col}!`,
+            })
+            setTimeout(() => setSaveMessage(null), 3500)
+          } else {
+            // Swap staged rack with floor occupant
+            const occupant = target.occupant
+            setStagedRacks((prev) => [...prev.filter((r) => r.id !== rack.id), { ...occupant, row: '', col: 0 }])
+            const deployedRack: RackSummary = {
+              ...rack,
+              row: targetRowStr,
+              col: target.col,
+              name: `Rack ${target.slotCode}`,
+            }
+            setLocalRacks((prev) => [...prev.filter((r) => r.id !== occupant.id), deployedRack])
+            setHasChanges(true)
+            setSaveMessage({
+              type: 'success',
+              text: `🔄 Deployed ${rack.name} and moved ${occupant.name} to Staging!`,
+            })
+            setTimeout(() => setSaveMessage(null), 3500)
+          }
+          return
+        }
+
         const isSamePos =
           rack.row.replace('Row ', '').trim().toUpperCase() === target.rowLetter &&
           rack.col === target.col
@@ -445,7 +573,7 @@ export function IsometricRoom({
       window.removeEventListener('pointermove', handleGlobalPointerMove)
       window.removeEventListener('pointerup', handleGlobalPointerUp)
     }
-  }, [effectiveRows, effectiveCols, cos, sin, centerIso, tileW, tileH, roomId, racks, onLayoutSaved])
+  }, [effectiveRows, effectiveCols, cos, sin, centerIso, tileW, tileH, roomId, racks, onLayoutSaved, showPaletteDrawer, stagedRacks])
 
   // Calculate rotated floor, cold aisle, and back walls dynamically based on gridRows and gridCols
   const roomGeometry = useMemo(() => {
@@ -811,17 +939,52 @@ export function IsometricRoom({
       setSaving(true)
       setSaveMessage(null)
 
+      // 1. Update Grid Dimensions if changed
       await updateRoomLayout(roomId, effectiveRows, effectiveCols)
 
-      const positions = localRacks.map((r) => ({
-        rack_id: r.id,
-        row: r.row,
-        col: r.col,
-      }))
-      await batchUpdateRackPositions(roomId, positions)
+      // 2. Identify newly placed racks vs existing racks
+      const newlyPlacedRacks = localRacks.filter((r) => String(r.id).startsWith('new-'))
+      const existingRacks = localRacks.filter((r) => !String(r.id).startsWith('new-'))
 
+      // 3. Create newly placed racks on backend
+      const createdRacks: RackSummary[] = []
+      for (const newR of newlyPlacedRacks) {
+        const res = await createRack(roomId, {
+          name: newR.name,
+          row: newR.row,
+          col: newR.col,
+          total_u: newR.total_u || 42,
+          room_id: roomId,
+        })
+        createdRacks.push({
+          ...newR,
+          id: res.id,
+          name: res.name,
+          row: res.row,
+          col: res.col,
+          total_u: res.total_u,
+        })
+      }
+
+      // 4. Batch update positions of existing racks
+      if (existingRacks.length > 0) {
+        const positions = existingRacks.map((r) => ({
+          rack_id: r.id,
+          row: r.row,
+          col: r.col,
+        }))
+        await batchUpdateRackPositions(roomId, positions)
+      }
+
+      // 5. Update local state with real IDs from created racks
+      const allPersistedRacks = [...existingRacks, ...createdRacks]
+      setLocalRacks(allPersistedRacks)
       setHasChanges(false)
-      setSaveMessage({ type: 'success', text: '✓ 3D Room Layout saved successfully to database!' })
+      setSaveMessage({
+        type: 'success',
+        text: `✓ 3D Room Layout saved! (${createdRacks.length} created, ${existingRacks.length} updated)`,
+      })
+
       setTimeout(() => {
         onLayoutSaved?.()
       }, 600)
@@ -907,15 +1070,141 @@ export function IsometricRoom({
     }
   }
 
+  // ─── Left Asset Palette Drag Start ───────────────────────────
+  const handleTemplatePointerDown = (template: AssetTemplate, e: React.PointerEvent) => {
+    if (!isEditMode) return
+    dragTemplateRef.current = template
+    dragStartClientPosRef.current = { x: e.clientX, y: e.clientY }
+    isTemplateDraggingRef.current = false
+    setDraggedTemplate(template)
+  }
+
+  const handleUnplacedPointerDown = (rack: RackSummary, e: React.PointerEvent) => {
+    if (!isEditMode) return
+    dragRackRef.current = rack
+    dragStartClientPosRef.current = { x: e.clientX, y: e.clientY }
+    isRackDraggingRef.current = false
+  }
+
+  // ─── Collision Resolution Handlers ───────────────────────────
+  const handleResolveCollisionShift = () => {
+    if (!collisionTarget) return
+    const { template, target } = collisionTarget
+    const occupant = target.occupant
+
+    const occupiedCoords = new Set(
+      localRacks.map((r) => `${getRowIndex(r.row)}_${r.col}`)
+    )
+
+    let emptySlot: { rowLetter: string; col: number; slotCode: string } | null = null
+    for (let r = 0; r < effectiveRows; r++) {
+      const letter = getRowLetter(r)
+      for (let c = 1; c <= effectiveCols; c++) {
+        if (letter === target.rowLetter && c === target.col) continue
+        if (!occupiedCoords.has(`${r}_${c}`)) {
+          emptySlot = {
+            rowLetter: letter,
+            col: c,
+            slotCode: `${letter}${c < 10 ? '0' + c : c}`,
+          }
+          break
+        }
+      }
+      if (emptySlot) break
+    }
+
+    if (!emptySlot) {
+      setSaveMessage({
+        type: 'error',
+        text: 'Cannot shift occupant: Room grid has no empty slots. Resize grid scale first.',
+      })
+      setTimeout(() => setSaveMessage(null), 4000)
+      setCollisionTarget(null)
+      return
+    }
+
+    const targetRowStr = `Row ${target.rowLetter}`
+    const tempId = `new-${Date.now()}`
+    const newRackSummary: RackSummary = {
+      id: tempId,
+      name: `${template.defaultPrefix} ${target.slotCode}`,
+      row: targetRowStr,
+      col: target.col,
+      total_u: template.totalU,
+      used_u: 0,
+      usage_percent: 0,
+      power_kw: 1.2,
+      inlet_temp_c: 24.5,
+      device_count: 0,
+      status: 'healthy',
+      highest_severity: 0,
+    }
+
+    const updated = localRacks.map((r) => {
+      if (r.id === occupant.id) {
+        return {
+          ...r,
+          row: `Row ${emptySlot!.rowLetter}`,
+          col: emptySlot!.col,
+          name: `Rack ${emptySlot!.slotCode}`,
+        }
+      }
+      return r
+    })
+
+    setLocalRacks([...updated, newRackSummary])
+    setHasChanges(true)
+    setCollisionTarget(null)
+    setSaveMessage({
+      type: 'success',
+      text: `✨ Placed ${template.badge} at ${target.slotCode} & shifted ${occupant.name} to ${emptySlot.slotCode}!`,
+    })
+    setTimeout(() => setSaveMessage(null), 4000)
+  }
+
+  const handleResolveCollisionStage = () => {
+    if (!collisionTarget) return
+    const { template, target } = collisionTarget
+    const occupant = target.occupant
+
+    const targetRowStr = `Row ${target.rowLetter}`
+    const tempId = `new-${Date.now()}`
+    const newRackSummary: RackSummary = {
+      id: tempId,
+      name: `${template.defaultPrefix} ${target.slotCode}`,
+      row: targetRowStr,
+      col: target.col,
+      total_u: template.totalU,
+      used_u: 0,
+      usage_percent: 0,
+      power_kw: 1.2,
+      inlet_temp_c: 24.5,
+      device_count: 0,
+      status: 'healthy',
+      highest_severity: 0,
+    }
+
+    setLocalRacks((prev) => [...prev.filter((r) => r.id !== occupant.id), newRackSummary])
+    setStagedRacks((prev) => [...prev, { ...occupant, row: '', col: 0 }])
+    setHasChanges(true)
+    setCollisionTarget(null)
+    setSaveMessage({
+      type: 'success',
+      text: `✨ Placed ${template.badge} at ${target.slotCode} & moved ${occupant.name} to Staging!`,
+    })
+    setTimeout(() => setSaveMessage(null), 4000)
+  }
+
   const pickedUpRack = localRacks.find((r) => r.id === pickedUpRackId)
 
   return (
     <div className={`relative rounded-[3px] bg-[#161c20] border border-[#394650] shadow-2xl overflow-hidden flex flex-col ${fullPage ? 'min-h-[720px] h-[750px]' : 'min-h-[580px] h-[600px]'}`}>
       {/* ─── Top Main Bar: View Modes & Edit Toggle ────────────────── */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
-        {/* Left Side: View Mode Toggles (or Edit Mode Indicator) */}
-        <div className="pointer-events-auto flex items-center gap-2">
-          {!isEditMode ? (
+      {(!hideViewModeControls || !hideRotationControls || isEditMode) && (
+        <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
+          {/* Left Side: View Mode Toggles (or Edit Mode Indicator) */}
+          <div className="pointer-events-auto flex items-center gap-2">
+            {!isEditMode && !hideViewModeControls ? (
             <div className="flex items-center gap-1 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-lg">
               <button
                 type="button"
@@ -966,7 +1255,7 @@ export function IsometricRoom({
                 <span>Power</span>
               </button>
             </div>
-          ) : (
+          ) : isEditMode ? (
             /* Edit Mode Scale Controls Toolbar */
             <div className="flex items-center gap-2 p-1.5 rounded-[3px] bg-[#20282f]/95 border border-[#8bd7d1]/50 backdrop-blur shadow-2xl">
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] bg-[#273139] border border-[#8bd7d1]/40 text-[#8bd7d1] text-xs font-bold font-mono tracking-wide">
@@ -1047,8 +1336,25 @@ export function IsometricRoom({
                   +
                 </button>
               </div>
+
+              <div className="h-4 w-px bg-[#394650]" />
+
+              {/* Asset Catalog Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setShowPaletteDrawer(!showPaletteDrawer)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] font-mono text-[11px] font-semibold transition-all cursor-pointer ${
+                  showPaletteDrawer
+                    ? 'bg-[#34424b] text-[#8bd7d1] border border-[#8bd7d1]'
+                    : 'bg-[#273139] text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] border border-[#394650]'
+                }`}
+                title="Toggle Model Catalog Palette"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Catalog</span>
+              </button>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Right Side: Edit Mode Actions */}
@@ -1086,35 +1392,38 @@ export function IsometricRoom({
             </div>
           )}
 
-          {/* 360 Rotation Controls */}
-          <div className="flex items-center gap-1 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-lg">
-            <button
-              type="button"
-              onClick={handleRotateLeft}
-              className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
-              title="Rotate Left 45° (⟲)"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-            <div
-              className="flex items-center gap-1 px-2 py-1 text-xs font-mono font-medium text-[#caedde] bg-[#273139] rounded-[2px] border border-[#394650] select-none cursor-pointer hover:border-[#8bd7d1]"
-              onClick={() => setRotationAngle(0)}
-              title="Reset rotation to 0°"
-            >
-              <Compass className="w-3 h-3 text-[#85a6b1]" />
-              <span>{Math.round(rotationAngle)}°</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleRotateRight}
-              className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
-              title="Rotate Right 45° (⟳)"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
-            </button>
+            {/* 360 Rotation Controls */}
+            {!hideRotationControls && (
+              <div className="flex items-center gap-1 p-1 rounded-[3px] bg-[#20282f]/95 border border-[#394650] backdrop-blur shadow-lg">
+                <button
+                  type="button"
+                  onClick={handleRotateLeft}
+                  className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
+                  title="Rotate Left 45° (⟲)"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+                <div
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-mono font-medium text-[#caedde] bg-[#273139] rounded-[2px] border border-[#394650] select-none cursor-pointer hover:border-[#8bd7d1]"
+                  onClick={() => setRotationAngle(0)}
+                  title="Reset rotation to 0°"
+                >
+                  <Compass className="w-3 h-3 text-[#85a6b1]" />
+                  <span>{Math.round(rotationAngle)}°</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRotateRight}
+                  className="p-1.5 text-[#85a6b1] hover:text-[#caedde] hover:bg-[#34424b] rounded-[2px] transition-colors cursor-pointer"
+                  title="Rotate Right 45° (⟳)"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* ─── Notification / Instruction Strip ────────────────────────── */}
       {saveMessage && (
@@ -1157,6 +1466,16 @@ export function IsometricRoom({
             )}
           </div>
         </div>
+      )}
+
+      {/* ─── Left Asset Palette Drawer (The Sims Model Catalog) ───────── */}
+      {isEditMode && showPaletteDrawer && (
+        <AssetPaletteDrawer
+          unplacedRacks={stagedRacks}
+          onTemplatePointerDown={handleTemplatePointerDown}
+          onUnplacedPointerDown={handleUnplacedPointerDown}
+          isDraggingActive={Boolean(draggedTemplate || draggingRack)}
+        />
       )}
 
       {/* ─── Main Isometric SVG Room Canvas ─────────────────────────── */}
@@ -1588,7 +1907,7 @@ export function IsometricRoom({
           ))}
 
           {/* ─── The Sims-Style 2.5D Dragging Ghost Cabinet ─── */}
-          {draggingRack && dragPointerSvg && (() => {
+          {(draggingRack || draggedTemplate) && dragPointerSvg && (() => {
             const gx = dragPointerSvg.x
             const gy = dragPointerSvg.y
             const lift = Math.round(35 * autoScale)
@@ -1596,6 +1915,24 @@ export function IsometricRoom({
             const targetX = dragTargetCell ? dragTargetCell.x : gx
             const targetY = dragTargetCell ? dragTargetCell.y : gy
             const isSwapping = Boolean(dragTargetCell?.occupant)
+
+            const activeColor = draggedTemplate
+              ? draggedTemplate.accentColor
+              : isSwapping
+              ? '#f59e0b'
+              : '#38bdf8'
+
+            const tileStroke = isSwapping
+              ? '#fbbf24'
+              : draggedTemplate
+              ? draggedTemplate.accentColor
+              : '#34d399'
+
+            const tileFill = isSwapping
+              ? '#f59e0b'
+              : draggedTemplate
+              ? `${draggedTemplate.accentColor}55`
+              : '#10b981'
 
             const snapCorners = dragTargetCell
               ? cornersUV.map((corner) => {
@@ -1615,9 +1952,9 @@ export function IsometricRoom({
                   <g>
                     <polygon
                       points={snapCorners.map((p) => `${p.x},${p.y}`).join(' ')}
-                      fill={isSwapping ? '#f59e0b' : '#10b981'}
+                      fill={tileFill}
                       fillOpacity="0.45"
-                      stroke={isSwapping ? '#fbbf24' : '#34d399'}
+                      stroke={tileStroke}
                       strokeWidth="2.5"
                       strokeDasharray="4 2"
                       filter="url(#beaconGlow)"
@@ -1628,7 +1965,7 @@ export function IsometricRoom({
                       rx={Math.round(28 * autoScale)}
                       ry={Math.round(14 * autoScale)}
                       fill="none"
-                      stroke={isSwapping ? '#fbbf24' : '#34d399'}
+                      stroke={tileStroke}
                       strokeWidth="1.5"
                       strokeDasharray="3 3"
                     />
@@ -1641,7 +1978,7 @@ export function IsometricRoom({
                   y1={targetY + Math.round(8 * autoScale)}
                   x2={gx}
                   y2={gy - lift + Math.round(8 * autoScale)}
-                  stroke={isSwapping ? '#fbbf24' : '#38bdf8'}
+                  stroke={activeColor}
                   strokeWidth="2.5"
                   strokeDasharray="4 3"
                   filter="url(#beaconGlow)"
@@ -1662,9 +1999,9 @@ export function IsometricRoom({
                   {/* Top face */}
                   <polygon
                     points={`${centerIso.x - 18 * autoScale},${centerIso.y - rackHeight} ${centerIso.x},${centerIso.y - 8 * autoScale - rackHeight} ${centerIso.x + 18 * autoScale},${centerIso.y - rackHeight} ${centerIso.x},${centerIso.y + 8 * autoScale - rackHeight}`}
-                    fill={isSwapping ? '#f59e0b' : '#0284c7'}
+                    fill={activeColor}
                     fillOpacity="0.8"
-                    stroke={isSwapping ? '#fbbf24' : '#38bdf8'}
+                    stroke={activeColor}
                     strokeWidth="2"
                     filter="url(#beaconGlow)"
                   />
@@ -1673,7 +2010,7 @@ export function IsometricRoom({
                     points={`${centerIso.x - 18 * autoScale},${centerIso.y} ${centerIso.x},${centerIso.y + 8 * autoScale} ${centerIso.x},${centerIso.y + 8 * autoScale - rackHeight} ${centerIso.x - 18 * autoScale},${centerIso.y - rackHeight}`}
                     fill="#0f172a"
                     fillOpacity="0.85"
-                    stroke={isSwapping ? '#fbbf24' : '#38bdf8'}
+                    stroke={activeColor}
                     strokeWidth="1.5"
                   />
                   {/* Right Face */}
@@ -1681,7 +2018,7 @@ export function IsometricRoom({
                     points={`${centerIso.x},${centerIso.y + 8 * autoScale} ${centerIso.x + 18 * autoScale},${centerIso.y} ${centerIso.x + 18 * autoScale},${centerIso.y - rackHeight} ${centerIso.x},${centerIso.y + 8 * autoScale - rackHeight}`}
                     fill="#1e293b"
                     fillOpacity="0.85"
-                    stroke={isSwapping ? '#fbbf24' : '#38bdf8'}
+                    stroke={activeColor}
                     strokeWidth="1.5"
                   />
                   {/* Status Beacon */}
@@ -1689,7 +2026,7 @@ export function IsometricRoom({
                     cx={centerIso.x}
                     cy={centerIso.y - rackHeight - 6}
                     r={5 * autoScale}
-                    fill={isSwapping ? '#fbbf24' : '#38bdf8'}
+                    fill={activeColor}
                     filter="url(#beaconGlow)"
                   />
                 </g>
@@ -1697,21 +2034,21 @@ export function IsometricRoom({
                 {/* 5. Floating Sims HUD Badge over the dragging cabinet */}
                 <g transform={`translate(${gx}, ${gy - lift - rackHeight - 24})`}>
                   <rect
-                    x="-90"
+                    x="-105"
                     y="-16"
-                    width="180"
+                    width="210"
                     height="32"
                     rx="8"
-                    fill={isSwapping ? '#451a03' : '#082f49'}
+                    fill="#0c1319"
                     fillOpacity="0.95"
-                    stroke={isSwapping ? '#f59e0b' : '#38bdf8'}
+                    stroke={activeColor}
                     strokeWidth="1.5"
                   />
                   <text
                     x="0"
                     y="5"
                     textAnchor="middle"
-                    fill={isSwapping ? '#fde68a' : '#7dd3fc'}
+                    fill="#ffffff"
                     fontSize="11"
                     fontFamily="monospace"
                     fontWeight="bold"
@@ -1719,8 +2056,12 @@ export function IsometricRoom({
                     {isSwapping
                       ? `🔄 SWAP WITH ${dragTargetCell?.occupant?.name}`
                       : dragTargetCell
-                      ? `📍 ROW ${dragTargetCell.rowLetter} / COL ${dragTargetCell.col}`
-                      : `🖐️ ${draggingRack.name}`}
+                      ? draggedTemplate
+                        ? `✨ PLACE ${draggedTemplate.badge} @ ROW ${dragTargetCell.rowLetter}-${dragTargetCell.col}`
+                        : `📍 ROW ${dragTargetCell.rowLetter} / COL ${dragTargetCell.col}`
+                      : draggedTemplate
+                      ? `🖐️ ${draggedTemplate.name}`
+                      : `🖐️ ${draggingRack?.name}`}
                   </text>
                 </g>
               </g>
@@ -1911,6 +2252,78 @@ export function IsometricRoom({
                 className="px-4 py-1.5 rounded-[2px] text-xs font-mono font-bold bg-rose-950/60 hover:bg-rose-900 border border-rose-700 text-rose-300 transition-colors cursor-pointer"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Rack'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ─── Collision Resolution Modal ────────────────────────────── */}
+      {collisionTarget && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-[3px] bg-[#1e262d] border border-amber-500/60 p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#394650]">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+                <h3 className="text-sm font-bold text-[#caedde] font-mono">
+                  Slot Collision: {collisionTarget.target.slotCode}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCollisionTarget(null)}
+                className="text-[#85a6b1] hover:text-[#caedde]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs font-mono text-[#85a6b1]">
+              <p>
+                Slot <span className="font-bold text-[#caedde]">{collisionTarget.target.slotCode}</span> is currently occupied by:
+              </p>
+              <div className="p-3 rounded-[2px] bg-[#161c20] border border-[#394650] flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#caedde] text-sm block">
+                    {collisionTarget.target.occupant.name}
+                  </span>
+                  <span className="text-[11px] text-[#85a6b1]">
+                    {collisionTarget.target.occupant.device_count} devices • {collisionTarget.target.occupant.power_kw} kW
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
+                  {collisionTarget.target.occupant.status}
+                </span>
+              </div>
+              <p className="text-[11px] pt-1">
+                You are placing a new <span className="text-[#8bd7d1] font-bold">{collisionTarget.template.name}</span>. How would you like to resolve this collision?
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-[#394650]">
+              <button
+                type="button"
+                onClick={handleResolveCollisionShift}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-[2px] text-xs font-mono font-bold bg-[#27343e] hover:bg-[#32424f] border border-[#8bd7d1] text-[#8bd7d1] transition-colors cursor-pointer"
+              >
+                <span>Shift Occupant to Next Empty Slot</span>
+                <span className="text-[10px] text-[#85a6b1]">Auto-finds slot →</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResolveCollisionStage}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-[2px] text-xs font-mono font-semibold bg-[#27343e] hover:bg-[#32424f] border border-[#394650] text-[#caedde] transition-colors cursor-pointer"
+              >
+                <span>Move Occupant to Staging Inventory</span>
+                <span className="text-[10px] text-[#85a6b1]">Catalog tab →</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCollisionTarget(null)}
+                className="w-full py-1.5 rounded-[2px] text-xs font-mono text-[#85a6b1] hover:text-[#caedde] text-center"
+              >
+                Cancel Placement
               </button>
             </div>
           </div>

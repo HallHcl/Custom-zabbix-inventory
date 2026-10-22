@@ -185,7 +185,7 @@ class RoomLayoutUpdate(BaseModel):
 
 class RackCreate(BaseModel):
     """Create a new rack in a room"""
-    room_id: Any
+    room_id: Optional[Any] = None
     name: str = Field(..., min_length=1, max_length=50)
     row: str = Field(..., min_length=1, max_length=10)
     col: int = Field(..., ge=1)
@@ -260,7 +260,7 @@ class SubnetResponse(SubnetBase):
 class SubnetIPDetail(BaseModel):
     ip: str
     status: str  # "assigned", "zabbix_monitored", "gateway", "available"
-    device_id: Optional[int] = None
+    device_id: Optional[Any] = None
     device_name: Optional[str] = None
     zabbix_host_id: Optional[str] = None
     is_gateway: bool = False
