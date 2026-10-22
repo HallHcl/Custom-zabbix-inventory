@@ -180,7 +180,8 @@ export function MountDeviceModal({
       onSuccess()
       onClose()
     } catch (err: any) {
-      setError(err.message || 'Failed to mount device')
+      const msg = typeof err === 'string' ? err : err?.message ? err.message : 'Failed to mount device'
+      setError(typeof msg === 'object' ? JSON.stringify(msg) : String(msg))
     } finally {
       setLoading(false)
     }

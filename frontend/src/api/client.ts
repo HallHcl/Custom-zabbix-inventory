@@ -21,6 +21,30 @@ import type {
 
 const API_BASE = '/api/v1'
 
+export function parseApiError(errorData: any, fallbackMessage: string): string {
+  if (!errorData) return fallbackMessage
+  const detail = errorData.detail ?? errorData.message ?? errorData.error
+  if (!detail) return fallbackMessage
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item: any) => {
+        if (typeof item === 'string') return item
+        if (item && typeof item === 'object') {
+          const loc = Array.isArray(item.loc) ? item.loc.filter((l: any) => l !== 'body').join('.') : ''
+          const msg = item.msg || item.message || JSON.stringify(item)
+          return loc ? `${loc}: ${msg}` : msg
+        }
+        return String(item)
+      })
+      .join(' | ')
+  }
+  if (typeof detail === 'object') {
+    return detail.msg || detail.message || JSON.stringify(detail)
+  }
+  return String(detail)
+}
+
 export async function fetchRoomOverview(roomName: string = 'Room A'): Promise<RoomOverview> {
   const res = await fetch(`${API_BASE}/overview?room_name=${encodeURIComponent(roomName)}`)
   if (!res.ok) throw new Error('Failed to fetch room overview')
@@ -93,7 +117,7 @@ export async function mountDevice(payload: {
   })
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}))
-    throw new Error(errorData.detail || 'Failed to mount device')
+    throw new Error(parseApiError(errorData, 'Failed to mount device'))
   }
   return res.json()
 }
