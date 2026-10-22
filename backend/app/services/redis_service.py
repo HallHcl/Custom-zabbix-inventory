@@ -100,6 +100,12 @@ class RedisService:
     async def invalidate_unassigned_hosts(self):
         await self.delete("zabbix:unassigned_hosts")
 
+    async def cache_zabbix_sync_status(self, data: Dict[str, Any], ttl: int = 86400):
+        await self.set_json("zabbix:sync_status", data, ttl=ttl)
+
+    async def get_zabbix_sync_status(self) -> Optional[Dict[str, Any]]:
+        return await self.get_json("zabbix:sync_status")
+
     # ========================================================================
     # Digital Twin Real-Time Telemetry Methods
     # ========================================================================

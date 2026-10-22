@@ -98,6 +98,18 @@ class RackElevationResponse(BaseModel):
     devices: List[DeviceResponse] = []
 
 
+class ZabbixConnectionStatus(BaseModel):
+    status: str  # "CONNECTED", "STALE", "DISCONNECTED", "ERROR"
+    last_sync_time: Optional[str] = None
+    seconds_since_last_sync: Optional[int] = None
+    version: Optional[str] = None
+    monitored_hosts_count: int = 0
+    active_problems_count: int = 0
+    zabbix_url: str
+    zabbix_web_console_url: str
+    message: str
+
+
 class RoomOverviewResponse(BaseModel):
     room_id: Optional[Any] = None
     site_name: str
@@ -115,6 +127,7 @@ class RoomOverviewResponse(BaseModel):
     grid_cols: int = 6
     racks: List[RackSummary]
     recent_alerts: List[Dict[str, Any]]
+    zabbix_status: Optional[ZabbixConnectionStatus] = None
 
 
 class DeviceMetricHistoryPoint(BaseModel):

@@ -5,7 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db.session import get_db
 from backend.app.db.models import Device
-from backend.app.schemas import UnassignedHostResponse, UnassignedHostsOverview
+from backend.app.schemas import (
+    UnassignedHostResponse,
+    UnassignedHostsOverview,
+    ZabbixConnectionStatus,
+)
 from backend.app.services.zabbix_service import zabbix_service
 from backend.app.services.sync_service import sync_service
 from backend.app.services.redis_service import redis_service
@@ -214,4 +218,14 @@ async def trigger_sync():
         "status": "success",
         "result": result,
     }
+
+
+@router.get("/status", response_model=ZabbixConnectionStatus)
+async def get_zabbix_status():
+    """
+    Get real-time Zabbix connectivity status and sync metadata.
+    Evaluates CONNECTED (<=120s), STALE (120s-600s), or DISCONNECTED (>600s).
+    """
+    status_data = await sync_service.get_sync_status()
+    return ZabbixConnectionStatus(**status_data)
 

@@ -128,8 +128,8 @@
   └── [x] Task 0.4: ปิด Silent Mock Fallbacks และแยก Seeder ออกจาก Production (เสร็จสิ้น)
 
 [Phase 1: Reliable Zabbix Integration]
-  ├── [ ] Task 1.1: ปรับปรุง Zabbix Client เชื่อมต่อ 7.0.29 จริง พร้อมสถานะ Connected/Stale/Disconnected ◄ (ขั้นตอนถัดไป)
-  ├── [ ] Task 1.2: ตรวจสอบและแก้ไข Item Key Matching สำหรับ CPU/Memory ตามมาตรฐาน Zabbix จริง
+  ├── [x] Task 1.1: ปรับปรุง Zabbix Client เชื่อมต่อ 7.0.29 จริง พร้อมสถานะ Connected/Stale/Disconnected (เสร็จสิ้น)
+  ├── [ ] Task 1.2: ตรวจสอบและแก้ไข Item Key Matching สำหรับ CPU/Memory ตามมาตรฐาน Zabbix จริง ◄ (ขั้นตอนถัดไป)
   └── [ ] Task 1.3: ปรับปรุง Unassigned Hosts Reconciliation (เทียบ Zabbix vs PostgreSQL จริง)
 
 [Phase 2: Rack Operations Workflow]

@@ -7,7 +7,8 @@ from sqlalchemy.orm import selectinload
 from backend.app.db.session import get_db
 from backend.app.db.models import Site, Building, Room, Row, Rack, Device
 from backend.app.services.redis_service import redis_service
-from backend.app.schemas import RoomOverviewResponse, RackSummary
+from backend.app.services.sync_service import sync_service
+from backend.app.schemas import RoomOverviewResponse, RackSummary, ZabbixConnectionStatus
 
 router = APIRouter()
 
@@ -152,6 +153,9 @@ async def get_room_overview(
     if room.building and room.building.site:
         site_name = room.building.site.name
 
+    zabbix_status_data = await sync_service.get_sync_status()
+    zabbix_status = ZabbixConnectionStatus(**zabbix_status_data)
+
     return RoomOverviewResponse(
         room_id=str(room.id),
         site_name=site_name,
@@ -169,4 +173,5 @@ async def get_room_overview(
         grid_cols=room.grid_cols,
         racks=racks_summary,
         recent_alerts=recent_alerts,
+        zabbix_status=zabbix_status,
     )
