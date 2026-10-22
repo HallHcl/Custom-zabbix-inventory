@@ -136,6 +136,20 @@ class ZabbixService:
         except Exception:
             return []
 
+    async def get_host_all_items(self, host_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+        """Fetch all latest items for a host for the Unified Device Overview / Latest Data view"""
+        params = {
+            "output": ["itemid", "name", "key_", "lastvalue", "units", "lastclock", "value_type"],
+            "hostids": [host_id],
+            "monitored": True,
+            "sortfield": "name",
+            "limit": limit,
+        }
+        try:
+            return await self._call("item.get", params) or []
+        except Exception:
+            return []
+
     async def get_item_history(self, item_id: str, value_type: int = 0, limit: int = 60) -> List[Dict[str, Any]]:
         """Fetch historical values (e.g. last 60 points) for sparkline charts"""
         params = {

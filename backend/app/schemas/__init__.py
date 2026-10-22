@@ -25,8 +25,8 @@ class DeviceBase(BaseModel):
     device_type: str = "Server"
     model: Optional[str] = None
     manufacturer: Optional[str] = None
-    start_u: int = Field(..., ge=1, le=42)
-    height_u: int = Field(default=1, ge=1, le=42)
+    start_u: int = Field(default=1, ge=0, le=52)
+    height_u: int = Field(default=1, ge=0, le=52)
     position_face: str = "Front"
     ip_address: Optional[str] = None
     serial_number: Optional[str] = None
@@ -62,8 +62,8 @@ class BrandInfo(BaseModel):
 
 
 class DeviceResponse(DeviceBase):
-    id: int
-    rack_id: int
+    id: Any
+    rack_id: Optional[Any] = None
     zabbix_status: Optional[ZabbixStatusSummary] = None
     brand_info: Optional[BrandInfo] = None
 
@@ -71,7 +71,7 @@ class DeviceResponse(DeviceBase):
 
 
 class RackSummary(BaseModel):
-    id: int
+    id: Any
     name: str
     row: str
     col: int
@@ -86,7 +86,7 @@ class RackSummary(BaseModel):
 
 
 class RackElevationResponse(BaseModel):
-    id: int
+    id: Any
     name: str
     row: str
     col: int
@@ -120,7 +120,7 @@ class DeviceMetricHistoryPoint(BaseModel):
 
 
 class DeviceMetricsResponse(BaseModel):
-    device_id: int
+    device_id: Any
     device_name: str
     zabbix_host_id: Optional[str] = None
     cpu_utilization: Optional[float] = None
@@ -142,12 +142,12 @@ class ZabbixLatestItem(BaseModel):
 
 
 class DeviceOverviewResponse(BaseModel):
-    device_id: int
+    device_id: Any
     device_name: str
     device_type: str
     model: Optional[str] = None
     manufacturer: Optional[str] = None
-    rack_id: int
+    rack_id: Optional[Any] = None
     rack_name: str
     room_name: str
     start_u: int
@@ -202,18 +202,18 @@ class BatchRackPositionUpdate(BaseModel):
 
 
 class RackCreateResponse(BaseModel):
-    id: int
+    id: Any
     name: str
     row: str
     col: int
     total_u: int
-    room_id: int
+    room_id: Optional[Any] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RoomLayoutResponse(BaseModel):
-    room_id: int
+    room_id: Optional[Any] = None
     room_name: str
     grid_rows: int
     grid_cols: int
@@ -244,7 +244,7 @@ class SubnetUpdate(BaseModel):
 
 
 class SubnetResponse(SubnetBase):
-    id: int
+    id: Any
     created_at: Optional[datetime] = None
     total_ips: int = 0
     used_ips: int = 0

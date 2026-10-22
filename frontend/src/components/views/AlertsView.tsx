@@ -140,7 +140,7 @@ export function AlertsView({ alerts, onInspectBlastRadius }: AlertsViewProps) {
                     </button>
                   )}
                   <a
-                    href={`http://192.168.1.190/zabbix.php?action=problem.view&filter_name=${encodeURIComponent(alert.description)}`}
+                    href={`http://192.168.1.85:8080/zabbix.php?action=problem.view&filter_name=${encodeURIComponent(alert.description)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="px-2.5 py-1 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#caedde] hover:text-white text-xs font-mono flex items-center gap-1.5 transition-colors"

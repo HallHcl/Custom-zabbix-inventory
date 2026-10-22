@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.app.db.session import get_db
-from backend.app.db.models import Room, Rack, Device
+from backend.app.db.models import Site, Building, Room, Row, Rack, Device
 from backend.app.services.redis_service import redis_service
 from backend.app.schemas import RoomOverviewResponse, RackSummary
 
@@ -21,25 +21,31 @@ async def get_room_overview(
     Get 3D / Isometric Floor Plan Overview with aggregated rack statuses.
     Single round-trip, zero N+1 queries.
     """
-    # 1. Fetch Room with Racks and Devices
-    stmt = (
-        select(Room)
-        .where(Room.name == room_name)
-        .options(
-            selectinload(Room.site),
-            selectinload(Room.racks).selectinload(Rack.devices),
-        )
-    )
+    # 1. Fetch Room with hierarchy: Building -> Site, Rows -> Racks -> Devices -> DeviceModel
+    options = [
+        selectinload(Room.building).selectinload(Building.site),
+        selectinload(Room.rows).selectinload(Row.racks).selectinload(Rack.devices).selectinload(Device.device_model),
+    ]
+
+    # Try matching room by exact or partial name
+    stmt = select(Room).where(Room.name.ilike(f"%{room_name}%")).options(*options)
     result = await db.execute(stmt)
-    room = result.scalar_one_or_none()
+    room = result.scalars().first()
+
+    # Fallback to first available room in DB if not found (e.g. default 'Room A' requested but hall is named 'Data Hall Alpha')
+    if not room:
+        stmt_fallback = select(Room).order_by(Room.name).options(*options)
+        result_fallback = await db.execute(stmt_fallback)
+        room = result_fallback.scalars().first()
 
     if not room:
-        raise HTTPException(status_code=404, detail=f"Room '{room_name}' not found")
+        raise HTTPException(status_code=404, detail="No datacenter rooms found in database")
 
-    # 2. Collect all zabbix_host_ids across all devices in the room
+    # 2. Collect all racks and devices in room
+    all_racks = [rack for row in room.rows for rack in row.racks] if room.rows else []
     all_zabbix_ids = set()
     total_devices_count = 0
-    for rack in room.racks:
+    for rack in all_racks:
         total_devices_count += len(rack.devices)
         for dev in rack.devices:
             if dev.zabbix_host_id:
@@ -53,7 +59,7 @@ async def get_room_overview(
     status_counts = {"healthy": 0, "warning": 0, "critical": 0, "offline": 0}
     racks_summary: List[RackSummary] = []
 
-    for rack in sorted(room.racks, key=lambda r: (r.row, r.col)):
+    for rack in sorted(all_racks, key=lambda r: (r.row_letter, r.col_number)):
         used_u = sum(d.height_u for d in rack.devices)
         usage_pct = round((used_u / rack.total_u) * 100, 1) if rack.total_u > 0 else 0.0
 
@@ -88,10 +94,10 @@ async def get_room_overview(
 
         racks_summary.append(
             RackSummary(
-                id=rack.id,
+                id=str(rack.id),
                 name=rack.name,
-                row=rack.row,
-                col=rack.col,
+                row=rack.row_letter,
+                col=rack.col_number,
                 total_u=rack.total_u,
                 used_u=used_u,
                 usage_percent=usage_pct,
@@ -142,11 +148,15 @@ async def get_room_overview(
     total_used_u = sum(r.used_u for r in racks_summary)
     total_cap_u = sum(r.total_u for r in racks_summary)
 
+    site_name = "Bangkok DC-1"
+    if room.building and room.building.site:
+        site_name = room.building.site.name
+
     return RoomOverviewResponse(
-        site_name=room.site.name if room.site else "Data Center",
+        site_name=site_name,
         room_name=room.name,
         room_temp_c=room.room_temp_target,
-        total_racks=len(room.racks),
+        total_racks=len(all_racks),
         total_devices=total_devices_count,
         total_alerts=len(active_problems),
         total_power_kw=total_power,

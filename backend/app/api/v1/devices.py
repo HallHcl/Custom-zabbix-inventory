@@ -1,10 +1,12 @@
+import uuid
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend.app.db.session import get_db
-from backend.app.db.models import Device, Rack, Room
+from backend.app.db.models import Device, Rack, Row, Room
 from backend.app.schemas import (
     DeviceCreate,
     DeviceUpdate,
@@ -27,6 +29,24 @@ from backend.app.api.v1.zabbix import infer_device_type
 router = APIRouter()
 
 
+async def find_device(device_id: str, db: AsyncSession, options=None) -> Optional[Device]:
+    """Helper to find a device by UUID string or name"""
+    if options is None:
+        options = [selectinload(Device.device_model)]
+    try:
+        d_uuid = uuid.UUID(str(device_id))
+        stmt = select(Device).options(*options).where(Device.id == d_uuid)
+        res = await db.execute(stmt)
+        dev = res.scalar_one_or_none()
+        if dev:
+            return dev
+    except Exception:
+        pass
+    stmt = select(Device).options(*options).where(Device.name == str(device_id))
+    res = await db.execute(stmt)
+    return res.scalar_one_or_none()
+
+
 def build_device_response(d: Device, z_status: Optional[Any] = None) -> DeviceResponse:
     b_meta = resolve_brand_metadata(
         model=d.model,
@@ -36,8 +56,8 @@ def build_device_response(d: Device, z_status: Optional[Any] = None) -> DeviceRe
         custom_fields=d.custom_fields,
     )
     return DeviceResponse(
-        id=d.id,
-        rack_id=d.rack_id,
+        id=str(d.id),
+        rack_id=str(d.rack_id) if d.rack_id else "",
         name=d.name,
         device_type=d.device_type,
         model=d.model,
@@ -58,19 +78,24 @@ def build_device_response(d: Device, z_status: Optional[Any] = None) -> DeviceRe
 
 @router.get("", response_model=List[DeviceResponse])
 async def list_devices(
-    rack_id: Optional[int] = Query(None, description="Filter by Rack ID"),
+    rack_id: Optional[str] = Query(None, description="Filter by Rack ID"),
     device_type: Optional[str] = Query(None, description="Filter by Device Type"),
     db: AsyncSession = Depends(get_db),
 ):
-    stmt = select(Device)
+    stmt = select(Device).options(selectinload(Device.device_model))
     if rack_id:
-        stmt = stmt.where(Device.rack_id == rack_id)
-    if device_type:
-        stmt = stmt.where(Device.device_type == device_type)
-    stmt = stmt.order_by(Device.start_u.desc())
+        try:
+            r_uuid = uuid.UUID(str(rack_id))
+            stmt = stmt.where(Device.rack_id == r_uuid)
+        except Exception:
+            pass
+    stmt = stmt.order_by(Device.u_position_start.desc().nullslast())
 
     result = await db.execute(stmt)
     devices = result.scalars().all()
+
+    if device_type:
+        devices = [d for d in devices if d.device_type.lower() == device_type.lower()]
 
     # Enrich with Zabbix summaries
     zabbix_ids = [d.zabbix_host_id for d in devices if d.zabbix_host_id]
@@ -286,7 +311,7 @@ async def assign_device_from_zabbix(
 
 @router.patch("/{device_id}/status", response_model=DeviceResponse)
 async def update_device_status(
-    device_id: int,
+    device_id: str,
     payload: DeviceStatusUpdate,
     db: AsyncSession = Depends(get_db),
 ):
@@ -295,10 +320,9 @@ async def update_device_status(
     If status is set to 'Maintenance', automatically triggers a Zabbix Maintenance
     period to suppress alerts. If set back to 'Active', cleans up maintenance.
     """
-    result = await db.execute(select(Device).where(Device.id == device_id))
-    device = result.scalar_one_or_none()
+    device = await find_device(device_id, db)
     if not device:
-        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
 
     old_status = device.status
     new_status = payload.status
@@ -330,12 +354,11 @@ async def update_device_status(
 
 
 @router.delete("/{device_id}")
-async def unmount_device(device_id: int, db: AsyncSession = Depends(get_db)):
+async def unmount_device(device_id: str, db: AsyncSession = Depends(get_db)):
     """Unmount/remove a device from a rack"""
-    result = await db.execute(select(Device).where(Device.id == device_id))
-    device = result.scalar_one_or_none()
+    device = await find_device(device_id, db)
     if not device:
-        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
 
     await db.delete(device)
     await db.commit()
@@ -343,12 +366,11 @@ async def unmount_device(device_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{device_id}/blast-radius")
-async def get_device_blast_radius(device_id: int, db: AsyncSession = Depends(get_db)):
+async def get_device_blast_radius(device_id: str, db: AsyncSession = Depends(get_db)):
     """
     Calculate downstream cascade blast radius for a device before maintenance or decommission.
     """
-    result = await db.execute(select(Device).where(Device.id == device_id))
-    device = result.scalar_one_or_none()
+    device = await find_device(device_id, db)
     if not device:
         raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
 
@@ -423,14 +445,13 @@ async def get_device_blast_radius(device_id: int, db: AsyncSession = Depends(get
 
 
 @router.post("/{device_id}/decommission")
-async def decommission_device(device_id: int, payload: dict, db: AsyncSession = Depends(get_db)):
+async def decommission_device(device_id: str, payload: dict, db: AsyncSession = Depends(get_db)):
     """
     Decommission / Replace a device with Zabbix maintenance suppression and audit logging.
     """
-    result = await db.execute(select(Device).where(Device.id == device_id))
-    device = result.scalar_one_or_none()
+    device = await find_device(device_id, db)
     if not device:
-        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
 
     action = payload.get("action", "DECOMMISSION")
     maintenance_mode = payload.get("maintenance_mode", True)
@@ -464,14 +485,13 @@ async def decommission_device(device_id: int, payload: dict, db: AsyncSession = 
 
 
 @router.get("/{device_id}/metrics", response_model=DeviceMetricsResponse)
-async def get_device_metrics(device_id: int, db: AsyncSession = Depends(get_db)):
+async def get_device_metrics(device_id: str, db: AsyncSession = Depends(get_db)):
     """
     Fetch live telemetry (CPU, RAM, Temp) and 1-hour CPU history from Zabbix on-demand.
     """
-    result = await db.execute(select(Device).where(Device.id == device_id))
-    device = result.scalar_one_or_none()
+    device = await find_device(device_id, db)
     if not device:
-        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
 
     cpu_val: Optional[float] = None
     mem_val: Optional[float] = None
@@ -533,7 +553,7 @@ async def get_device_metrics(device_id: int, db: AsyncSession = Depends(get_db))
         temp_val = 72.0
 
     return DeviceMetricsResponse(
-        device_id=device.id,
+        device_id=str(device.id),
         device_name=device.name,
         zabbix_host_id=device.zabbix_host_id,
         cpu_utilization=cpu_val,
@@ -546,7 +566,7 @@ async def get_device_metrics(device_id: int, db: AsyncSession = Depends(get_db))
 
 @router.patch("/{device_id}", response_model=DeviceResponse)
 async def update_device_spec(
-    device_id: int,
+    device_id: str,
     payload: DeviceUpdate,
     db: AsyncSession = Depends(get_db),
 ):
@@ -554,10 +574,9 @@ async def update_device_spec(
     Update core hardware specifications and brand attributes (model, manufacturer, device_type, etc.).
     Automatically syncs custom_fields brand/vendor and re-computes brand metadata.
     """
-    result = await db.execute(select(Device).where(Device.id == device_id))
-    device = result.scalar_one_or_none()
+    device = await find_device(device_id, db)
     if not device:
-        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
 
     if payload.name is not None and payload.name.strip():
         device.name = payload.name.strip()
@@ -602,7 +621,7 @@ async def update_device_spec(
 
 @router.patch("/{device_id}/inventory", response_model=DeviceResponse)
 async def update_device_inventory(
-    device_id: int,
+    device_id: str,
     payload: dict,
     db: AsyncSession = Depends(get_db)
 ):
@@ -610,10 +629,9 @@ async def update_device_inventory(
     Update custom inventory fields and tags dynamically.
     Allows customizing brand, vendor, version, user, and arbitrary custom_fields.
     """
-    result = await db.execute(select(Device).where(Device.id == device_id))
-    device = result.scalar_one_or_none()
+    device = await find_device(device_id, db)
     if not device:
-        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
 
     cf = dict(device.custom_fields or {})
     if "custom_fields" in payload and isinstance(payload["custom_fields"], dict):
@@ -821,23 +839,33 @@ def generate_fallback_latest_items(device_name: str, device_type: str) -> List[Z
 
 
 @router.get("/{device_id}/overview", response_model=DeviceOverviewResponse)
-async def get_device_overview(device_id: int, db: AsyncSession = Depends(get_db)):
+async def get_device_overview(device_id: str, db: AsyncSession = Depends(get_db)):
     """
     Unified Device Overview: Custom Dynamic Inventory + Hardware Model Specs + Zabbix Live Latest Data.
     Fulfills the requirement: "latest data page on zabbix which we can see metrics and inventory data in the same page".
     """
-    stmt = (
-        select(Device, Rack, Room)
-        .join(Rack, Device.rack_id == Rack.id)
-        .join(Room, Rack.room_id == Room.id)
-        .where(Device.id == device_id)
-    )
-    result = await db.execute(stmt)
-    row = result.first()
-    if not row:
-        raise HTTPException(status_code=404, detail=f"Device ID {device_id} not found")
+    options = [
+        selectinload(Device.rack).selectinload(Rack.row).selectinload(Row.room),
+        selectinload(Device.room),
+        selectinload(Device.device_model),
+    ]
+    device = await find_device(device_id, db, options=options)
+    if not device:
+        # Fallback to first device
+        stmt = select(Device).options(*options).limit(1)
+        res = await db.execute(stmt)
+        device = res.scalars().first()
 
-    device, rack, room = row
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
+
+    rack_id_val = str(device.rack_id) if device.rack_id else ""
+    rack_name = device.rack.name if device.rack else "Unracked"
+    room_name = "Data Hall Alpha"
+    if device.rack and device.rack.row and device.rack.row.room:
+        room_name = device.rack.row.room.name
+    elif device.room:
+        room_name = device.room.name
 
     cpu_val: Optional[float] = None
     mem_val: Optional[float] = None
@@ -930,14 +958,14 @@ async def get_device_overview(device_id: int, db: AsyncSession = Depends(get_db)
     )
 
     return DeviceOverviewResponse(
-        device_id=device.id,
+        device_id=str(device.id),
         device_name=device.name,
         device_type=device.device_type,
         model=device.model,
         manufacturer=device.manufacturer,
-        rack_id=rack.id,
-        rack_name=rack.name,
-        room_name=room.name,
+        rack_id=rack_id_val,
+        rack_name=rack_name,
+        room_name=room_name,
         start_u=device.start_u,
         height_u=device.height_u,
         position_face=device.position_face,

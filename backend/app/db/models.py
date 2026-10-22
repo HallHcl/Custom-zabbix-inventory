@@ -90,6 +90,26 @@ class Room(Base):
     rows: Mapped[List["Row"]] = relationship("Row", back_populates="room", cascade="all, delete-orphan")
     devices: Mapped[List["Device"]] = relationship("Device", back_populates="room", cascade="all, delete-orphan")
 
+    @property
+    def site(self) -> Optional["Site"]:
+        if "building" in self.__dict__ and self.building:
+            if "site" in self.building.__dict__:
+                return self.building.site
+        return None
+
+    @property
+    def racks(self) -> List["Rack"]:
+        all_racks = []
+        if "rows" in self.__dict__ and self.rows:
+            for r in self.rows:
+                if "racks" in r.__dict__ and r.racks:
+                    all_racks.extend(r.racks)
+        return all_racks
+
+    @property
+    def room_temp_target(self) -> float:
+        return 22.5
+
     __table_args__ = (
         UniqueConstraint("building_id", "name", name="uq_room_building_name"),
     )
@@ -149,6 +169,44 @@ class Rack(Base):
     # Relationships
     row: Mapped["Row"] = relationship("Row", back_populates="racks")
     devices: Mapped[List["Device"]] = relationship("Device", back_populates="rack")
+
+    @property
+    def total_u(self) -> int:
+        return self.u_height
+
+    @property
+    def room_id(self) -> Optional[uuid.UUID]:
+        if "row" in self.__dict__ and self.row:
+            return self.row.room_id
+        return None
+
+    @property
+    def row_name(self) -> str:
+        if "row" in self.__dict__ and self.row:
+            return self.row.name
+        return "Row A"
+
+    @property
+    def row_letter(self) -> str:
+        if "row" in self.__dict__ and self.row and self.row.name:
+            return self.row.name.split()[-1]
+        if self.name and "-" in self.name:
+            part = self.name.split("-")[-1]
+            letters = [c for c in part if c.isalpha()]
+            if letters:
+                return "".join(letters)
+        return "A"
+
+    @property
+    def col_number(self) -> int:
+        try:
+            if self.name and "-" in self.name:
+                part = self.name.split("-")[-1]
+                num_str = "".join([c for c in part if c.isdigit()])
+                return int(num_str) if num_str else 1
+        except Exception:
+            pass
+        return 1
 
     __table_args__ = (
         UniqueConstraint("row_id", "name", name="uq_rack_row_name"),
@@ -236,6 +294,66 @@ class Device(Base):
     target_connections: Mapped[List["DeviceConnection"]] = relationship(
         "DeviceConnection", foreign_keys="DeviceConnection.target_device_id", back_populates="target_device", cascade="all, delete-orphan"
     )
+
+    @property
+    def start_u(self) -> int:
+        return self.u_position_start or 1
+
+    @start_u.setter
+    def start_u(self, val: int):
+        self.u_position_start = val
+
+    @property
+    def height_u(self) -> int:
+        if "device_model" in self.__dict__ and self.device_model:
+            return self.device_model.u_height
+        return 1
+
+    @property
+    def device_type(self) -> str:
+        if "device_model" in self.__dict__ and self.device_model and self.device_model.category:
+            return self.device_model.category.title()
+        return "Server"
+
+    @property
+    def model(self) -> Optional[str]:
+        if "device_model" in self.__dict__ and self.device_model:
+            return self.device_model.model_name
+        return None
+
+    @property
+    def manufacturer(self) -> Optional[str]:
+        if "device_model" in self.__dict__ and self.device_model:
+            return self.device_model.manufacturer
+        return None
+
+    @property
+    def position_face(self) -> str:
+        return self.rack_face.title() if self.rack_face else "Front"
+
+    @property
+    def ip_address(self) -> Optional[str]:
+        return self.management_ip
+
+    @ip_address.setter
+    def ip_address(self, val: Optional[str]):
+        self.management_ip = val
+
+    @property
+    def zabbix_host_id(self) -> Optional[str]:
+        return self.zabbix_hostid
+
+    @zabbix_host_id.setter
+    def zabbix_host_id(self, val: Optional[str]):
+        self.zabbix_hostid = val
+
+    @property
+    def tags(self) -> dict:
+        return {}
+
+    @property
+    def custom_fields(self) -> dict:
+        return {}
 
     __table_args__ = (
         UniqueConstraint("rack_id", "u_position_start", "rack_face", name="uq_rack_u_position"),

@@ -9,6 +9,7 @@ from backend.app.db.session import AsyncSessionLocal
 from backend.app.db.models import Rack, Device
 from backend.app.services.zabbix_service import zabbix_service
 from backend.app.services.redis_service import redis_service
+from backend.app.services.sync_service import sync_service
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] [ZabbixPoller] %(message)s")
 logger = logging.getLogger("ZabbixPoller")
@@ -17,13 +18,21 @@ logger = logging.getLogger("ZabbixPoller")
 async def poll_once() -> Dict[str, Any]:
     """
     Executes a single cycle of Zabbix digital twin telemetry collection:
-    1. Queries all Racks and Devices from dcim_db
-    2. Gathers thermal and dual-feed power telemetry
-    3. Caches snapshots into Redis (twin:rack:{id}:telemetry, twin:device:{id}:telemetry)
-    4. Computes live facility load and PUE
-    5. Publishes a delta event to Redis channel 'twin:telemetry_stream'
+    1. Synchronizes live hosts and active problems from Zabbix into Redis
+    2. Queries all Racks and Devices from dcim_db
+    3. Gathers thermal and dual-feed power telemetry
+    4. Caches snapshots into Redis (twin:rack:{id}:telemetry, twin:device:{id}:telemetry)
+    5. Computes live facility load and PUE
+    6. Publishes a delta event to Redis channel 'twin:telemetry_stream'
     """
     start_ts = time.time()
+
+    # 0. Sync real-time Zabbix hosts & active problems into Redis cache
+    try:
+        await sync_service.sync_zabbix_cache()
+    except Exception as e:
+        logger.warning(f"Zabbix live cache sync notice: {e}")
+
     total_it_watts = 0
     rack_telemetries: Dict[str, Any] = {}
     device_telemetries: Dict[str, Any] = {}

@@ -1,11 +1,12 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+import uuid
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.app.db.session import get_db
-from backend.app.db.models import Rack, Device
+from backend.app.db.models import Rack, Row, Room, Device
 from backend.app.services.redis_service import redis_service
 from backend.app.schemas import (
     RackSummary,
@@ -20,14 +21,26 @@ router = APIRouter()
 
 
 @router.get("", response_model=List[RackSummary])
-async def list_racks(room_id: int = 1, db: AsyncSession = Depends(get_db)):
-    """List all racks in a room with basic stats"""
+async def list_racks(
+    room_id: Optional[str] = Query(None, description="Filter by Room ID or omit for all"),
+    db: AsyncSession = Depends(get_db)
+):
+    """List all racks with status summaries"""
     stmt = (
         select(Rack)
-        .where(Rack.room_id == room_id)
-        .options(selectinload(Rack.devices))
-        .order_by(Rack.row, Rack.col)
+        .options(
+            selectinload(Rack.row),
+            selectinload(Rack.devices).selectinload(Device.device_model),
+        )
     )
+
+    if room_id:
+        try:
+            r_uuid = uuid.UUID(str(room_id))
+            stmt = stmt.join(Rack.row).where(Row.room_id == r_uuid)
+        except Exception:
+            pass  # If room_id is numeric like 1, return all racks
+
     result = await db.execute(stmt)
     racks = result.scalars().all()
 
@@ -36,7 +49,7 @@ async def list_racks(room_id: int = 1, db: AsyncSession = Depends(get_db)):
     zabbix_summaries = await redis_service.get_hosts_summaries(all_zabbix_ids)
 
     summaries = []
-    for rack in racks:
+    for rack in sorted(racks, key=lambda r: (r.row_letter, r.col_number)):
         used_u = sum(d.height_u for d in rack.devices)
         usage_pct = round((used_u / rack.total_u) * 100, 1) if rack.total_u > 0 else 0.0
 
@@ -59,10 +72,10 @@ async def list_racks(room_id: int = 1, db: AsyncSession = Depends(get_db)):
 
         summaries.append(
             RackSummary(
-                id=rack.id,
+                id=str(rack.id),
                 name=rack.name,
-                row=rack.row,
-                col=rack.col,
+                row=rack.row_letter,
+                col=rack.col_number,
                 total_u=rack.total_u,
                 used_u=used_u,
                 usage_percent=usage_pct,
@@ -77,21 +90,38 @@ async def list_racks(room_id: int = 1, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{rack_id}/elevation", response_model=RackElevationResponse)
-async def get_rack_elevation(rack_id: int, db: AsyncSession = Depends(get_db)):
+async def get_rack_elevation(rack_id: str, db: AsyncSession = Depends(get_db)):
     """
     Get full 42U Rack Elevation with placed devices and live Zabbix status from Redis.
     Single round-trip, zero N+1 calls from frontend.
     """
-    stmt = (
-        select(Rack)
-        .where(Rack.id == rack_id)
-        .options(selectinload(Rack.devices))
-    )
-    result = await db.execute(stmt)
-    rack = result.scalar_one_or_none()
+    options = [
+        selectinload(Rack.row),
+        selectinload(Rack.devices).selectinload(Device.device_model),
+    ]
+
+    rack = None
+    try:
+        r_uuid = uuid.UUID(str(rack_id))
+        stmt = select(Rack).where(Rack.id == r_uuid).options(*options)
+        result = await db.execute(stmt)
+        rack = result.scalar_one_or_none()
+    except Exception:
+        pass
 
     if not rack:
-        raise HTTPException(status_code=404, detail=f"Rack ID {rack_id} not found")
+        stmt = select(Rack).where(Rack.name == str(rack_id)).options(*options)
+        result = await db.execute(stmt)
+        rack = result.scalar_one_or_none()
+
+    if not rack:
+        # Fallback to first rack
+        stmt = select(Rack).order_by(Rack.name).options(*options)
+        result = await db.execute(stmt)
+        rack = result.scalars().first()
+
+    if not rack:
+        raise HTTPException(status_code=404, detail=f"Rack '{rack_id}' not found")
 
     # 1. Collect all zabbix_host_ids in this rack
     zabbix_ids = [d.zabbix_host_id for d in rack.devices if d.zabbix_host_id]
@@ -121,8 +151,8 @@ async def get_rack_elevation(rack_id: int, db: AsyncSession = Depends(get_db)):
 
         enriched_devices.append(
             DeviceResponse(
-                id=dev.id,
-                rack_id=dev.rack_id,
+                id=str(dev.id),
+                rack_id=str(dev.rack_id) if dev.rack_id else "",
                 name=dev.name,
                 device_type=dev.device_type,
                 model=dev.model,
@@ -144,10 +174,10 @@ async def get_rack_elevation(rack_id: int, db: AsyncSession = Depends(get_db)):
     usage_pct = round((used_u / rack.total_u) * 100, 1) if rack.total_u > 0 else 0.0
 
     return RackElevationResponse(
-        id=rack.id,
+        id=str(rack.id),
         name=rack.name,
-        row=rack.row,
-        col=rack.col,
+        row=rack.row_letter,
+        col=rack.col_number,
         total_u=rack.total_u,
         used_u=used_u,
         usage_percent=usage_pct,
