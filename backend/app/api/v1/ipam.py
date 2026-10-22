@@ -1,4 +1,5 @@
 import ipaddress
+import uuid
 from typing import Any, Dict, List, Optional, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -18,6 +19,13 @@ from backend.app.services.zabbix_service import zabbix_service
 router = APIRouter()
 
 
+def resolve_subnet_id(val: Any) -> Any:
+    try:
+        return uuid.UUID(str(val))
+    except Exception:
+        return val
+
+
 def compute_subnet_stats(cidr: str, used_ips: int) -> Tuple[int, int, int, float]:
     """Calculate total, used, free, and utilization percentage for a CIDR"""
     try:
@@ -34,13 +42,13 @@ def compute_subnet_stats(cidr: str, used_ips: int) -> Tuple[int, int, int, float
         return 0, used_ips, 0, 0.0
 
 
-async def get_all_device_ips(db: AsyncSession) -> List[Tuple[str, int, str, Optional[str]]]:
+async def get_all_device_ips(db: AsyncSession) -> List[Tuple[str, Any, str, Optional[str]]]:
     """Fetch all registered device IPs with id, name, zabbix_host_id"""
-    stmt = select(Device.ip_address, Device.id, Device.name, Device.zabbix_host_id).where(
-        Device.ip_address.isnot(None)
+    stmt = select(Device.management_ip, Device.id, Device.name, Device.zabbix_hostid).where(
+        Device.management_ip.isnot(None)
     )
     result = await db.execute(stmt)
-    return [(row[0].strip(), row[1], row[2], row[3]) for row in result.all() if row[0]]
+    return [(str(row[0]).strip(), row[1], row[2], row[3]) for row in result.all() if row[0]]
 
 
 @router.get("/subnets", response_model=List[SubnetResponse])
@@ -93,7 +101,7 @@ async def list_subnets(
 
         responses.append(
             SubnetResponse(
-                id=s.id,
+                id=str(s.id),
                 name=s.name,
                 cidr=s.cidr,
                 vlan_id=s.vlan_id,
@@ -162,7 +170,7 @@ async def create_subnet(
     total, used, free, util = compute_subnet_stats(new_subnet.cidr, initial_used)
 
     return SubnetResponse(
-        id=new_subnet.id,
+        id=str(new_subnet.id),
         name=new_subnet.name,
         cidr=new_subnet.cidr,
         vlan_id=new_subnet.vlan_id,
@@ -179,13 +187,14 @@ async def create_subnet(
 
 @router.get("/subnets/{subnet_id}", response_model=SubnetResponse)
 async def get_subnet(
-    subnet_id: int,
+    subnet_id: Any,
     db: AsyncSession = Depends(get_db),
 ):
     """
     Get single subnet details with live utilization.
     """
-    result = await db.execute(select(Subnet).where(Subnet.id == subnet_id))
+    s_id = resolve_subnet_id(subnet_id)
+    result = await db.execute(select(Subnet).where((Subnet.id == s_id) | (Subnet.name == str(subnet_id))))
     s = result.scalar_one_or_none()
     if not s:
         raise HTTPException(status_code=404, detail=f"Subnet ID {subnet_id} not found")
@@ -212,7 +221,7 @@ async def get_subnet(
     total, used, free, util = compute_subnet_stats(s.cidr, len(matched_ips))
 
     return SubnetResponse(
-        id=s.id,
+        id=str(s.id),
         name=s.name,
         cidr=s.cidr,
         vlan_id=s.vlan_id,
@@ -229,14 +238,15 @@ async def get_subnet(
 
 @router.patch("/subnets/{subnet_id}", response_model=SubnetResponse)
 async def update_subnet(
-    subnet_id: int,
+    subnet_id: Any,
     update_in: SubnetUpdate,
     db: AsyncSession = Depends(get_db),
 ):
     """
     Update subnet configuration (Name, VLAN ID, Gateway, DNS, Description).
     """
-    result = await db.execute(select(Subnet).where(Subnet.id == subnet_id))
+    s_id = resolve_subnet_id(subnet_id)
+    result = await db.execute(select(Subnet).where((Subnet.id == s_id) | (Subnet.name == str(subnet_id))))
     s = result.scalar_one_or_none()
     if not s:
         raise HTTPException(status_code=404, detail=f"Subnet ID {subnet_id} not found")
@@ -288,7 +298,7 @@ async def update_subnet(
     total, used, free, util = compute_subnet_stats(s.cidr, len(matched_ips))
 
     return SubnetResponse(
-        id=s.id,
+        id=str(s.id),
         name=s.name,
         cidr=s.cidr,
         vlan_id=s.vlan_id,
@@ -305,13 +315,14 @@ async def update_subnet(
 
 @router.delete("/subnets/{subnet_id}")
 async def delete_subnet(
-    subnet_id: int,
+    subnet_id: Any,
     db: AsyncSession = Depends(get_db),
 ):
     """
     Delete a subnet from IPAM.
     """
-    result = await db.execute(select(Subnet).where(Subnet.id == subnet_id))
+    s_id = resolve_subnet_id(subnet_id)
+    result = await db.execute(select(Subnet).where((Subnet.id == s_id) | (Subnet.name == str(subnet_id))))
     s = result.scalar_one_or_none()
     if not s:
         raise HTTPException(status_code=404, detail=f"Subnet ID {subnet_id} not found")
@@ -323,7 +334,7 @@ async def delete_subnet(
 
 @router.get("/subnets/{subnet_id}/ips", response_model=List[SubnetIPDetail])
 async def get_subnet_ip_map(
-    subnet_id: int,
+    subnet_id: Any,
     limit: int = Query(256, ge=1, le=1024, description="Max IPs to return"),
     offset: int = Query(0, ge=0, description="IP list offset"),
     db: AsyncSession = Depends(get_db),
@@ -333,7 +344,8 @@ async def get_subnet_ip_map(
     Returns individual IP breakdown inside this subnet, classifying each address
     as: 'gateway', 'assigned' (DCIM Device), 'zabbix_monitored', or 'available'.
     """
-    result = await db.execute(select(Subnet).where(Subnet.id == subnet_id))
+    s_id = resolve_subnet_id(subnet_id)
+    result = await db.execute(select(Subnet).where((Subnet.id == s_id) | (Subnet.name == str(subnet_id))))
     s = result.scalar_one_or_none()
     if not s:
         raise HTTPException(status_code=404, detail=f"Subnet ID {subnet_id} not found")
@@ -350,7 +362,7 @@ async def get_subnet_ip_map(
         try:
             if ipaddress.ip_address(ip_str) in net:
                 device_map[ip_str] = {
-                    "device_id": dev_id,
+                    "device_id": str(dev_id) if dev_id else None,
                     "device_name": dev_name,
                     "zabbix_host_id": zh_id,
                 }

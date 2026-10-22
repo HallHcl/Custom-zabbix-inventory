@@ -17,7 +17,7 @@ export function IPAMView() {
   const [error, setError] = useState<string | null>(null)
 
   // Selected subnet for grid view
-  const [selectedSubnetId, setSelectedSubnetId] = useState<number | null>(null)
+  const [selectedSubnetId, setSelectedSubnetId] = useState<any>(null)
   const [ipList, setIpList] = useState<SubnetIPDetail[]>([])
   const [gridLoading, setGridLoading] = useState(false)
   const [gridError, setGridError] = useState<string | null>(null)
@@ -43,7 +43,7 @@ export function IPAMView() {
     return subnets.find((s) => s.id === selectedSubnetId) || null
   }, [subnets, selectedSubnetId])
 
-  const loadSubnets = async (selectId?: number) => {
+  const loadSubnets = async (selectId?: any) => {
     setLoading(true)
     setError(null)
     try {
@@ -64,7 +64,7 @@ export function IPAMView() {
     }
   }
 
-  const loadSubnetGrid = async (subnetId: number) => {
+  const loadSubnetGrid = async (subnetId: any) => {
     setGridLoading(true)
     setGridError(null)
     try {

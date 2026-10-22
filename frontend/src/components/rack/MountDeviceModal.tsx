@@ -17,7 +17,7 @@ import { fetchZabbixHosts, fetchDeviceTemplates, mountDevice } from '../../api/c
 import { DeviceBezel } from './DeviceBezel'
 
 interface MountDeviceModalProps {
-  rackId: number
+  rackId: number | string
   initialStartU: number
   isOpen: boolean
   onClose: () => void
@@ -176,6 +176,13 @@ export function MountDeviceModal({
         position_face: 'Front',
         ip_address: ipAddress || undefined,
         zabbix_host_id: zabbixHostId || undefined,
+        tags: {
+          power_redundancy: powerRedundancy,
+          single_corded: powerRedundancy === 'SINGLE_CORD',
+          pdu_a_outlet: Number(pduAOutlet),
+          pdu_b_outlet: powerRedundancy === 'DUAL_2N' ? Number(pduBOutlet) : null,
+          estimated_watts: Number(estimatedWatts),
+        },
       })
       onSuccess()
       onClose()
@@ -210,7 +217,13 @@ export function MountDeviceModal({
         glow_color: '#38bdf844',
         model_family: model,
       },
-      tags: { single_corded: powerRedundancy === 'SINGLE_CORD' },
+      tags: {
+        power_redundancy: powerRedundancy,
+        single_corded: powerRedundancy === 'SINGLE_CORD',
+        pdu_a_outlet: Number(pduAOutlet),
+        pdu_b_outlet: powerRedundancy === 'DUAL_2N' ? Number(pduBOutlet) : null,
+        estimated_watts: Number(estimatedWatts),
+      },
     }
   }, [
     rackId,
@@ -225,6 +238,9 @@ export function MountDeviceModal({
     zabbixHostId,
     currentTemplate,
     powerRedundancy,
+    pduAOutlet,
+    pduBOutlet,
+    estimatedWatts,
   ])
 
   if (!isOpen) return null

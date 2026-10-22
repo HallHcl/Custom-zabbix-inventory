@@ -51,7 +51,7 @@ export async function fetchRoomOverview(roomName: string = 'Room A'): Promise<Ro
   return res.json()
 }
 
-export async function fetchRackElevation(rackId: number): Promise<RackElevation> {
+export async function fetchRackElevation(rackId: number | string): Promise<RackElevation> {
   const res = await fetch(`${API_BASE}/racks/${rackId}/elevation`)
   if (!res.ok) throw new Error(`Failed to fetch rack elevation for ID ${rackId}`)
   return res.json()
@@ -63,7 +63,7 @@ export async function fetchRacks(roomId: number = 1) {
   return res.json()
 }
 
-export async function fetchDevices(params?: { rack_id?: number; device_type?: string }): Promise<Device[]> {
+export async function fetchDevices(params?: { rack_id?: number | string; device_type?: string }): Promise<Device[]> {
   const query = new URLSearchParams()
   if (params?.rack_id) query.append('rack_id', String(params.rack_id))
   if (params?.device_type) query.append('device_type', params.device_type)
@@ -85,7 +85,7 @@ export async function fetchDeviceTemplates(params?: { brand?: string; device_typ
   return res.json()
 }
 
-export async function fetchDeviceMetrics(deviceId: number): Promise<DeviceMetrics> {
+export async function fetchDeviceMetrics(deviceId: number | string): Promise<DeviceMetrics> {
   const res = await fetch(`${API_BASE}/devices/${deviceId}/metrics`)
   if (!res.ok) throw new Error(`Failed to fetch device metrics for ID ${deviceId}`)
   return res.json()
@@ -98,7 +98,7 @@ export async function fetchZabbixHosts(): Promise<ZabbixHostOption[]> {
 }
 
 export async function mountDevice(payload: {
-  rack_id: number
+  rack_id: number | string
   name: string
   device_type: string
   model?: string
@@ -109,6 +109,8 @@ export async function mountDevice(payload: {
   ip_address?: string
   serial_number?: string
   zabbix_host_id?: string
+  tags?: Record<string, any>
+  custom_fields?: Record<string, any>
 }): Promise<Device> {
   const res = await fetch(`${API_BASE}/devices`, {
     method: 'POST',
@@ -122,21 +124,21 @@ export async function mountDevice(payload: {
   return res.json()
 }
 
-export async function unmountDevice(deviceId: number): Promise<void> {
+export async function unmountDevice(deviceId: number | string): Promise<void> {
   const res = await fetch(`${API_BASE}/devices/${deviceId}`, {
     method: 'DELETE',
   })
   if (!res.ok) throw new Error(`Failed to unmount device ${deviceId}`)
 }
 
-export async function fetchDeviceBlastRadius(deviceId: number): Promise<any> {
+export async function fetchDeviceBlastRadius(deviceId: number | string): Promise<any> {
   const res = await fetch(`${API_BASE}/devices/${deviceId}/blast-radius`)
   if (!res.ok) throw new Error(`Failed to fetch blast radius for device ${deviceId}`)
   return res.json()
 }
 
 export async function decommissionDevice(
-  deviceId: number,
+  deviceId: number | string,
   payload: {
     action: 'DECOMMISSION' | 'HOT_SWAP' | 'PERMANENT_REMOVE'
     maintenance_mode?: boolean
@@ -156,14 +158,14 @@ export async function decommissionDevice(
   return res.json()
 }
 
-export async function fetchDeviceOverview(deviceId: number): Promise<import('../types').DeviceOverview> {
+export async function fetchDeviceOverview(deviceId: number | string): Promise<import('../types').DeviceOverview> {
   const res = await fetch(`${API_BASE}/devices/${deviceId}/overview`)
   if (!res.ok) throw new Error(`Failed to fetch device overview for ID ${deviceId}`)
   return res.json()
 }
 
 export async function updateDeviceInventory(
-  deviceId: number,
+  deviceId: number | string,
   payload: {
     custom_fields?: Record<string, any>
     tags?: Record<string, any>
@@ -185,7 +187,7 @@ export async function updateDeviceInventory(
 }
 
 export async function updateDeviceSpec(
-  deviceId: number,
+  deviceId: number | string,
   payload: DeviceSpecUpdate
 ): Promise<Device> {
   const res = await fetch(`${API_BASE}/devices/${deviceId}`, {
@@ -288,7 +290,7 @@ export async function assignDeviceFromZabbix(payload: DeviceAssignFromZabbix): P
 }
 
 export async function updateDeviceStatus(
-  deviceId: number,
+  deviceId: number | string,
   status: DeviceStatusUpdate['status']
 ): Promise<Device> {
   const res = await fetch(`${API_BASE}/devices/${deviceId}/status`, {
@@ -324,7 +326,7 @@ export async function createSubnet(payload: SubnetCreate): Promise<Subnet> {
   return res.json()
 }
 
-export async function deleteSubnet(subnetId: number): Promise<void> {
+export async function deleteSubnet(subnetId: number | string): Promise<void> {
   const res = await fetch(`${API_BASE}/ipam/subnets/${subnetId}`, {
     method: 'DELETE',
   })
@@ -334,7 +336,7 @@ export async function deleteSubnet(subnetId: number): Promise<void> {
   }
 }
 
-export async function fetchSubnetIPs(subnetId: number): Promise<SubnetIPDetail[]> {
+export async function fetchSubnetIPs(subnetId: number | string): Promise<SubnetIPDetail[]> {
   const res = await fetch(`${API_BASE}/ipam/subnets/${subnetId}/ips?limit=1024`)
   if (!res.ok) throw new Error(`Failed to fetch IP grid for subnet ${subnetId}`)
   return res.json()

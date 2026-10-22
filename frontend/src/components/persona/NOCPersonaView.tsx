@@ -232,6 +232,8 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
             gridRows={overview?.grid_rows || 5}
             gridCols={overview?.grid_cols || 6}
             mode={activeColorMode}
+            hideViewModeControls={true}
+            hideRotationControls={true}
           />
         )}
 

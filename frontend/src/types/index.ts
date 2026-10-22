@@ -38,8 +38,8 @@ export interface DeviceTemplate {
 
 
 export interface Device {
-  id: number
-  rack_id: number
+  id: any
+  rack_id: any
   name: string
   device_type: 'Server' | 'Switch' | 'Firewall' | 'Storage' | 'UPS' | 'Patch Panel' | 'Blank Panel'
   model?: string
@@ -58,7 +58,7 @@ export interface Device {
 }
 
 export interface RackSummary {
-  id: number
+  id: any
   name: string
   row: string
   col: number
@@ -73,7 +73,7 @@ export interface RackSummary {
 }
 
 export interface RackElevation {
-  id: number
+  id: any
   name: string
   row: string
   col: number
@@ -235,7 +235,7 @@ export interface UnassignedHostsOverview {
 export interface DeviceAssignFromZabbix {
   zabbix_host_id: string
   name: string
-  rack_id: number
+  rack_id: number | string
   start_u: number
   height_u?: number
   position_face?: 'Front' | 'Rear'
@@ -244,6 +244,8 @@ export interface DeviceAssignFromZabbix {
   manufacturer?: string
   ip_address?: string
   status?: 'Active' | 'Planned' | 'Maintenance' | 'Offline'
+  tags?: Record<string, any>
+  custom_fields?: Record<string, any>
 }
 
 export interface DeviceStatusUpdate {
@@ -264,7 +266,7 @@ export interface DeviceSpecUpdate {
 // ─── IPAM Lite Types ──────────────────────────────────────────
 
 export interface Subnet {
-  id: number
+  id: any
   cidr: string
   name: string
   gateway?: string | null
@@ -287,7 +289,7 @@ export interface SubnetCreate {
 export interface SubnetIPDetail {
   ip: string
   status: 'assigned' | 'zabbix_monitored' | 'gateway' | 'available'
-  device_id?: number | null
+  device_id?: any
   device_name?: string | null
   zabbix_host_id?: string | null
   is_gateway: boolean
