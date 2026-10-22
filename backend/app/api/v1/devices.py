@@ -88,6 +88,69 @@ async def resolve_rack(rack_id_input: Any, db: AsyncSession) -> Optional[Rack]:
     return res.scalars().first()
 
 
+async def validate_slot_and_collision(
+    rack: Rack,
+    start_u: int,
+    height_u: int,
+    face: str,
+    db: AsyncSession,
+    exclude_device_id: Optional[uuid.UUID] = None,
+) -> None:
+    """
+    Validate slot boundaries and detect collision against existing devices.
+    Rules:
+    - 1 <= start_u <= (start_u + height_u - 1) <= rack.total_u
+    - FRONT collides with FRONT or BOTH
+    - REAR collides with REAR or BOTH
+    - BOTH collides with FRONT, REAR, or BOTH
+    - Excludes self (exclude_device_id) when moving or resizing an existing device
+    """
+    if height_u < 1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Device height must be at least 1U (requested {height_u}U)",
+        )
+
+    end_u = start_u + height_u - 1
+    if start_u < 1 or end_u > rack.total_u:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Device slots (U{start_u}-U{end_u}) exceed rack height ({rack.total_u}U)",
+        )
+
+    norm_face = (face or "FRONT").upper()
+    if norm_face not in ("FRONT", "REAR", "BOTH"):
+        norm_face = "FRONT"
+
+    # Determine face conflict criteria
+    if norm_face == "BOTH":
+        face_filter = Device.rack_face.in_(["FRONT", "REAR", "BOTH"])
+    else:
+        face_filter = Device.rack_face.in_([norm_face, "BOTH"])
+
+    stmt = select(Device).options(selectinload(Device.device_model)).where(
+        Device.rack_id == rack.id,
+        face_filter,
+    )
+    if exclude_device_id:
+        stmt = stmt.where(Device.id != exclude_device_id)
+
+    existing_result = await db.execute(stmt)
+    existing_devices = existing_result.scalars().all()
+
+    req_slots = set(range(start_u, end_u + 1))
+    for exist in existing_devices:
+        exist_end = exist.start_u + exist.height_u - 1
+        exist_slots = set(range(exist.start_u, exist_end + 1))
+        collision = req_slots.intersection(exist_slots)
+        if collision:
+            collided_u = ", ".join(f"U{u}" for u in sorted(collision))
+            raise HTTPException(
+                status_code=400,
+                detail=f"Slot collision at {collided_u}. Already occupied by '{exist.name}'.",
+            )
+
+
 async def resolve_or_create_device_model(
     model_name: Optional[str],
     manufacturer: Optional[str],
@@ -96,21 +159,35 @@ async def resolve_or_create_device_model(
     db: AsyncSession,
 ) -> uuid.UUID:
     """Finds existing DeviceModel or provisions a new one."""
-    clean_model = (model_name or "Generic Device").strip()
+    h = max(1, height_u)
+    if not model_name or not model_name.strip():
+        clean_model = f"Generic {h}U Device" if h > 1 else "Generic Device"
+    else:
+        clean_model = model_name.strip()
     clean_mfr = (manufacturer or "Generic").strip()
     clean_type = (device_type or "Server").strip()
 
-    stmt = select(DeviceModel).where(func.lower(DeviceModel.model_name) == clean_model.lower())
+    stmt = select(DeviceModel).where(
+        func.lower(DeviceModel.model_name) == clean_model.lower(),
+        DeviceModel.u_height == h,
+    )
     res = await db.execute(stmt)
     dm = res.scalars().first()
     if dm:
         return dm.id
 
+    # Fallback to model name if height matches
+    stmt_name = select(DeviceModel).where(func.lower(DeviceModel.model_name) == clean_model.lower())
+    res_name = await db.execute(stmt_name)
+    dm_name = res_name.scalars().first()
+    if dm_name and dm_name.u_height == h:
+        return dm_name.id
+
     new_dm = DeviceModel(
         manufacturer=clean_mfr,
         model_name=clean_model,
         category=clean_type.upper(),
-        u_height=max(1, height_u),
+        u_height=h,
         typical_power_watts=450,
         weight_kg=15.0,
     )
@@ -206,35 +283,15 @@ async def mount_device(device_in: DeviceCreate, db: AsyncSession = Depends(get_d
     if not rack:
         raise HTTPException(status_code=404, detail=f"Rack ID {device_in.rack_id} not found")
 
-    # 2. Check U bounds (1 to rack.total_u)
-    end_u = device_in.start_u + device_in.height_u - 1
-    if end_u > rack.total_u or device_in.start_u < 1:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Device slots (U{device_in.start_u}-U{end_u}) exceed rack height ({rack.total_u}U)",
-        )
-
-    # 3. Check for slot collision with existing devices on the same face
+    # 2. Check U bounds and slot collision
     face = (device_in.position_face or "FRONT").upper()
-    existing_result = await db.execute(
-        select(Device).where(
-            Device.rack_id == rack.id,
-            Device.rack_face == face,
-        )
+    await validate_slot_and_collision(
+        rack=rack,
+        start_u=device_in.start_u,
+        height_u=device_in.height_u,
+        face=face,
+        db=db,
     )
-    existing_devices = existing_result.scalars().all()
-
-    req_slots = set(range(device_in.start_u, end_u + 1))
-    for exist in existing_devices:
-        exist_end = exist.start_u + exist.height_u - 1
-        exist_slots = set(range(exist.start_u, exist_end + 1))
-        collision = req_slots.intersection(exist_slots)
-        if collision:
-            collided_u = ", ".join(f"U{u}" for u in sorted(collision))
-            raise HTTPException(
-                status_code=400,
-                detail=f"Slot collision at {collided_u}. Already occupied by '{exist.name}'.",
-            )
 
     # Resolve Device Model & Room
     dm_id = await resolve_or_create_device_model(
@@ -274,9 +331,10 @@ async def mount_device(device_in: DeviceCreate, db: AsyncSession = Depends(get_d
     await db.commit()
     await db.refresh(new_device)
 
-    # Fetch Zabbix status if linked
+    # Fetch Zabbix status if linked and invalidate unassigned cache
     z_status = None
     if new_device.zabbix_host_id:
+        await redis_service.invalidate_unassigned_hosts()
         summaries = await redis_service.get_hosts_summaries([new_device.zabbix_host_id])
         z_status = summaries.get(new_device.zabbix_host_id)
 
@@ -308,34 +366,15 @@ async def assign_device_from_zabbix(
             detail=f"Zabbix Host ID {payload.zabbix_host_id} is already mounted as '{already.name}' (Rack ID {already.rack_id}).",
         )
 
-    # 3. Validate Slot Bounds
-    end_u = payload.start_u + payload.height_u - 1
-    if end_u > rack.total_u or payload.start_u < 1:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Device slots (U{payload.start_u}-U{end_u}) exceed rack height ({rack.total_u}U)",
-        )
-
-    # 4. Check for slot collision with existing devices on the same face
+    # 3. Validate Slot Bounds and Collision
     face = (payload.position_face or "FRONT").upper()
-    existing_result = await db.execute(
-        select(Device).where(
-            Device.rack_id == rack.id,
-            Device.rack_face == face,
-        )
+    await validate_slot_and_collision(
+        rack=rack,
+        start_u=payload.start_u,
+        height_u=payload.height_u,
+        face=face,
+        db=db,
     )
-    existing_devices = existing_result.scalars().all()
-    req_slots = set(range(payload.start_u, end_u + 1))
-    for exist in existing_devices:
-        exist_end = exist.start_u + exist.height_u - 1
-        exist_slots = set(range(exist.start_u, exist_end + 1))
-        collision = req_slots.intersection(exist_slots)
-        if collision:
-            collided_u = ", ".join(f"U{u}" for u in sorted(collision))
-            raise HTTPException(
-                status_code=400,
-                detail=f"Slot collision at {collided_u}. Already occupied by '{exist.name}'.",
-            )
 
     # 5. Fetch Zabbix Host details to enrich IP and metadata
     z_name = payload.name
@@ -686,6 +725,35 @@ async def update_device_spec(
     if payload.status is not None:
         device.status = payload.status
 
+    # Position, rack, or face move/resizing
+    target_rack_id = payload.rack_id if payload.rack_id is not None else device.rack_id
+    target_start_u = payload.start_u if payload.start_u is not None else device.start_u
+    target_height_u = payload.height_u if payload.height_u is not None else device.height_u
+    target_face = payload.position_face if payload.position_face is not None else device.rack_face
+
+    if (
+        payload.rack_id is not None
+        or payload.start_u is not None
+        or payload.height_u is not None
+        or payload.position_face is not None
+    ):
+        target_rack = await resolve_rack(target_rack_id, db)
+        if not target_rack:
+            raise HTTPException(status_code=404, detail=f"Target rack '{target_rack_id}' not found")
+
+        await validate_slot_and_collision(
+            rack=target_rack,
+            start_u=target_start_u,
+            height_u=target_height_u,
+            face=target_face,
+            db=db,
+            exclude_device_id=device.id,
+        )
+        device.rack_id = target_rack.id
+        device.start_u = target_start_u
+        device.height_u = target_height_u
+        device.position_face = target_face
+
     cf = dict(device.custom_fields or {})
     if payload.custom_fields is not None:
         cf.update(payload.custom_fields)
@@ -712,6 +780,26 @@ async def update_device_spec(
         z_status = summaries.get(device.zabbix_host_id)
 
     return build_device_response(device, z_status)
+
+
+@router.delete("/{device_id}")
+async def unmount_device(device_id: str, db: AsyncSession = Depends(get_db)):
+    """
+    Unmount / Delete a device from rack and return its linked Zabbix host to unassigned pool.
+    """
+    device = await find_device(device_id, db)
+    if not device:
+        raise HTTPException(status_code=404, detail=f"Device '{device_id}' not found")
+
+    dev_name = device.name
+    z_id = device.zabbix_host_id
+    await db.delete(device)
+    await db.commit()
+
+    if z_id:
+        await redis_service.invalidate_unassigned_hosts()
+
+    return {"status": "success", "message": f"Device '{dev_name}' unmounted successfully"}
 
 
 @router.patch("/{device_id}/inventory", response_model=DeviceResponse)

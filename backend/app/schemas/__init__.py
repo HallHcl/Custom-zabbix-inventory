@@ -49,6 +49,10 @@ class DeviceUpdate(BaseModel):
     status: Optional[str] = None
     custom_fields: Optional[Dict[str, Any]] = None
     tags: Optional[Dict[str, Any]] = None
+    rack_id: Optional[Any] = None
+    start_u: Optional[int] = None
+    height_u: Optional[int] = None
+    position_face: Optional[str] = None
 
 
 class BrandInfo(BaseModel):

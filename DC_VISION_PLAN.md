@@ -133,8 +133,8 @@
   └── [x] Task 1.3: ปรับปรุง Unassigned Hosts Reconciliation (เทียบ Zabbix vs PostgreSQL จริง) (เสร็จสิ้น)
 
 [Phase 2: Rack Operations Workflow]
-  ├── [ ] Task 2.1: ทดสอบและเสริมความแข็งแกร่งของ Rack Collision Detection & Mount Flow ◄ (ขั้นตอนถัดไป)
-  ├── [ ] Task 2.2: ทำ Deep Links จาก Portal ไปยัง Zabbix Web Console (Host & Problem)
+  ├── [x] Task 2.1: ทดสอบและเสริมความแข็งแกร่งของ Rack Collision Detection & Mount Flow (เสร็จสิ้น)
+  ├── [ ] Task 2.2: ทำ Deep Links จาก Portal ไปยัง Zabbix Web Console (Host & Problem) ◄ (ขั้นตอนถัดไป)
   └── [ ] Task 2.3: ปรับ Navigation และ Sidebar เพื่อซ่อนฟังก์ชันที่พักไว้
 
 [Phase 3: Operational Refinements]
