@@ -8,6 +8,7 @@ import type {
   LiveAlarmEvent,
   SpatialBreadcrumb,
 } from "../types/twin";
+import type { ZabbixConnectionStatus } from "../types";
 
 interface TwinStoreState {
   // 1. Persona Navigation
@@ -73,6 +74,10 @@ interface TwinStoreState {
   openCopilot: () => void;
   closeCopilot: () => void;
   toggleCopilot: () => void;
+
+  // 9. Zabbix 7.0 Connection Status & Alerting
+  zabbixStatus: ZabbixConnectionStatus | null;
+  setZabbixStatus: (status: ZabbixConnectionStatus | null) => void;
 }
 
 let socketInstance: WebSocket | null = null;
@@ -250,6 +255,13 @@ export const useTwinStore = create<TwinStoreState>((set, get) => ({
             if (payload.racks_summary) {
               get().setAllRacksTelemetry(payload.racks_summary);
             }
+            if (payload.zabbix_status) {
+              get().setZabbixStatus(payload.zabbix_status);
+            }
+          } else if (payload.event_type === "ZABBIX_STATUS_CHANGED") {
+            if (payload.zabbix_status) {
+              get().setZabbixStatus(payload.zabbix_status);
+            }
           } else if (payload.event_type === "TELEMETRY_REFRESH") {
             if (payload.facility_pue) {
               get().updateFacilityTelemetry({
@@ -319,4 +331,8 @@ export const useTwinStore = create<TwinStoreState>((set, get) => ({
   openCopilot: () => set({ isCopilotOpen: true }),
   closeCopilot: () => set({ isCopilotOpen: false }),
   toggleCopilot: () => set((state) => ({ isCopilotOpen: !state.isCopilotOpen })),
+
+  // 9. Zabbix 7.0 Connection Status & Alerting
+  zabbixStatus: null,
+  setZabbixStatus: (zabbixStatus) => set({ zabbixStatus }),
 }));

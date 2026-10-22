@@ -17,6 +17,7 @@ import type {
   CopilotCommandResponse,
   PlacementRequestPayload,
   KnowledgeSnippet,
+  ZabbixConnectionStatus,
 } from '../types'
 
 const API_BASE = '/api/v1'
@@ -382,6 +383,13 @@ export async function fetchKnowledgeDocuments(docType?: string): Promise<Knowled
   if (!res.ok) return []
   return res.json()
 }
+
+export async function fetchZabbixStatus(): Promise<ZabbixConnectionStatus> {
+  const res = await fetch(`${API_BASE}/zabbix/status`)
+  if (!res.ok) throw new Error('Failed to fetch Zabbix connection status')
+  return res.json()
+}
+
 
 
 

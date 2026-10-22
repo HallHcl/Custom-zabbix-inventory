@@ -7,6 +7,7 @@ import redis.asyncio as aioredis
 
 from backend.app.config import settings
 from backend.app.services.redis_service import redis_service
+from backend.app.services.sync_service import sync_service
 
 logger = logging.getLogger("NexusTwinWebSocket")
 router = APIRouter()
@@ -32,10 +33,12 @@ class ConnectionManager:
         try:
             facility = await redis_service.get_facility_telemetry()
             racks_all = await redis_service.get_all_racks_telemetry()
+            zabbix_status = await sync_service.get_sync_status()
             initial_payload = {
                 "event_type": "INITIAL_STATE",
                 "facility": facility,
                 "racks_summary": racks_all,
+                "zabbix_status": zabbix_status,
             }
             await websocket.send_json(initial_payload)
         except Exception as e:

@@ -39,6 +39,7 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
     wsConnecting,
     connectWebSocket,
     openSpotlight,
+    zabbixStatus,
   } = useTwinStore();
 
   const { theme, setTheme, themeMeta } = useTheme();
@@ -283,7 +284,35 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
           </div>
         </div>
 
-        {/* 2. Live WebSocket Heartbeat */}
+        {/* 2. Zabbix 7.0 Engine Live State Indicator Pill */}
+        {zabbixStatus && (
+          <a
+            href={zabbixStatus.zabbix_web_console_url || undefined}
+            target={zabbixStatus.zabbix_web_console_url ? "_blank" : undefined}
+            rel="noreferrer"
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono transition-all ${
+              zabbixStatus.status === "CONNECTED"
+                ? "bg-[var(--bg-elevated)]/60 border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-white"
+                : zabbixStatus.status === "STALE"
+                ? "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25"
+                : "bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 font-bold"
+            }`}
+            title={`Zabbix 7.0 Engine: ${zabbixStatus.status} (${zabbixStatus.message || ''})`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                zabbixStatus.status === "CONNECTED"
+                  ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
+                  : zabbixStatus.status === "STALE"
+                  ? "bg-amber-400 animate-pulse"
+                  : "bg-rose-400 animate-pulse"
+              }`}
+            />
+            <span>ZABBIX: {zabbixStatus.status}</span>
+          </a>
+        )}
+
+        {/* 3. Live WebSocket Heartbeat */}
         <button
           type="button"
           onClick={() => {

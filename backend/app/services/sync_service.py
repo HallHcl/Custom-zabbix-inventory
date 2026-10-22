@@ -45,6 +45,14 @@ class SyncService:
             "message": msg,
         }
         await redis_service.cache_zabbix_sync_status(failure_meta, ttl=86400)
+        try:
+            full_status = await self.get_sync_status()
+            await redis_service.publish_live_event("twin:live_events", {
+                "event_type": "ZABBIX_STATUS_CHANGED",
+                "zabbix_status": full_status,
+            })
+        except Exception:
+            pass
         return failure_meta
 
     async def get_sync_status(self) -> Dict[str, Any]:
@@ -185,6 +193,14 @@ class SyncService:
             "message": f"Zabbix {version} synchronized successfully",
         }
         await redis_service.cache_zabbix_sync_status(sync_meta, ttl=86400)
+        try:
+            full_status = await self.get_sync_status()
+            await redis_service.publish_live_event("twin:live_events", {
+                "event_type": "ZABBIX_STATUS_CHANGED",
+                "zabbix_status": full_status,
+            })
+        except Exception:
+            pass
 
         return {
             "synced_hosts": synced_count,

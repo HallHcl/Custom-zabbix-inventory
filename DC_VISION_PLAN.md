@@ -137,9 +137,9 @@
   ├── [x] Task 2.2: ทำ Deep Links จาก Portal ไปยัง Zabbix Web Console (Host & Problem) (เสร็จสิ้น)
   └── [x] Task 2.3: ปรับ Navigation และ Sidebar เพื่อซ่อนฟังก์ชันที่พักไว้ (เสร็จสิ้น)
 
-[Phase 3: Operational Refinements]
+[Phase 3: Operational Refinements] (เสร็จสมบูรณ์ 100%)
   ├── [x] Task 3.1: ปรับปรุงหน้า Reports ให้สรุปข้อมูลจริง (เสร็จสิ้น)
-  └── [ ] Task 3.2: เพิ่มการแจ้งเตือนเมื่อการเชื่อมต่อ Zabbix ผิดปกติ ◄ (ขั้นตอนถัดไป)
+  └── [x] Task 3.2: เพิ่มการแจ้งเตือนเมื่อการเชื่อมต่อ Zabbix ผิดปกติ (เสร็จสิ้น)
 ```
 
 ---

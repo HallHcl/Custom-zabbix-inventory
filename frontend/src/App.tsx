@@ -4,6 +4,7 @@ import type { RoomOverview, RackSummary, RackElevation as RackElevationType, Dev
 import { fetchRoomOverview, fetchRackElevation, fetchUnassignedHosts } from './api/client'
 import { Sidebar, type NavTab } from './components/layout/Sidebar'
 import { TopGlassmorphicHUD } from './components/layout/TopGlassmorphicHUD'
+import { ZabbixConnectionBanner } from './components/layout/ZabbixConnectionBanner'
 import { SpotlightCommandBar } from './components/layout/SpotlightCommandBar'
 import { PersonaViewContainer } from './components/persona/PersonaViewContainer'
 import { useTwinStore } from './store/useTwinStore'
@@ -95,6 +96,9 @@ export function App() {
     fetchRoomOverview()
       .then((data) => {
         setOverview(data)
+        if (data.zabbix_status) {
+          useTwinStore.getState().setZabbixStatus(data.zabbix_status)
+        }
         // Select Rack B03 by default if none selected
         if (!selectedRackSummary && data.racks.length > 0) {
           const b03 = data.racks.find((r) => r.name.includes('B03')) || data.racks[0]
@@ -230,6 +234,9 @@ export function App() {
           onOpenUnassigned={() => setIsUnassignedDrawerOpen(true)}
           unassignedCount={unassignedCount}
         />
+
+        {/* Global Zabbix Connectivity Alert Banner */}
+        <ZabbixConnectionBanner />
 
         {/* Scrollable View Content */}
         <main className="flex-1 overflow-y-auto p-4 space-y-4">
