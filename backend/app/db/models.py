@@ -288,6 +288,10 @@ class Device(Base):
     vendor_contract_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     purchase_cost_usd: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
 
+    # Custom Metadata & Tags (JSONB)
+    tags: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+    custom_fields: Mapped[dict] = mapped_column(JSONB, default=dict, server_default="{}")
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, server_default=func.now())
 
@@ -365,6 +369,13 @@ class Device(Base):
     def position_face(self) -> str:
         return self.rack_face.title() if self.rack_face else "Front"
 
+    @position_face.setter
+    def position_face(self, val: Optional[str]):
+        if val:
+            self.rack_face = str(val).upper()
+        else:
+            self.rack_face = "FRONT"
+
     @property
     def ip_address(self) -> Optional[str]:
         return self.management_ip
@@ -381,21 +392,7 @@ class Device(Base):
     def zabbix_host_id(self, val: Optional[str]):
         self.zabbix_hostid = val
 
-    @property
-    def tags(self) -> dict:
-        return getattr(self, "_tags", {})
 
-    @tags.setter
-    def tags(self, val: dict):
-        self._tags = val or {}
-
-    @property
-    def custom_fields(self) -> dict:
-        return getattr(self, "_custom_fields", {})
-
-    @custom_fields.setter
-    def custom_fields(self, val: dict):
-        self._custom_fields = val or {}
 
     __table_args__ = (
         UniqueConstraint("rack_id", "u_position_start", "rack_face", name="uq_rack_u_position"),

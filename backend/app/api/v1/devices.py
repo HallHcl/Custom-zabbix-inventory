@@ -1,12 +1,12 @@
 import uuid
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.app.db.session import get_db
-from backend.app.db.models import Device, Rack, Row, Room
+from backend.app.db.models import Device, Rack, Row, Room, DeviceModel
 from backend.app.schemas import (
     DeviceCreate,
     DeviceUpdate,
@@ -45,6 +45,78 @@ async def find_device(device_id: str, db: AsyncSession, options=None) -> Optiona
     stmt = select(Device).options(*options).where(Device.name == str(device_id))
     res = await db.execute(stmt)
     return res.scalar_one_or_none()
+
+
+async def resolve_rack(rack_id_input: Any, db: AsyncSession) -> Optional[Rack]:
+    """Helper to flexibly resolve a Rack by UUID, name, or integer index."""
+    if rack_id_input is None:
+        return None
+    options = [selectinload(Rack.row), selectinload(Rack.devices)]
+
+    # 1. Try as UUID
+    try:
+        r_uuid = uuid.UUID(str(rack_id_input))
+        stmt = select(Rack).options(*options).where(Rack.id == r_uuid)
+        res = await db.execute(stmt)
+        rack = res.scalar_one_or_none()
+        if rack:
+            return rack
+    except Exception:
+        pass
+
+    # 2. Try by Rack name (e.g. "R-A01", "Rack 1")
+    stmt = select(Rack).options(*options).where(Rack.name == str(rack_id_input))
+    res = await db.execute(stmt)
+    rack = res.scalar_one_or_none()
+    if rack:
+        return rack
+
+    # 3. Try integer index / position
+    try:
+        idx = int(rack_id_input)
+        stmt = select(Rack).options(*options).order_by(Rack.name)
+        res = await db.execute(stmt)
+        racks_all = res.scalars().all()
+        if 1 <= idx <= len(racks_all):
+            return racks_all[idx - 1]
+    except Exception:
+        pass
+
+    # 4. Fallback to first rack
+    stmt = select(Rack).options(*options).order_by(Rack.name)
+    res = await db.execute(stmt)
+    return res.scalars().first()
+
+
+async def resolve_or_create_device_model(
+    model_name: Optional[str],
+    manufacturer: Optional[str],
+    device_type: Optional[str],
+    height_u: int,
+    db: AsyncSession,
+) -> uuid.UUID:
+    """Finds existing DeviceModel or provisions a new one."""
+    clean_model = (model_name or "Generic Device").strip()
+    clean_mfr = (manufacturer or "Generic").strip()
+    clean_type = (device_type or "Server").strip()
+
+    stmt = select(DeviceModel).where(func.lower(DeviceModel.model_name) == clean_model.lower())
+    res = await db.execute(stmt)
+    dm = res.scalars().first()
+    if dm:
+        return dm.id
+
+    new_dm = DeviceModel(
+        manufacturer=clean_mfr,
+        model_name=clean_model,
+        category=clean_type.upper(),
+        u_height=max(1, height_u),
+        typical_power_watts=450,
+        weight_kg=15.0,
+    )
+    db.add(new_dm)
+    await db.flush()
+    return new_dm.id
 
 
 def build_device_response(d: Device, z_status: Optional[Any] = None) -> DeviceResponse:
@@ -130,8 +202,7 @@ async def mount_device(device_in: DeviceCreate, db: AsyncSession = Depends(get_d
     Mount a new device into a rack slot with collision validation.
     """
     # 1. Verify Rack exists
-    rack_result = await db.execute(select(Rack).where(Rack.id == device_in.rack_id))
-    rack = rack_result.scalar_one_or_none()
+    rack = await resolve_rack(device_in.rack_id, db)
     if not rack:
         raise HTTPException(status_code=404, detail=f"Rack ID {device_in.rack_id} not found")
 
@@ -144,10 +215,11 @@ async def mount_device(device_in: DeviceCreate, db: AsyncSession = Depends(get_d
         )
 
     # 3. Check for slot collision with existing devices on the same face
+    face = (device_in.position_face or "FRONT").upper()
     existing_result = await db.execute(
         select(Device).where(
-            Device.rack_id == device_in.rack_id,
-            Device.position_face == device_in.position_face,
+            Device.rack_id == rack.id,
+            Device.rack_face == face,
         )
     )
     existing_devices = existing_result.scalars().all()
@@ -164,16 +236,33 @@ async def mount_device(device_in: DeviceCreate, db: AsyncSession = Depends(get_d
                 detail=f"Slot collision at {collided_u}. Already occupied by '{exist.name}'.",
             )
 
+    # Resolve Device Model & Room
+    dm_id = await resolve_or_create_device_model(
+        device_in.model,
+        device_in.manufacturer,
+        device_in.device_type,
+        device_in.height_u,
+        db,
+    )
+    room_id = rack.row.room_id if rack.row and rack.row.room_id else None
+    if not room_id:
+        room_res = await db.execute(select(Room).limit(1))
+        first_room = room_res.scalar_one_or_none()
+        if first_room:
+            room_id = first_room.id
+
     # 4. Create and save device
     new_device = Device(
-        rack_id=device_in.rack_id,
+        rack_id=rack.id,
+        room_id=room_id,
+        device_model_id=dm_id,
         name=device_in.name,
         device_type=device_in.device_type,
         model=device_in.model,
         manufacturer=device_in.manufacturer,
         start_u=device_in.start_u,
         height_u=device_in.height_u,
-        position_face=device_in.position_face,
+        position_face=face,
         ip_address=device_in.ip_address,
         serial_number=device_in.serial_number,
         zabbix_host_id=device_in.zabbix_host_id,
@@ -206,8 +295,7 @@ async def assign_device_from_zabbix(
     creates the Device entity, and invalidates the unassigned hosts pool cache.
     """
     # 1. Verify Rack exists
-    rack_result = await db.execute(select(Rack).where(Rack.id == payload.rack_id))
-    rack = rack_result.scalar_one_or_none()
+    rack = await resolve_rack(payload.rack_id, db)
     if not rack:
         raise HTTPException(status_code=404, detail=f"Rack ID {payload.rack_id} not found")
 
@@ -229,10 +317,11 @@ async def assign_device_from_zabbix(
         )
 
     # 4. Check for slot collision with existing devices on the same face
+    face = (payload.position_face or "FRONT").upper()
     existing_result = await db.execute(
         select(Device).where(
-            Device.rack_id == payload.rack_id,
-            Device.position_face == payload.position_face,
+            Device.rack_id == rack.id,
+            Device.rack_face == face,
         )
     )
     existing_devices = existing_result.scalars().all()
@@ -280,16 +369,33 @@ async def assign_device_from_zabbix(
     final_name = z_name or f"Host-{payload.zabbix_host_id}"
     final_type = payload.device_type or infer_device_type(z_groups, z_tags, final_name)
 
+    # Resolve DeviceModel & Room
+    dm_id = await resolve_or_create_device_model(
+        payload.model,
+        payload.manufacturer,
+        final_type,
+        payload.height_u,
+        db,
+    )
+    room_id = rack.row.room_id if rack.row and rack.row.room_id else None
+    if not room_id:
+        room_res = await db.execute(select(Room).limit(1))
+        first_room = room_res.scalar_one_or_none()
+        if first_room:
+            room_id = first_room.id
+
     # 6. Create Device
     new_device = Device(
-        rack_id=payload.rack_id,
+        rack_id=rack.id,
+        room_id=room_id,
+        device_model_id=dm_id,
         name=final_name,
         device_type=final_type,
         model=payload.model,
         manufacturer=payload.manufacturer,
         start_u=payload.start_u,
         height_u=payload.height_u,
-        position_face=payload.position_face,
+        position_face=face,
         ip_address=z_ip or None,
         zabbix_host_id=payload.zabbix_host_id,
         status=payload.status or "Active",

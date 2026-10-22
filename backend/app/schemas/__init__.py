@@ -37,7 +37,7 @@ class DeviceBase(BaseModel):
 
 
 class DeviceCreate(DeviceBase):
-    rack_id: int
+    rack_id: Any
 
 
 class DeviceUpdate(BaseModel):
@@ -293,7 +293,7 @@ class UnassignedHostsOverview(BaseModel):
 
 class DeviceAssignFromZabbix(BaseModel):
     zabbix_host_id: str
-    rack_id: int
+    rack_id: Any
     start_u: int = Field(..., ge=1, le=42)
     height_u: int = Field(default=1, ge=1, le=42)
     position_face: str = "Front"  # Front or Rear
