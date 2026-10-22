@@ -99,6 +99,7 @@ class RackElevationResponse(BaseModel):
 
 
 class RoomOverviewResponse(BaseModel):
+    room_id: Optional[Any] = None
     site_name: str
     room_name: str
     room_temp_c: float
@@ -110,6 +111,8 @@ class RoomOverviewResponse(BaseModel):
     total_capacity_u: int = 0
     status_counts: Dict[str, int]
     severity_counts: Dict[str, int] = {}
+    grid_rows: int = 4
+    grid_cols: int = 6
     racks: List[RackSummary]
     recent_alerts: List[Dict[str, Any]]
 
@@ -182,7 +185,7 @@ class RoomLayoutUpdate(BaseModel):
 
 class RackCreate(BaseModel):
     """Create a new rack in a room"""
-    room_id: int
+    room_id: Any
     name: str = Field(..., min_length=1, max_length=50)
     row: str = Field(..., min_length=1, max_length=10)
     col: int = Field(..., ge=1)
@@ -191,7 +194,7 @@ class RackCreate(BaseModel):
 
 class RackPositionUpdate(BaseModel):
     """Update a single rack's grid position"""
-    rack_id: int
+    rack_id: Any
     row: str
     col: int
 

@@ -83,6 +83,8 @@ class Room(Base):
     max_kw_capacity: Mapped[float] = mapped_column(Numeric(10, 2), default=150.0, nullable=False)
     max_cooling_btu: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
     blueprint_svg_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    grid_rows: Mapped[int] = mapped_column(Integer, default=4, server_default="4", nullable=False)
+    grid_cols: Mapped[int] = mapped_column(Integer, default=6, server_default="6", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, server_default=func.now())
 
     # Relationships
@@ -182,28 +184,36 @@ class Rack(Base):
 
     @property
     def row_name(self) -> str:
-        if "row" in self.__dict__ and self.row:
+        if "row" in self.__dict__ and self.row and getattr(self.row, "name", None):
             return self.row.name
-        return "Row A"
+        letter = self.row_letter
+        return f"Row {letter}" if letter else "Row A"
 
     @property
     def row_letter(self) -> str:
         if "row" in self.__dict__ and self.row and self.row.name:
-            return self.row.name.split()[-1]
-        if self.name and "-" in self.name:
-            part = self.name.split("-")[-1]
-            letters = [c for c in part if c.isalpha()]
+            parts = self.row.name.split()
+            if parts:
+                return parts[-1].strip().upper()
+        if self.name:
+            cleaned = self.name.replace("Rack", "").replace("R-", "").strip()
+            letters = [c for c in cleaned if c.isalpha()]
             if letters:
-                return "".join(letters)
+                return "".join(letters).upper()
         return "A"
 
     @property
     def col_number(self) -> int:
         try:
-            if self.name and "-" in self.name:
-                part = self.name.split("-")[-1]
-                num_str = "".join([c for c in part if c.isdigit()])
-                return int(num_str) if num_str else 1
+            if self.name:
+                cleaned = self.name.replace("Rack", "").strip()
+                num_str = "".join([c for c in cleaned if c.isdigit()])
+                if num_str:
+                    return int(num_str)
+            if self.pos_x_meters is not None:
+                computed = round((float(self.pos_x_meters) - 4.0) / 1.8) + 1
+                if 1 <= computed <= 50:
+                    return computed
         except Exception:
             pass
         return 1
@@ -307,25 +317,49 @@ class Device(Base):
     def height_u(self) -> int:
         if "device_model" in self.__dict__ and self.device_model:
             return self.device_model.u_height
-        return 1
+        return getattr(self, "_height_u", 1)
+
+    @height_u.setter
+    def height_u(self, val: int):
+        self._height_u = val
+        if "device_model" in self.__dict__ and self.device_model:
+            self.device_model.u_height = val
 
     @property
     def device_type(self) -> str:
         if "device_model" in self.__dict__ and self.device_model and self.device_model.category:
             return self.device_model.category.title()
-        return "Server"
+        return getattr(self, "_device_type", "Server")
+
+    @device_type.setter
+    def device_type(self, val: str):
+        self._device_type = val
+        if "device_model" in self.__dict__ and self.device_model:
+            self.device_model.category = val.upper()
 
     @property
     def model(self) -> Optional[str]:
         if "device_model" in self.__dict__ and self.device_model:
             return self.device_model.model_name
-        return None
+        return getattr(self, "_model", None)
+
+    @model.setter
+    def model(self, val: Optional[str]):
+        self._model = val
+        if "device_model" in self.__dict__ and self.device_model and val:
+            self.device_model.model_name = val
 
     @property
     def manufacturer(self) -> Optional[str]:
         if "device_model" in self.__dict__ and self.device_model:
             return self.device_model.manufacturer
-        return None
+        return getattr(self, "_manufacturer", None)
+
+    @manufacturer.setter
+    def manufacturer(self, val: Optional[str]):
+        self._manufacturer = val
+        if "device_model" in self.__dict__ and self.device_model and val:
+            self.device_model.manufacturer = val
 
     @property
     def position_face(self) -> str:
@@ -349,11 +383,19 @@ class Device(Base):
 
     @property
     def tags(self) -> dict:
-        return {}
+        return getattr(self, "_tags", {})
+
+    @tags.setter
+    def tags(self, val: dict):
+        self._tags = val or {}
 
     @property
     def custom_fields(self) -> dict:
-        return {}
+        return getattr(self, "_custom_fields", {})
+
+    @custom_fields.setter
+    def custom_fields(self, val: dict):
+        self._custom_fields = val or {}
 
     __table_args__ = (
         UniqueConstraint("rack_id", "u_position_start", "rack_face", name="uq_rack_u_position"),

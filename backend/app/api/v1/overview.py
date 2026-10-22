@@ -153,6 +153,7 @@ async def get_room_overview(
         site_name = room.building.site.name
 
     return RoomOverviewResponse(
+        room_id=str(room.id),
         site_name=site_name,
         room_name=room.name,
         room_temp_c=room.room_temp_target,
@@ -164,6 +165,8 @@ async def get_room_overview(
         total_capacity_u=total_cap_u,
         status_counts=status_counts,
         severity_counts=severity_counts,
+        grid_rows=room.grid_rows,
+        grid_cols=room.grid_cols,
         racks=racks_summary,
         recent_alerts=recent_alerts,
     )
