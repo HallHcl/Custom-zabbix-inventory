@@ -370,5 +370,68 @@ export interface PlacementRequestPayload {
   requires_dual_feed?: boolean
 }
 
+// ─── Zabbix Host Creation & Provisioning Types ────────────────
+export interface ZabbixHostGroupOption {
+  groupid: string
+  name: string
+}
+
+export interface ZabbixTemplateOption {
+  templateid: string
+  name: string
+  host: string
+}
+
+export interface ZabbixHostInterfaceInput {
+  type: number // 1=Agent, 2=SNMP, 3=IPMI, 4=JMX
+  main: number // 1=Primary, 0=Secondary
+  useip: number // 1=IP, 0=DNS
+  ip: string
+  dns: string
+  port: string
+  details?: {
+    version?: number // 1=SNMPv1, 2=SNMPv2c, 3=SNMPv3
+    community?: string
+    securityname?: string
+    securitylevel?: number
+    authpassphrase?: string
+    privpassphrase?: string
+    authprotocol?: number
+    privprotocol?: number
+    contextname?: string
+  }
+}
+
+export interface ZabbixHostCreatePayload {
+  host: string
+  name?: string
+  group_ids: string[]
+  interfaces: ZabbixHostInterfaceInput[]
+  template_ids?: string[]
+  tags?: Record<string, string>
+  description?: string
+  status?: number
+
+  // Optional DCIM Rack Binding (Step 4 of Stepper)
+  mount_rack_id?: string | number | null
+  mount_start_u?: number | null
+  mount_height_u?: number
+  mount_position_face?: 'Front' | 'Rear' | 'Both'
+  device_type?: string
+  manufacturer?: string
+  model?: string
+}
+
+export interface ZabbixHostCreateResponse {
+  hostid: string
+  host: string
+  name: string
+  message: string
+  device_id?: string | null
+  rack_name?: string | null
+  status: string
+}
+
+
 
 

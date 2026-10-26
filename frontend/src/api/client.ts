@@ -18,6 +18,10 @@ import type {
   PlacementRequestPayload,
   KnowledgeSnippet,
   ZabbixConnectionStatus,
+  ZabbixHostGroupOption,
+  ZabbixTemplateOption,
+  ZabbixHostCreatePayload,
+  ZabbixHostCreateResponse,
 } from '../types'
 
 const API_BASE = '/api/v1'
@@ -389,6 +393,43 @@ export async function fetchZabbixStatus(): Promise<ZabbixConnectionStatus> {
   if (!res.ok) throw new Error('Failed to fetch Zabbix connection status')
   return res.json()
 }
+
+// ─── Zabbix Host Creation & Provisioning APIs ─────────────────
+
+export async function fetchZabbixHostGroups(): Promise<ZabbixHostGroupOption[]> {
+  const res = await fetch(`${API_BASE}/zabbix/hostgroups`)
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(parseApiError(errorData, 'Failed to fetch Zabbix host groups'))
+  }
+  return res.json()
+}
+
+export async function fetchZabbixTemplates(search?: string): Promise<ZabbixTemplateOption[]> {
+  const qs = search ? `?search=${encodeURIComponent(search)}` : ''
+  const res = await fetch(`${API_BASE}/zabbix/templates${qs}`)
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(parseApiError(errorData, 'Failed to fetch Zabbix templates'))
+  }
+  return res.json()
+}
+
+export async function createZabbixHost(
+  payload: ZabbixHostCreatePayload,
+): Promise<ZabbixHostCreateResponse> {
+  const res = await fetch(`${API_BASE}/zabbix/hosts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}))
+    throw new Error(parseApiError(errorData, 'Failed to create Zabbix host'))
+  }
+  return res.json()
+}
+
 
 
 

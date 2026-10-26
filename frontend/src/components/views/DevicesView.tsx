@@ -9,9 +9,11 @@ import {
   CheckCircle2,
   Filter,
   Inbox,
+  Plus,
 } from 'lucide-react'
 import type { Device, RackSummary } from '../../types'
 import { fetchDevices } from '../../api/client'
+import { AddHostModal } from '../rack/AddHostModal'
 
 interface DevicesViewProps {
   racks: RackSummary[]
@@ -32,13 +34,18 @@ export function DevicesView({
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedType, setSelectedType] = useState<string>('all')
+  const [isAddHostOpen, setIsAddHostOpen] = useState(false)
 
-  useEffect(() => {
+  const loadDevices = () => {
     setLoading(true)
     fetchDevices()
       .then((data) => setDevices(data))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadDevices()
   }, [])
 
   const rackMap: Record<number, string> = {}
@@ -121,6 +128,15 @@ export function DevicesView({
               )}
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setIsAddHostOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[3px] bg-[#244158] hover:bg-[#2e5270] border border-[#7aa5d2] text-xs font-mono text-white transition-colors cursor-pointer shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5 text-[#7aa5d2]" />
+            <span>Add Host</span>
+          </button>
         </div>
       </div>
 
@@ -269,6 +285,14 @@ export function DevicesView({
           </tbody>
         </table>
       </div>
+
+      {/* Add Host Modal Wizard */}
+      <AddHostModal
+        isOpen={isAddHostOpen}
+        onClose={() => setIsAddHostOpen(false)}
+        racks={racks}
+        onSuccess={() => loadDevices()}
+      />
     </div>
   )
 }
