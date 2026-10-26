@@ -409,6 +409,69 @@ class ZabbixService:
             print(f"[Zabbix Maintenance] Warning: Could not delete maintenance: {e}")
             return False
 
+    async def get_host_groups(self) -> List[Dict[str, Any]]:
+        """Fetch all host groups for host provisioning"""
+        params = {
+            "output": ["groupid", "name"],
+            "sortfield": "name",
+        }
+        try:
+            res = await self._call("hostgroup.get", params)
+            return res if isinstance(res, list) else []
+        except Exception as e:
+            if settings.SIMULATE_ZABBIX_TELEMETRY:
+                logger.warning(f"[Zabbix] Using simulated host groups: {e}")
+                return [
+                    {"groupid": "2", "name": "Linux servers"},
+                    {"groupid": "4", "name": "Zabbix servers"},
+                    {"groupid": "20", "name": "Databases"},
+                    {"groupid": "23", "name": "#Network Switch"},
+                    {"groupid": "30", "name": "Docker Containers"},
+                ]
+            raise e
+
+    async def get_templates(self, search: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Fetch available templates for host provisioning"""
+        params: Dict[str, Any] = {
+            "output": ["templateid", "name", "host"],
+            "sortfield": "name",
+            "limit": 1000,
+        }
+        if search:
+            params["search"] = {"name": search, "host": search}
+            params["searchByAny"] = True
+        try:
+            res = await self._call("template.get", params)
+            return res if isinstance(res, list) else []
+        except Exception as e:
+            if settings.SIMULATE_ZABBIX_TELEMETRY:
+                logger.warning(f"[Zabbix] Using simulated templates: {e}")
+                return [
+                    {"templateid": "10001", "name": "Linux by Zabbix agent", "host": "Linux by Zabbix agent"},
+                    {"templateid": "10081", "name": "Windows by Zabbix agent", "host": "Windows by Zabbix agent"},
+                    {"templateid": "10186", "name": "Cisco IOS by SNMP", "host": "Cisco IOS by SNMP"},
+                    {"templateid": "10200", "name": "Generic SNMP", "host": "Generic SNMP"},
+                    {"templateid": "10047", "name": "Zabbix server health", "host": "Zabbix server health"},
+                ]
+            raise e
+
+    async def create_host(self, host_params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create a new host in Zabbix via host.create API.
+        Returns: {"hostids": ["10500"]}
+        """
+        try:
+            res = await self._call("host.create", host_params)
+            return res
+        except Exception as e:
+            if settings.SIMULATE_ZABBIX_TELEMETRY:
+                logger.warning(f"[Zabbix] Simulated host.create: {e}")
+                import random
+                sim_id = str(random.randint(20000, 99999))
+                return {"hostids": [sim_id]}
+            raise e
+
+
     # ========================================================================
     # Digital Twin Real-Time Telemetry Methods (Rack & Device)
     # ========================================================================

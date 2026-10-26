@@ -1,6 +1,6 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +10,10 @@ from backend.app.schemas import (
     UnassignedHostResponse,
     UnassignedHostsOverview,
     ZabbixConnectionStatus,
+    ZabbixHostGroupOption,
+    ZabbixTemplateOption,
+    ZabbixHostCreateRequest,
+    ZabbixHostCreateResponse,
 )
 from backend.app.services.zabbix_service import zabbix_service
 from backend.app.services.sync_service import sync_service
@@ -308,5 +312,175 @@ async def trigger_auto_provision(
     from backend.app.services.zabbix_provision_service import auto_provision_zabbix_hosts
     result = await auto_provision_zabbix_hosts(db, wipe_mock_devices=wipe_mock_devices)
     return result
+
+
+@router.get("/hostgroups", response_model=List[ZabbixHostGroupOption])
+async def list_zabbix_hostgroups():
+    """List available host groups from Zabbix for host creation"""
+    try:
+        groups = await zabbix_service.get_host_groups()
+        return [
+            ZabbixHostGroupOption(groupid=str(g["groupid"]), name=g["name"])
+            for g in groups
+            if "groupid" in g and "name" in g
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch host groups: {str(e)}")
+
+
+@router.get("/templates", response_model=List[ZabbixTemplateOption])
+async def list_zabbix_templates(search: Optional[str] = Query(None, description="Search templates by name")):
+    """List available templates from Zabbix for host creation"""
+    try:
+        templates = await zabbix_service.get_templates(search=search)
+        return [
+            ZabbixTemplateOption(
+                templateid=str(t["templateid"]),
+                name=t.get("name", t.get("host", "")),
+                host=t.get("host", ""),
+            )
+            for t in templates
+            if "templateid" in t
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch templates: {str(e)}")
+
+
+@router.post("/hosts", response_model=ZabbixHostCreateResponse)
+async def create_zabbix_host(
+    payload: ZabbixHostCreateRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Create a new Host in Zabbix 7.0 and optionally mount into DCIM Rack (Step 4 of Stepper).
+    """
+    # 1. Format payload for Zabbix host.create
+    groups_payload = [{"groupid": str(gid)} for gid in payload.group_ids]
+    templates_payload = [{"templateid": str(tid)} for tid in (payload.template_ids or [])]
+    interfaces_payload = []
+    primary_ip = ""
+
+    for iface in payload.interfaces:
+        if_data: Dict[str, Any] = {
+            "type": iface.type,
+            "main": iface.main,
+            "useip": iface.useip,
+            "ip": iface.ip,
+            "dns": iface.dns,
+            "port": str(iface.port),
+        }
+        if iface.type == 2 and iface.details:  # SNMP
+            if_data["details"] = iface.details
+        interfaces_payload.append(if_data)
+        if iface.main == 1 or not primary_ip:
+            primary_ip = iface.ip
+
+    # Tags handling
+    tags_dict = dict(payload.tags or {})
+
+    # 2. Check DCIM rack collision first if mount is requested
+    rack_obj = None
+    if payload.mount_rack_id and payload.mount_start_u:
+        from backend.app.api.v1.devices import resolve_rack, validate_slot_and_collision
+        rack_obj = await resolve_rack(payload.mount_rack_id, db)
+        if not rack_obj:
+            raise HTTPException(status_code=404, detail=f"Rack '{payload.mount_rack_id}' not found in DCIM")
+
+        height_u = payload.mount_height_u or 1
+        await validate_slot_and_collision(
+            rack=rack_obj,
+            start_u=payload.mount_start_u,
+            height_u=height_u,
+            face=payload.mount_position_face or "Front",
+            db=db,
+        )
+
+        # Populate Location tag in Zabbix
+        end_u = payload.mount_start_u + height_u - 1
+        u_str = f"U{payload.mount_start_u}" if height_u == 1 else f"U{payload.mount_start_u}-U{end_u}"
+        tags_dict["Location"] = f"Rack {rack_obj.name} / {u_str}"
+
+    tags_payload = [{"tag": k, "value": v} for k, v in tags_dict.items()]
+
+    zabbix_params: Dict[str, Any] = {
+        "host": payload.host,
+        "name": payload.name or payload.host,
+        "groups": groups_payload,
+        "interfaces": interfaces_payload,
+        "status": payload.status,
+    }
+    if templates_payload:
+        zabbix_params["templates"] = templates_payload
+    if tags_payload:
+        zabbix_params["tags"] = tags_payload
+    if payload.description:
+        zabbix_params["description"] = payload.description
+
+    # 3. Call Zabbix API
+    try:
+        zabbix_res = await zabbix_service.create_host(zabbix_params)
+        created_hostids = zabbix_res.get("hostids", [])
+        if not created_hostids:
+            raise RuntimeError("Zabbix API did not return hostid")
+        created_hostid = str(created_hostids[0])
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Zabbix host creation failed: {str(e)}")
+
+    # 4. If DCIM mount was requested, register Device in PostgreSQL
+    created_device_id = None
+    rack_name = None
+    if rack_obj and payload.mount_start_u:
+        from backend.app.api.v1.devices import resolve_or_create_device_model
+        from backend.app.db.models import Room
+
+        height_u = payload.mount_height_u or 1
+        dm_id = await resolve_or_create_device_model(
+            model_name=payload.model,
+            manufacturer=payload.manufacturer,
+            device_type=payload.device_type or "Server",
+            height_u=height_u,
+            db=db,
+        )
+        room_id = rack_obj.row.room_id if rack_obj.row and rack_obj.row.room_id else None
+        if not room_id:
+            first_room = (await db.execute(select(Room).limit(1))).scalar_one_or_none()
+            if first_room:
+                room_id = first_room.id
+
+        new_device = Device(
+            rack_id=rack_obj.id,
+            room_id=room_id,
+            device_model_id=dm_id,
+            name=payload.name or payload.host,
+            device_type=payload.device_type or "Server",
+            model=payload.model,
+            manufacturer=payload.manufacturer,
+            start_u=payload.mount_start_u,
+            height_u=height_u,
+            position_face=(payload.mount_position_face or "Front").upper(),
+            ip_address=primary_ip,
+            zabbix_host_id=created_hostid,
+            status="Active",
+            tags=tags_dict,
+        )
+        db.add(new_device)
+        await db.commit()
+        await db.refresh(new_device)
+        created_device_id = str(new_device.id)
+        rack_name = rack_obj.name
+
+    # 5. Invalidate caches
+    await redis_service.invalidate_unassigned_hosts()
+
+    return ZabbixHostCreateResponse(
+        hostid=created_hostid,
+        host=payload.host,
+        name=payload.name or payload.host,
+        message=f"Host '{payload.host}' created successfully in Zabbix" + (f" and mounted into {rack_name}" if rack_name else ""),
+        device_id=created_device_id,
+        rack_name=rack_name,
+        status="success",
+    )
+
 
 

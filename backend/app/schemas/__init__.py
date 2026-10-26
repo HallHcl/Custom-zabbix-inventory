@@ -400,6 +400,61 @@ class CopilotCommandResponse(BaseModel):
     knowledge_snippet: Optional[Dict[str, Any]] = None
 
 
+# ============================================================================
+# Zabbix Host Creation & Metadata Schemas
+# ============================================================================
+class ZabbixHostGroupOption(BaseModel):
+    groupid: str
+    name: str
+
+
+class ZabbixTemplateOption(BaseModel):
+    templateid: str
+    name: str
+    host: str
+
+
+class ZabbixHostInterfaceInput(BaseModel):
+    type: int = Field(default=1, description="1=Agent, 2=SNMP, 3=IPMI, 4=JMX")
+    main: int = Field(default=1, description="1=Primary interface, 0=Secondary")
+    useip: int = Field(default=1, description="1=Connect by IP, 0=Connect by DNS")
+    ip: str = Field(default="127.0.0.1")
+    dns: str = Field(default="")
+    port: str = Field(default="10050")
+    details: Optional[Dict[str, Any]] = Field(default=None, description="SNMP details (version, community, etc.)")
+
+
+class ZabbixHostCreateRequest(BaseModel):
+    host: str = Field(..., min_length=1, max_length=128, description="Technical host name")
+    name: Optional[str] = Field(None, max_length=128, description="Visible name in Zabbix")
+    group_ids: List[str] = Field(..., min_length=1, description="Host group IDs")
+    interfaces: List[ZabbixHostInterfaceInput] = Field(..., min_length=1, description="Host interfaces")
+    template_ids: Optional[List[str]] = Field(default_factory=list, description="Template IDs to link")
+    tags: Optional[Dict[str, str]] = Field(default_factory=dict, description="Custom tags {tag: value}")
+    description: Optional[str] = Field(None, description="Host description or operational notes")
+    status: int = Field(default=0, description="0=Monitored, 1=Unmonitored")
+
+    # Optional DCIM Mount Binding (Step 4 of wizard)
+    mount_rack_id: Optional[Any] = Field(default=None, description="Optional Rack ID to mount device immediately")
+    mount_start_u: Optional[int] = Field(default=None, ge=1, le=52, description="Start U position")
+    mount_height_u: Optional[int] = Field(default=1, ge=1, le=52, description="Height in U")
+    mount_position_face: Optional[str] = Field(default="Front", description="Front, Rear, or Both")
+    device_type: Optional[str] = Field(default="Server", description="DCIM device type")
+    manufacturer: Optional[str] = Field(default=None, description="Hardware vendor")
+    model: Optional[str] = Field(default=None, description="Hardware model")
+
+
+class ZabbixHostCreateResponse(BaseModel):
+    hostid: str
+    host: str
+    name: str
+    message: str
+    device_id: Optional[str] = None
+    rack_name: Optional[str] = None
+    status: str = "success"
+
+
+
 
 
 
