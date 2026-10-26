@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import type { UnassignedHost, RackSummary, DeviceAssignFromZabbix } from '../../types'
 import { fetchUnassignedHosts, assignDeviceFromZabbix } from '../../api/client'
+import { useTheme } from '../../lib/theme'
 
 interface UnassignedHostsDrawerProps {
   isOpen: boolean
@@ -30,6 +31,7 @@ export function UnassignedHostsDrawer({
   racks,
   onDeviceAssigned,
 }: UnassignedHostsDrawerProps) {
+  const { isTeslaDark } = useTheme()
   const [hosts, setHosts] = useState<UnassignedHost[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -187,24 +189,40 @@ export function UnassignedHostsDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs select-none font-sans">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs select-none font-sans">
       {/* Click outside backdrop to close */}
       <div className="flex-1" onClick={onClose} />
 
       {/* Drawer Container */}
-      <div className="w-full max-w-2xl bg-white/95 backdrop-blur-3xl border-l border-black/10 h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 text-[#1d1d1f]">
+      <div className={`w-full max-w-2xl h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 transition-all ${
+        isTeslaDark
+          ? 'bg-[#0A0A0A] border-l border-[#1F1F1F] text-[#F5F5F7]'
+          : 'bg-white/95 backdrop-blur-3xl border-l border-black/10 text-[#1d1d1f]'
+      }`}>
         {/* Header */}
-        <div className="px-6 py-4 border-b border-black/10 bg-black/[0.02] flex items-center justify-between shrink-0">
+        <div className={`px-6 py-4 border-b flex items-center justify-between shrink-0 ${
+          isTeslaDark
+            ? 'border-[#1F1F1F] bg-[#111111]'
+            : 'border-black/10 bg-black/[0.02]'
+        }`}>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[10px] bg-[#0071E3]/15 border border-[#0071E3]/30 flex items-center justify-center text-[#0071E3]">
+            <div className={`w-8 h-8 rounded-[10px] flex items-center justify-center ${
+              isTeslaDark
+                ? 'bg-[#3E6AE1]/20 border border-[#3E6AE1]/40 text-[#3E6AE1]'
+                : 'bg-[#0071E3]/15 border border-[#0071E3]/30 text-[#0071E3]'
+            }`}>
               <Layers className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold tracking-[-0.015em] text-[#1d1d1f]">
+                <h3 className={`text-sm font-semibold tracking-[-0.015em] ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
                   Zabbix Ingestion Queue
                 </h3>
-                <span className="px-2 py-0.5 rounded-[6px] bg-[#0071E3]/15 border border-[#0071E3]/30 text-[10px] font-semibold text-[#0071E3]">
+                <span className={`px-2 py-0.5 rounded-[6px] border text-[10px] font-semibold ${
+                  isTeslaDark
+                    ? 'bg-[#3E6AE1]/20 border-[#3E6AE1]/40 text-[#3E6AE1]'
+                    : 'bg-[#0071E3]/15 border border-[#0071E3]/30 text-[#0071E3]'
+                }`}>
                   {hosts.length} UNASSIGNED
                 </span>
               </div>
@@ -220,14 +238,22 @@ export function UnassignedHostsDrawer({
               onClick={loadUnassigned}
               disabled={loading}
               title="Refresh unassigned hosts"
-              className="p-2 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 text-zinc-600 hover:text-black transition-colors cursor-pointer disabled:opacity-50"
+              className={`p-2 rounded-[8px] border transition-colors cursor-pointer disabled:opacity-50 ${
+                isTeslaDark
+                  ? 'bg-[#1C1C1E] hover:bg-[#252528] border-[#2A2A2A] text-zinc-300 hover:text-white'
+                  : 'bg-black/[0.04] hover:bg-black/[0.08] border-black/10 text-zinc-600 hover:text-black'
+              }`}
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#0071E3]' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#3E6AE1]' : ''}`} />
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 text-zinc-600 hover:text-black transition-colors cursor-pointer"
+              className={`p-2 rounded-[8px] border transition-colors cursor-pointer ${
+                isTeslaDark
+                  ? 'bg-[#1C1C1E] hover:bg-[#252528] border-[#2A2A2A] text-zinc-300 hover:text-white'
+                  : 'bg-black/[0.04] hover:bg-black/[0.08] border-black/10 text-zinc-600 hover:text-black'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -243,7 +269,11 @@ export function UnassignedHostsDrawer({
         )}
 
         {/* Search & Filter Toolbar */}
-        <div className="p-4 border-b border-black/10 bg-black/[0.01] space-y-3 shrink-0">
+        <div className={`p-4 border-b space-y-3 shrink-0 ${
+          isTeslaDark
+            ? 'border-[#1F1F1F] bg-[#111111]/50'
+            : 'border-black/10 bg-black/[0.01]'
+        }`}>
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -251,7 +281,11 @@ export function UnassignedHostsDrawer({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search unassigned hosts by name or IP..."
-              className="w-full bg-black/[0.04] border border-black/10 rounded-[10px] pl-9 pr-3 py-2 text-xs text-[#1d1d1f] placeholder:text-zinc-400 focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all"
+              className={`w-full rounded-[10px] pl-9 pr-3 py-2 text-xs transition-all focus:outline-none ${
+                isTeslaDark
+                  ? 'bg-[#161616] border border-[#2A2A2A] text-[#F5F5F7] placeholder:text-zinc-500 focus:border-[#3E6AE1]'
+                  : 'bg-black/[0.04] border border-black/10 text-[#1d1d1f] placeholder:text-zinc-400 focus:border-[#0071E3] focus:bg-white'
+              }`}
             />
           </div>
 
@@ -267,8 +301,12 @@ export function UnassignedHostsDrawer({
                   onClick={() => setSelectedType(t)}
                   className={`px-3 py-1.5 rounded-[8px] border transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 text-xs ${
                     active
-                      ? 'bg-[#0071E3] border-[#0071E3] text-white shadow-xs font-semibold'
-                      : 'bg-black/[0.04] border-black/10 text-zinc-600 hover:text-[#1d1d1f]'
+                      ? isTeslaDark
+                        ? 'bg-[#3E6AE1] border-[#3E6AE1] text-white shadow-xs font-semibold'
+                        : 'bg-[#0071E3] border-[#0071E3] text-white shadow-xs font-semibold'
+                      : isTeslaDark
+                        ? 'bg-[#161616] border-[#2A2A2A] text-zinc-300 hover:text-white'
+                        : 'bg-black/[0.04] border-black/10 text-zinc-600 hover:text-[#1d1d1f]'
                   }`}
                 >
                   <span>{t === 'all' ? 'All Types' : t}</span>
@@ -281,10 +319,14 @@ export function UnassignedHostsDrawer({
 
         {/* Slotting Panel (Appears when user clicks "Slot into Rack") */}
         {slottingHost && (
-          <div className="p-4 border-b border-black/10 bg-black/[0.03] shadow-inner shrink-0">
-            <div className="flex items-center justify-between pb-2 border-b border-black/10 mb-3">
+          <div className={`p-4 border-b shadow-inner shrink-0 ${
+            isTeslaDark
+              ? 'border-[#1F1F1F] bg-[#141414]'
+              : 'border-black/10 bg-black/[0.03]'
+          }`}>
+            <div className={`flex items-center justify-between pb-2 border-b mb-3 ${isTeslaDark ? 'border-[#1F1F1F]' : 'border-black/10'}`}>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[#0071E3] uppercase">
+                <span className={`text-xs font-semibold uppercase ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`}>
                   Slotting Host: {slottingHost.name}
                 </span>
                 <span className={`px-2 py-0.5 rounded-[6px] border text-[10px] font-semibold ${getTypeBadgeClass(slottingHost.inferred_type)}`}>
@@ -294,7 +336,7 @@ export function UnassignedHostsDrawer({
               <button
                 type="button"
                 onClick={() => setSlottingHost(null)}
-                className="text-zinc-500 hover:text-black text-xs font-medium cursor-pointer"
+                className={`text-xs font-medium cursor-pointer ${isTeslaDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-black'}`}
               >
                 Cancel
               </button>
@@ -310,36 +352,44 @@ export function UnassignedHostsDrawer({
             <form onSubmit={handleConfirmSlot} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-zinc-700 font-medium mb-1">Target Rack *</label>
+                  <label className={`block font-medium mb-1 ${isTeslaDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Target Rack *</label>
                   <select
                     value={selectedRackId}
                     onChange={(e) => setSelectedRackId(Number(e.target.value))}
-                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3] cursor-pointer"
+                    className={`w-full rounded-[8px] px-3 py-1.5 focus:outline-none cursor-pointer ${
+                      isTeslaDark
+                        ? 'bg-[#1E1E1E] border border-[#2A2A2A] text-[#F5F5F7] focus:border-[#3E6AE1]'
+                        : 'bg-white border border-black/10 text-[#1d1d1f] focus:border-[#0071E3]'
+                    }`}
                   >
                     {racks.map((r) => (
-                      <option key={r.id} value={r.id} className="bg-white text-[#1d1d1f]">
+                      <option key={r.id} value={r.id} className={isTeslaDark ? 'bg-[#1E1E1E] text-[#F5F5F7]' : 'bg-white text-[#1d1d1f]'}>
                         {r.name} ({r.used_u}/{r.total_u}U • {r.usage_percent}%)
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-zinc-700 font-medium mb-1">Status</label>
+                  <label className={`block font-medium mb-1 ${isTeslaDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Status</label>
                   <select
                     value={deviceStatus}
                     onChange={(e) => setDeviceStatus(e.target.value as any)}
-                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3] cursor-pointer"
+                    className={`w-full rounded-[8px] px-3 py-1.5 focus:outline-none cursor-pointer ${
+                      isTeslaDark
+                        ? 'bg-[#1E1E1E] border border-[#2A2A2A] text-[#F5F5F7] focus:border-[#3E6AE1]'
+                        : 'bg-white border border-black/10 text-[#1d1d1f] focus:border-[#0071E3]'
+                    }`}
                   >
-                    <option value="Active" className="bg-white text-[#1d1d1f]">Active</option>
-                    <option value="Planned" className="bg-white text-[#1d1d1f]">Planned</option>
-                    <option value="Maintenance" className="bg-white text-[#1d1d1f]">Maintenance</option>
+                    <option value="Active" className={isTeslaDark ? 'bg-[#1E1E1E] text-[#F5F5F7]' : 'bg-white text-[#1d1d1f]'}>Active</option>
+                    <option value="Planned" className={isTeslaDark ? 'bg-[#1E1E1E] text-[#F5F5F7]' : 'bg-white text-[#1d1d1f]'}>Planned</option>
+                    <option value="Maintenance" className={isTeslaDark ? 'bg-[#1E1E1E] text-[#F5F5F7]' : 'bg-white text-[#1d1d1f]'}>Maintenance</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-zinc-700 font-medium mb-1">Start U (1-42) *</label>
+                  <label className={`block font-medium mb-1 ${isTeslaDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Start U (1-42) *</label>
                   <input
                     type="number"
                     min="1"
@@ -347,11 +397,15 @@ export function UnassignedHostsDrawer({
                     required
                     value={startU}
                     onChange={(e) => setStartU(Number(e.target.value))}
-                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3]"
+                    className={`w-full rounded-[8px] px-3 py-1.5 focus:outline-none ${
+                      isTeslaDark
+                        ? 'bg-[#1E1E1E] border border-[#2A2A2A] text-[#F5F5F7] focus:border-[#3E6AE1]'
+                        : 'bg-white border border-black/10 text-[#1d1d1f] focus:border-[#0071E3]'
+                    }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-700 font-medium mb-1">Height (U) *</label>
+                  <label className={`block font-medium mb-1 ${isTeslaDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Height (U) *</label>
                   <input
                     type="number"
                     min="1"
@@ -359,18 +413,26 @@ export function UnassignedHostsDrawer({
                     required
                     value={heightU}
                     onChange={(e) => setHeightU(Number(e.target.value))}
-                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3]"
+                    className={`w-full rounded-[8px] px-3 py-1.5 focus:outline-none ${
+                      isTeslaDark
+                        ? 'bg-[#1E1E1E] border border-[#2A2A2A] text-[#F5F5F7] focus:border-[#3E6AE1]'
+                        : 'bg-white border border-black/10 text-[#1d1d1f] focus:border-[#0071E3]'
+                    }`}
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-700 font-medium mb-1">Mount Face</label>
+                  <label className={`block font-medium mb-1 ${isTeslaDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Mount Face</label>
                   <select
                     value={face}
                     onChange={(e) => setFace(e.target.value as any)}
-                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3] cursor-pointer"
+                    className={`w-full rounded-[8px] px-3 py-1.5 focus:outline-none cursor-pointer ${
+                      isTeslaDark
+                        ? 'bg-[#1E1E1E] border border-[#2A2A2A] text-[#F5F5F7] focus:border-[#3E6AE1]'
+                        : 'bg-white border border-black/10 text-[#1d1d1f] focus:border-[#0071E3]'
+                    }`}
                   >
-                    <option value="Front" className="bg-white text-[#1d1d1f]">Front</option>
-                    <option value="Rear" className="bg-white text-[#1d1d1f]">Rear</option>
+                    <option value="Front" className={isTeslaDark ? 'bg-[#1E1E1E] text-[#F5F5F7]' : 'bg-white text-[#1d1d1f]'}>Front</option>
+                    <option value="Rear" className={isTeslaDark ? 'bg-[#1E1E1E] text-[#F5F5F7]' : 'bg-white text-[#1d1d1f]'}>Rear</option>
                   </select>
                 </div>
               </div>
@@ -379,14 +441,22 @@ export function UnassignedHostsDrawer({
                 <button
                   type="button"
                   onClick={() => setSlottingHost(null)}
-                  className="px-3 py-1.5 rounded-[8px] bg-black/[0.05] hover:bg-black/[0.09] text-zinc-600 hover:text-black transition-colors cursor-pointer"
+                  className={`px-3 py-1.5 rounded-[8px] transition-colors cursor-pointer ${
+                    isTeslaDark
+                      ? 'bg-[#1C1C1E] hover:bg-[#252528] text-zinc-300 hover:text-white'
+                      : 'bg-black/[0.05] hover:bg-black/[0.09] text-zinc-600 hover:text-black'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={assigning}
-                  className="px-3.5 py-1.5 rounded-[8px] bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
+                  className={`px-3.5 py-1.5 rounded-[8px] text-white font-semibold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs ${
+                    isTeslaDark
+                      ? 'bg-[#3E6AE1] hover:bg-[#345cc4]'
+                      : 'bg-[#0071E3] hover:bg-[#0077ED]'
+                  }`}
                 >
                   {assigning ? (
                     <>
@@ -409,7 +479,7 @@ export function UnassignedHostsDrawer({
         <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
           {loading && hosts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-zinc-500 text-xs space-y-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-[#0071E3]" />
+              <RefreshCw className={`w-6 h-6 animate-spin ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`} />
               <span>Querying live Zabbix API &amp; CMDB state...</span>
             </div>
           ) : error ? (
@@ -419,8 +489,8 @@ export function UnassignedHostsDrawer({
             </div>
           ) : filteredHosts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-zinc-500 text-xs space-y-2 text-center">
-              <CheckCircle2 className="w-8 h-8 text-[#0071E3] opacity-75" />
-              <span className="text-[#1d1d1f] font-semibold text-sm">All Zabbix hosts are allocated!</span>
+              <CheckCircle2 className={`w-8 h-8 opacity-75 ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`} />
+              <span className={`font-semibold text-sm ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>All Zabbix hosts are allocated!</span>
               <span className="text-xs text-zinc-500">No unassigned hosts match your current filter.</span>
             </div>
           ) : (
@@ -431,14 +501,18 @@ export function UnassignedHostsDrawer({
                   key={host.hostid}
                   className={`p-3.5 rounded-[12px] border transition-all ${
                     isSelected
-                      ? 'bg-[#0071E3]/10 border-[#0071E3]/40 shadow-sm'
-                      : 'bg-white/80 border-black/10 hover:border-black/20 hover:shadow-xs'
+                      ? isTeslaDark
+                        ? 'bg-[#3E6AE1]/20 border-[#3E6AE1]/50 shadow-sm'
+                        : 'bg-[#0071E3]/10 border-[#0071E3]/40 shadow-sm'
+                      : isTeslaDark
+                        ? 'bg-[#141414] border-[#1F1F1F] hover:border-[#2F2F2F]'
+                        : 'bg-white/80 border-black/10 hover:border-black/20 hover:shadow-xs'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-[#1d1d1f] text-xs tracking-tight truncate">
+                        <span className={`font-semibold text-xs tracking-tight truncate ${isTeslaDark ? 'text-[#F5F5F7]' : 'text-[#1d1d1f]'}`}>
                           {host.name}
                         </span>
                         <span className={`px-2 py-0.5 rounded-[6px] border text-[10px] font-medium flex items-center gap-1 ${getTypeBadgeClass(host.inferred_type)}`}>
@@ -446,14 +520,18 @@ export function UnassignedHostsDrawer({
                           <span>{host.inferred_type}</span>
                         </span>
                         {host.device_model && (
-                          <span className="px-2 py-0.5 rounded-[6px] bg-black/[0.04] border border-black/10 text-[10px] text-zinc-600">
+                          <span className={`px-2 py-0.5 rounded-[6px] border text-[10px] ${
+                            isTeslaDark
+                              ? 'bg-white/5 border-white/10 text-zinc-400'
+                              : 'bg-black/[0.04] border-black/10 text-zinc-600'
+                          }`}>
                             {host.device_model}
                           </span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-3 text-xs text-zinc-500">
-                        <span>IP: <strong className="text-[#1d1d1f] font-medium">{host.ip || '0.0.0.0'}</strong></span>
+                        <span>IP: <strong className={`font-medium ${isTeslaDark ? 'text-zinc-200' : 'text-[#1d1d1f]'}`}>{host.ip || '0.0.0.0'}</strong></span>
                         {host.port && <span>Port: {host.port}</span>}
                         <span>Zabbix ID: {host.hostid}</span>
                       </div>
@@ -470,7 +548,11 @@ export function UnassignedHostsDrawer({
                         href={host.zabbix_web_links?.latest_data_url || `http://192.168.1.85:8080/zabbix.php?action=latest.view&filter_hostids%5B%5D=${host.hostid}&filter_set=1`}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-2 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 text-zinc-600 hover:text-black transition-colors cursor-pointer"
+                        className={`p-2 rounded-[8px] border transition-colors cursor-pointer ${
+                          isTeslaDark
+                            ? 'bg-[#1C1C1E] hover:bg-[#252528] border-[#2A2A2A] text-zinc-400 hover:text-white'
+                            : 'bg-black/[0.04] hover:bg-black/[0.08] border-black/10 text-zinc-600 hover:text-black'
+                        }`}
                         title="View Host in Zabbix 7.0 Web Console"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -478,7 +560,11 @@ export function UnassignedHostsDrawer({
                       <button
                         type="button"
                         onClick={() => handleOpenSlotForm(host)}
-                        className="px-3 py-1.5 rounded-[8px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all"
+                        className={`px-3 py-1.5 rounded-[8px] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all ${
+                          isTeslaDark
+                            ? 'bg-[#3E6AE1] hover:bg-[#345cc4]'
+                            : 'bg-[#0071E3] hover:bg-[#0077ED]'
+                        }`}
                       >
                         <ArrowRight className="w-3.5 h-3.5" />
                         <span>Slot</span>
@@ -492,11 +578,15 @@ export function UnassignedHostsDrawer({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-black/10 bg-black/[0.02] flex items-center justify-between text-xs text-zinc-500 shrink-0">
+        <div className={`px-6 py-3 border-t flex items-center justify-between text-xs text-zinc-500 shrink-0 ${
+          isTeslaDark
+            ? 'border-[#1F1F1F] bg-[#111111]'
+            : 'border-black/10 bg-black/[0.02]'
+        }`}>
           <span>
-            Showing <strong className="text-[#1d1d1f]">{filteredHosts.length}</strong> of {hosts.length} unassigned hosts
+            Showing <strong className={isTeslaDark ? 'text-zinc-200' : 'text-[#1d1d1f]'}>{filteredHosts.length}</strong> of {hosts.length} unassigned hosts
           </span>
-          <span className="text-[11px] text-zinc-400">
+          <span className="text-[11px] text-zinc-500">
             FastAPI Ingestion Engine • Redis Cached
           </span>
         </div>

@@ -17,6 +17,7 @@ import {
 import type { ZabbixHostOption, DeviceTemplate, Device } from '../../types'
 import { fetchZabbixHosts, fetchDeviceTemplates, mountDevice } from '../../api/client'
 import { DeviceBezel } from './DeviceBezel'
+import { useTheme } from '../../lib/theme'
 
 interface MountDeviceModalProps {
   rackId: number | string
@@ -35,6 +36,7 @@ export function MountDeviceModal({
   onClose,
   onSuccess,
 }: MountDeviceModalProps) {
+  const { isTeslaDark } = useTheme()
   const [step, setStep] = useState<WizardStep>(1)
 
   // Step 1: Hardware Spec & Template
@@ -266,10 +268,24 @@ export function MountDeviceModal({
   )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-2xl select-none font-sans">
-      <div className="w-full max-w-2xl rounded-[20px] bg-white/95 backdrop-blur-3xl saturate-180 border-[0.5px] border-black/15 shadow-[0_24px_64px_rgba(0,0,0,0.2)] relative overflow-hidden flex flex-col max-h-[90vh] text-[#1d1d1f]">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 select-none ${
+        isTeslaDark ? 'bg-black/80 backdrop-blur-md font-mono' : 'bg-black/40 backdrop-blur-2xl font-sans'
+      }`}
+    >
+      <div
+        className={`w-full max-w-2xl relative overflow-hidden flex flex-col max-h-[90vh] ${
+          isTeslaDark
+            ? 'rounded-[12px] bg-[#111111] border border-[#1F1F1F] text-[#F5F5F7] shadow-none'
+            : 'rounded-[20px] bg-white/95 backdrop-blur-3xl saturate-180 border-[0.5px] border-black/15 shadow-[0_24px_64px_rgba(0,0,0,0.2)] text-[#1d1d1f]'
+        }`}
+      >
         {/* Header Ribbon with macOS Traffic Lights & 4-Step Stepper */}
-        <div className="p-4 border-b border-black/10 bg-black/[0.02] space-y-3">
+        <div
+          className={`p-4 border-b space-y-3 ${
+            isTeslaDark ? 'bg-[#0A0A0A] border-[#1F1F1F]' : 'border-black/10 bg-black/[0.02]'
+          }`}
+        >
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
@@ -277,10 +293,10 @@ export function MountDeviceModal({
                 <span className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d89e24]" />
                 <span className="w-3 h-3 rounded-full bg-[#28c840] border border-[#1aab29]" />
               </div>
-              <div className="h-4 w-[1px] bg-black/10 mx-1" />
+              <div className={`h-4 w-[1px] mx-1 ${isTeslaDark ? 'bg-[#1F1F1F]' : 'bg-black/10'}`} />
               <div className="flex items-center gap-2">
-                <Server className="w-4 h-4 text-[#0071E3]" />
-                <span className="text-sm font-semibold tracking-[-0.022em] text-[#1d1d1f]">
+                <Server className={`w-4 h-4 ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`} />
+                <span className={`text-sm font-semibold ${isTeslaDark ? 'text-white font-mono' : 'tracking-[-0.022em] text-[#1d1d1f]'}`}>
                   Device Provisioning Wizard (Slot U{startU})
                 </span>
               </div>
@@ -288,14 +304,22 @@ export function MountDeviceModal({
             <button
               type="button"
               onClick={onClose}
-              className="text-zinc-500 hover:text-black p-1 rounded-[8px] hover:bg-black/[0.05] transition-colors cursor-pointer"
+              className={`p-1 rounded-[8px] transition-colors cursor-pointer ${
+                isTeslaDark ? 'text-zinc-500 hover:text-white hover:bg-[#1F1F1F]' : 'text-zinc-500 hover:text-black hover:bg-black/[0.05]'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Apple Segmented Stepper */}
-          <div className="grid grid-cols-4 gap-1.5 p-1 rounded-[10px] bg-black/[0.05] text-xs">
+          {/* Stepper Progress Ribbon */}
+          <div
+            className={`grid grid-cols-4 gap-1.5 p-1 text-xs ${
+              isTeslaDark
+                ? 'rounded-[6px] bg-[#161616] border border-[#1F1F1F]'
+                : 'rounded-[10px] bg-black/[0.05]'
+            }`}
+          >
             {[
               { id: 1, label: '1. Hardware Spec' },
               { id: 2, label: '2. RU Placement' },
@@ -311,14 +335,24 @@ export function MountDeviceModal({
                   onClick={() => setStep(s.id as WizardStep)}
                   className={`min-h-[32px] px-2.5 rounded-[8px] flex items-center justify-between text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
                     isCurrent
-                      ? 'bg-[#0071E3] text-white shadow-sm'
+                      ? isTeslaDark
+                        ? 'bg-[#3E6AE1] text-white shadow-none'
+                        : 'bg-[#0071E3] text-white shadow-sm'
                       : isPast
-                      ? 'bg-[#34c759]/15 text-[#34c759]'
+                      ? isTeslaDark
+                        ? 'bg-[#00C853]/15 text-[#00C853]'
+                        : 'bg-[#34c759]/15 text-[#34c759]'
+                      : isTeslaDark
+                      ? 'text-zinc-500 hover:text-white'
                       : 'text-zinc-500 hover:text-black'
                   }`}
                 >
                   <span className="truncate">{s.label}</span>
-                  {isPast && <Check className="w-3.5 h-3.5 text-[#34c759] shrink-0" />}
+                  {isPast && (
+                    <Check
+                      className={`w-3.5 h-3.5 shrink-0 ${isTeslaDark ? 'text-[#00C853]' : 'text-[#34c759]'}`}
+                    />
+                  )}
                 </button>
               )
             })}
@@ -764,12 +798,20 @@ export function MountDeviceModal({
         </div>
 
         {/* Wizard Navigation Footer */}
-        <div className="p-4 bg-black/[0.02] border-t border-black/10 flex items-center justify-between text-xs">
+        <div
+          className={`p-4 border-t flex items-center justify-between text-xs ${
+            isTeslaDark ? 'bg-[#0A0A0A] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+          }`}
+        >
           {step > 1 ? (
             <button
               type="button"
               onClick={() => setStep((s) => (s - 1) as WizardStep)}
-              className="min-h-[44px] px-4 rounded-[12px] border-[0.5px] border-black/10 bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black transition-all cursor-pointer flex items-center gap-2"
+              className={`min-h-[44px] px-4 flex items-center gap-2 transition-all cursor-pointer border ${
+                isTeslaDark
+                  ? 'rounded-[6px] bg-[#161616] hover:bg-[#1F1F1F] border-[#1F1F1F] text-zinc-300 font-mono'
+                  : 'rounded-[12px] border-[0.5px] border-black/10 bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black'
+              }`}
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -778,7 +820,11 @@ export function MountDeviceModal({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 rounded-[12px] border-[0.5px] border-black/10 bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black transition-all cursor-pointer"
+              className={`min-h-[44px] px-4 transition-all cursor-pointer border ${
+                isTeslaDark
+                  ? 'rounded-[6px] bg-[#161616] hover:bg-[#1F1F1F] border-[#1F1F1F] text-zinc-300 font-mono'
+                  : 'rounded-[12px] border-[0.5px] border-black/10 bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black'
+              }`}
             >
               Cancel
             </button>
@@ -788,7 +834,11 @@ export function MountDeviceModal({
             <button
               type="button"
               onClick={() => setStep((s) => (s + 1) as WizardStep)}
-              className="min-h-[44px] px-5 rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] active:scale-[0.98] cursor-pointer flex items-center gap-2 shadow-sm"
+              className={`min-h-[44px] px-5 font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+                isTeslaDark
+                  ? 'rounded-[6px] bg-[#3E6AE1] hover:bg-[#345ac2] text-white font-mono shadow-none'
+                  : 'rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm hover:scale-[1.01] active:scale-[0.98]'
+              }`}
             >
               Next Step
               <ArrowRight className="w-4 h-4" />
@@ -798,7 +848,11 @@ export function MountDeviceModal({
               type="button"
               disabled={loading}
               onClick={handleCommitMounting}
-              className="min-h-[44px] px-6 rounded-[12px] bg-[#34c759] hover:bg-[#2fb34f] text-white font-bold transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center gap-2 shadow-sm"
+              className={`min-h-[44px] px-6 font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2 ${
+                isTeslaDark
+                  ? 'rounded-[6px] bg-[#00C853] hover:bg-[#00a846] text-black font-mono shadow-none'
+                  : 'rounded-[12px] bg-[#34c759] hover:bg-[#2fb34f] text-white shadow-sm hover:scale-[1.01] active:scale-[0.98]'
+              }`}
             >
               <CheckCircle2 className="w-4 h-4" />
               {loading ? 'Committing Provision...' : 'Commit & Mount Device'}

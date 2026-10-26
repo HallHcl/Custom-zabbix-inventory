@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import type { Device } from '../../types'
 import { fetchDeviceBlastRadius, decommissionDevice } from '../../api/client'
+import { useTheme } from '../../lib/theme'
 
 interface DecommissionModalProps {
   device: Device | null
@@ -34,6 +35,7 @@ export function DecommissionModal({
   onClose,
   onSuccess,
 }: DecommissionModalProps) {
+  const { isTeslaDark } = useTheme()
   const [step, setStep] = useState<DecommissionStep>(1)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
@@ -110,10 +112,24 @@ export function DecommissionModal({
   const severity = blastData?.cascade_severity || 'LOW'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-2xl select-none font-sans">
-      <div className="w-full max-w-2xl rounded-[20px] bg-white/95 backdrop-blur-3xl saturate-180 border-[0.5px] border-black/15 shadow-[0_24px_64px_rgba(0,0,0,0.2)] relative overflow-hidden flex flex-col max-h-[90vh] text-[#1d1d1f]">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 select-none ${
+        isTeslaDark ? 'bg-black/80 backdrop-blur-md font-mono' : 'bg-black/40 backdrop-blur-2xl font-sans'
+      }`}
+    >
+      <div
+        className={`w-full max-w-2xl relative overflow-hidden flex flex-col max-h-[90vh] ${
+          isTeslaDark
+            ? 'rounded-[12px] bg-[#111111] border border-[#1F1F1F] text-[#F5F5F7] shadow-none'
+            : 'rounded-[20px] bg-white/95 backdrop-blur-3xl saturate-180 border-[0.5px] border-black/15 shadow-[0_24px_64px_rgba(0,0,0,0.2)] text-[#1d1d1f]'
+        }`}
+      >
         {/* Header Ribbon with Traffic Lights & 4-Step Stepper */}
-        <div className="p-4 border-b border-black/10 bg-black/[0.02] space-y-3">
+        <div
+          className={`p-4 border-b space-y-3 ${
+            isTeslaDark ? 'bg-[#0A0A0A] border-[#1F1F1F]' : 'border-black/10 bg-black/[0.02]'
+          }`}
+        >
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
@@ -121,10 +137,10 @@ export function DecommissionModal({
                 <span className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d89e24]" />
                 <span className="w-3 h-3 rounded-full bg-[#28c840] border border-[#1aab29]" />
               </div>
-              <div className="h-4 w-[1px] bg-black/10 mx-1" />
+              <div className={`h-4 w-[1px] mx-1 ${isTeslaDark ? 'bg-[#1F1F1F]' : 'bg-black/10'}`} />
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-[#ff9500]" />
-                <span className="text-sm font-semibold tracking-[-0.022em] text-[#1d1d1f]">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <span className={`text-sm font-semibold ${isTeslaDark ? 'text-white font-mono' : 'tracking-[-0.022em] text-[#1d1d1f]'}`}>
                   Decommission Wizard: {device.name}
                 </span>
               </div>
@@ -132,14 +148,22 @@ export function DecommissionModal({
             <button
               type="button"
               onClick={onClose}
-              className="text-zinc-500 hover:text-black p-1 rounded-[8px] hover:bg-black/[0.05] transition-colors cursor-pointer"
+              className={`p-1 rounded-[8px] transition-colors cursor-pointer ${
+                isTeslaDark ? 'text-zinc-500 hover:text-white hover:bg-[#1F1F1F]' : 'text-zinc-500 hover:text-black hover:bg-black/[0.05]'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Stepper Progress Ribbon */}
-          <div className="grid grid-cols-4 gap-1.5 p-1 rounded-[10px] bg-black/[0.05] text-xs">
+          <div
+            className={`grid grid-cols-4 gap-1.5 p-1 text-xs ${
+              isTeslaDark
+                ? 'rounded-[6px] bg-[#161616] border border-[#1F1F1F]'
+                : 'rounded-[10px] bg-black/[0.05]'
+            }`}
+          >
             {[
               { id: 1, label: '1. Blast Radius' },
               { id: 2, label: '2. Zabbix Maint' },
@@ -155,14 +179,24 @@ export function DecommissionModal({
                   onClick={() => setStep(s.id as DecommissionStep)}
                   className={`min-h-[32px] px-2.5 rounded-[8px] flex items-center justify-between text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
                     isCurrent
-                      ? 'bg-[#0071E3] text-white shadow-sm'
+                      ? isTeslaDark
+                        ? 'bg-[#3E6AE1] text-white shadow-none'
+                        : 'bg-[#0071E3] text-white shadow-sm'
                       : isPast
-                      ? 'bg-[#34c759]/15 text-[#34c759]'
+                      ? isTeslaDark
+                        ? 'bg-[#00C853]/15 text-[#00C853]'
+                        : 'bg-[#34c759]/15 text-[#34c759]'
+                      : isTeslaDark
+                      ? 'text-zinc-500 hover:text-white'
                       : 'text-zinc-500 hover:text-black'
                   }`}
                 >
                   <span className="truncate">{s.label}</span>
-                  {isPast && <CheckCircle2 className="w-3.5 h-3.5 text-[#34c759] shrink-0" />}
+                  {isPast && (
+                    <CheckCircle2
+                      className={`w-3.5 h-3.5 shrink-0 ${isTeslaDark ? 'text-[#00C853]' : 'text-[#34c759]'}`}
+                    />
+                  )}
                 </button>
               )
             })}
@@ -538,12 +572,20 @@ export function DecommissionModal({
         </div>
 
         {/* Wizard Footer Navigation */}
-        <div className="p-4 bg-black/[0.02] border-t border-black/10 flex items-center justify-between text-xs">
+        <div
+          className={`p-4 border-t flex items-center justify-between text-xs ${
+            isTeslaDark ? 'bg-[#0A0A0A] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+          }`}
+        >
           {step > 1 ? (
             <button
               type="button"
               onClick={() => setStep((s) => (s - 1) as DecommissionStep)}
-              className="min-h-[44px] px-4 rounded-[12px] border-[0.5px] border-black/15 bg-black/[0.04] text-zinc-700 hover:text-black transition-colors cursor-pointer flex items-center gap-2"
+              className={`min-h-[44px] px-4 flex items-center gap-2 transition-colors cursor-pointer border ${
+                isTeslaDark
+                  ? 'rounded-[6px] border-[#1F1F1F] bg-[#161616] text-zinc-300 hover:text-white font-mono'
+                  : 'rounded-[12px] border-[0.5px] border-black/15 bg-black/[0.04] text-zinc-700 hover:text-black'
+              }`}
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -552,7 +594,11 @@ export function DecommissionModal({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 rounded-[12px] border-[0.5px] border-black/15 bg-black/[0.04] text-zinc-700 hover:text-black transition-colors cursor-pointer"
+              className={`min-h-[44px] px-4 transition-colors cursor-pointer border ${
+                isTeslaDark
+                  ? 'rounded-[6px] border-[#1F1F1F] bg-[#161616] text-zinc-300 hover:text-white font-mono'
+                  : 'rounded-[12px] border-[0.5px] border-black/15 bg-black/[0.04] text-zinc-700 hover:text-black'
+              }`}
             >
               Cancel
             </button>
@@ -563,7 +609,11 @@ export function DecommissionModal({
               type="button"
               disabled={step === 3 && !allLotoChecked}
               onClick={() => setStep((s) => (s + 1) as DecommissionStep)}
-              className="min-h-[44px] px-5 rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] active:scale-[0.98] cursor-pointer flex items-center gap-2 shadow-[0_2px_12px_rgba(0,113,227,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
+              className={`min-h-[44px] px-5 font-semibold transition-all cursor-pointer flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
+                isTeslaDark
+                  ? 'rounded-[6px] bg-[#3E6AE1] hover:bg-[#345ac2] text-white font-mono shadow-none'
+                  : 'rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm hover:scale-[1.01] active:scale-[0.98]'
+              }`}
             >
               Next Step
               <ArrowRight className="w-4 h-4" />
@@ -573,7 +623,11 @@ export function DecommissionModal({
               type="button"
               disabled={loading}
               onClick={handleExecuteDecommission}
-              className="min-h-[44px] px-6 rounded-[12px] bg-[#ff3b30] hover:bg-[#e0342a] text-white font-bold transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center gap-2 shadow-[0_2px_12px_rgba(255,59,48,0.3)]"
+              className={`min-h-[44px] px-6 font-bold transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2 ${
+                isTeslaDark
+                  ? 'rounded-[6px] bg-[#E82127] hover:bg-[#cf1b21] text-white font-mono shadow-none'
+                  : 'rounded-[12px] bg-[#ff3b30] hover:bg-[#e0342a] text-white shadow-sm hover:scale-[1.01] active:scale-[0.98]'
+              }`}
             >
               <Trash2 className="w-4 h-4" />
               {loading ? 'Executing Decommission...' : 'Confirm & Execute Decommission'}

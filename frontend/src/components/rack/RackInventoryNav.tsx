@@ -1,5 +1,6 @@
 import { Search, Layers, Server, Network, Shield, HardDrive, BatteryCharging, MinusSquare, Cable } from 'lucide-react'
 import type { Device } from '../../types'
+import { useTheme } from '../../lib/theme'
 
 interface RackInventoryNavProps {
   devices: Device[]
@@ -16,6 +17,8 @@ export function RackInventoryNav({
   searchFilter,
   onSearchChange,
 }: RackInventoryNavProps) {
+  const { isTeslaDark } = useTheme()
+
   const counts: Record<string, number> = {
     all: devices.length,
     'Patch Panel': 0,
@@ -47,24 +50,35 @@ export function RackInventoryNav({
   ]
 
   return (
-/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
-    <div className="w-60 rounded-[20px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-sm flex flex-col justify-between select-none shrink-0 overflow-hidden text-[#1d1d1f]">
+    <div className={`w-60 rounded-[20px] backdrop-blur-2xl border shadow-sm flex flex-col justify-between select-none shrink-0 overflow-hidden transition-colors ${
+      isTeslaDark
+        ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+        : "bg-white/75 border-black/10 text-[#1d1d1f]"
+    }`}>
       <div>
-        <div className="px-4 py-3 border-b border-black/5 flex items-center justify-between">
-          <span className="font-semibold text-xs tracking-[-0.011em] text-[#1d1d1f]">Hardware Filters</span>
-          <span className="text-[11px] font-medium text-zinc-500">{devices.length} Units</span>
+        <div className={`px-4 py-3 border-b flex items-center justify-between ${
+          isTeslaDark ? "border-[#1F1F1F]" : "border-black/5"
+        }`}>
+          <span className={`font-semibold text-xs tracking-[-0.011em] ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>Hardware Filters</span>
+          <span className={`text-[11px] font-medium ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>{devices.length} Units</span>
         </div>
 
         <div className="p-3 space-y-3">
           {/* Quick Search */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${
+              isTeslaDark ? "text-[#666666]" : "text-zinc-400"
+            }`} />
             <input
               type="text"
               value={searchFilter}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Filter rack units..."
-              className="w-full bg-black/[0.04] text-xs text-[#1d1d1f] placeholder:text-zinc-400 pl-8 pr-3 py-2 rounded-[10px] border border-black/10 focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-colors"
+              className={`w-full text-xs pl-8 pr-3 py-2 rounded-[10px] border transition-colors focus:outline-none ${
+                isTeslaDark
+                  ? "bg-[#181818] text-[#F5F5F7] placeholder-[#666666] border-[#262626] focus:border-[#3E6AE1]"
+                  : "bg-black/[0.04] text-[#1d1d1f] placeholder:text-zinc-400 border-black/10 focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3]"
+              }`}
             />
           </div>
 
@@ -81,18 +95,24 @@ export function RackInventoryNav({
                   onClick={() => onSelectType(cat.id)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-[10px] text-xs font-medium transition-all duration-150 cursor-pointer ${
                     isSelected
-                      ? 'bg-[#0071E3] text-white shadow-sm'
+                      ? isTeslaDark ? 'bg-[#3E6AE1] text-white shadow-sm' : 'bg-[#0071E3] text-white shadow-sm'
+                      : isTeslaDark
+                      ? 'text-[#AAAAAA] hover:text-[#FFFFFF] hover:bg-[#181818]'
                       : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-zinc-500'}`} />
+                    <Icon className={`w-3.5 h-3.5 ${
+                      isSelected ? 'text-white' : isTeslaDark ? 'text-[#888888]' : 'text-zinc-500'
+                    }`} />
                     <span className="text-xs">{cat.label}</span>
                   </div>
                   <span
                     className={`px-2 py-0.5 rounded-[6px] text-[10px] font-semibold ${
                       isSelected
                         ? 'bg-white/20 text-white'
+                        : isTeslaDark
+                        ? 'bg-[#1C1C1C] text-[#888888] border border-[#262626]'
                         : 'bg-black/[0.05] text-zinc-600'
                     }`}
                   >
@@ -105,9 +125,13 @@ export function RackInventoryNav({
         </div>
       </div>
 
-      <div className="px-3.5 py-2.5 border-t border-black/5 bg-black/[0.02] text-[11px] font-medium text-zinc-500 flex items-center justify-between">
+      <div className={`px-3.5 py-2.5 border-t text-[11px] font-medium flex items-center justify-between ${
+        isTeslaDark
+          ? "border-[#1F1F1F] bg-[#0E0E0E] text-[#888888]"
+          : "border-black/5 bg-black/[0.02] text-zinc-500"
+      }`}>
         <span>Active Slot Filter</span>
-        <span className="text-[#0071E3] font-semibold">{selectedType || 'ALL'}</span>
+        <span className={`font-semibold ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`}>{selectedType || 'ALL'}</span>
       </div>
     </div>
   )

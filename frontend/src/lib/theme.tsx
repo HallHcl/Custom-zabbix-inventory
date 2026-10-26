@@ -42,13 +42,13 @@ export const NEXUS_THEMES: Record<NexusTheme, ThemeMetadata> = {
   },
   "tesla-midnight": {
     id: "tesla-midnight",
-    name: "Tesla Midnight",
-    inspiration: "Tesla Cybertruck / Model S HMI",
-    bestFor: "24/7 Dark-Room NOC Video Walls",
-    bgHex: "#0B0E14",
-    accentHex: "#3B82F6",
-    glassSurface: "rgba(22, 27, 38, 0.78)",
-    previewGradient: "from-blue-600 to-slate-900",
+    name: "Tesla Dark (TDS)",
+    inspiration: "Tesla Touchscreen (TDS) & Cockpit HUD",
+    bestFor: "Dual-System Synergy: Pure OLED Black & Telemetry",
+    bgHex: "#000000",
+    accentHex: "#3E6AE1",
+    glassSurface: "#111111",
+    previewGradient: "from-blue-600 to-black",
   },
   "obsidian-carbon": {
     id: "obsidian-carbon",
@@ -77,7 +77,9 @@ interface ThemeContextValue {
   themeMeta: ThemeMetadata;
   setTheme: (theme: NexusTheme) => void;
   cycleTheme: () => void;
+  toggleDualSystem: () => void;
   isLight: boolean;
+  isTeslaDark: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -116,6 +118,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTheme(nextTheme);
   };
 
+  const toggleDualSystem = () => {
+    // Dual-System Synergy: Apple Light Mode <-> Tesla Dark Mode
+    if (theme === "cupertino-frost") {
+      setTheme("tesla-midnight");
+    } else {
+      setTheme("cupertino-frost");
+    }
+  };
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
@@ -125,7 +136,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     themeMeta: NEXUS_THEMES[theme],
     setTheme,
     cycleTheme,
+    toggleDualSystem,
     isLight: theme === "cupertino-frost",
+    isTeslaDark: theme === "tesla-midnight",
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

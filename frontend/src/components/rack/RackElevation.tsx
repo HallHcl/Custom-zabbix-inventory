@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { Plus, Zap, Wifi, AlertTriangle, Activity, Layers } from 'lucide-react'
 import type { Device, RackElevation as RackElevationType } from '../../types'
 import { DeviceBezel } from './DeviceBezel'
+import { useTheme } from '../../lib/theme'
 
 interface RackElevationProps {
   rack: RackElevationType
@@ -24,6 +25,7 @@ export function RackElevation({
   typeFilter,
   searchFilter = '',
 }: RackElevationProps) {
+  const { isTeslaDark } = useTheme()
   const [face, setFace] = useState<'Front' | 'Rear'>('Front')
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null)
   const [cableFilter, setCableFilter] = useState<CableFilterMode>('ALL')
@@ -145,8 +147,12 @@ export function RackElevation({
           </div>
 
           {/* Left Rack Ear Screw */}
-          <div className="w-3 h-full flex items-center justify-center bg-black/[0.03] border-r-[0.5px] border-black/10 select-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-black/15 border-[0.5px] border-black/25" />
+          <div className={`w-3 h-full flex items-center justify-center select-none border-r-[0.5px] ${
+            isTeslaDark ? "bg-[#141414] border-[#1F1F1F]" : "bg-black/[0.03] border-black/10"
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full border-[0.5px] ${
+              isTeslaDark ? "bg-[#2E2E2E] border-[#3E3E3E]" : "bg-black/15 border-black/25"
+            }`} />
           </div>
 
           {/* Center: Device Faceplate Bezel */}
@@ -161,12 +167,18 @@ export function RackElevation({
           </div>
 
           {/* Right Rack Ear Screw */}
-          <div className="w-3 h-full flex items-center justify-center bg-black/[0.03] border-l-[0.5px] border-black/10 select-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-black/15 border-[0.5px] border-black/25" />
+          <div className={`w-3 h-full flex items-center justify-center select-none border-l-[0.5px] ${
+            isTeslaDark ? "bg-[#141414] border-[#1F1F1F]" : "bg-black/[0.03] border-black/10"
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full border-[0.5px] ${
+              isTeslaDark ? "bg-[#2E2E2E] border-[#3E3E3E]" : "bg-black/15 border-black/25"
+            }`} />
           </div>
 
           {/* Right U Rail Number */}
-          <div className="w-7 shrink-0 text-left pl-1.5 font-mono text-[10px] text-zinc-500 font-semibold select-none">
+          <div className={`w-7 shrink-0 text-left pl-1.5 font-mono text-[10px] font-semibold select-none ${
+            isTeslaDark ? "text-[#888888]" : "text-zinc-500"
+          }`}>
             {u}
           </div>
 
@@ -219,44 +231,60 @@ export function RackElevation({
         <div key={`slot-${u}`} className="flex items-center w-full group/slot">
           {/* Left Empty Finger */}
           <div className="w-10 shrink-0 h-7 flex items-center justify-end pr-1">
-            <div className="w-4 h-0.5 bg-black/10" />
+            <div className={`w-4 h-0.5 ${isTeslaDark ? "bg-[#222222]" : "bg-black/10"}`} />
           </div>
 
           {/* Left U Rail Number */}
-          <div className="w-7 shrink-0 text-right pr-1.5 font-mono text-[10px] text-zinc-400 select-none">
+          <div className={`w-7 shrink-0 text-right pr-1.5 font-mono text-[10px] select-none ${
+            isTeslaDark ? "text-[#666666]" : "text-zinc-400"
+          }`}>
             {u}
           </div>
 
           {/* Left Rail Mounting Hole */}
-          <div className="w-3 h-7 flex items-center justify-center bg-black/[0.03] border-r-[0.5px] border-black/10 select-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-black/15 border-[0.5px] border-black/25" />
+          <div className={`w-3 h-7 flex items-center justify-center select-none border-r-[0.5px] ${
+            isTeslaDark ? "bg-[#141414] border-[#1F1F1F]" : "bg-black/[0.03] border-black/10"
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full border-[0.5px] ${
+              isTeslaDark ? "bg-[#2E2E2E] border-[#3E3E3E]" : "bg-black/15 border-black/25"
+            }`} />
           </div>
 
           {/* Empty Slot Bay */}
           <div
             onClick={() => onEmptySlotClick(u)}
-            className="flex-1 h-7 border border-dashed border-black/15 bg-black/[0.015] hover:bg-[#0071E3]/10 hover:border-[#0071E3]/40 transition-all duration-200 cursor-pointer flex items-center justify-center text-transparent hover:text-[#0071E3] text-[11px] font-sans font-medium"
+            className={`flex-1 h-7 border border-dashed transition-all duration-200 cursor-pointer flex items-center justify-center text-transparent text-[11px] font-sans font-medium ${
+              isTeslaDark
+                ? "border-[#222222] bg-[#0E0E0E] hover:bg-[#3E6AE1]/15 hover:border-[#3E6AE1]/50 hover:text-[#3E6AE1]"
+                : "border-black/15 bg-black/[0.015] hover:bg-[#0071E3]/10 hover:border-[#0071E3]/40 hover:text-[#0071E3]"
+            }`}
             title={`Mount hardware unit at U${u}`}
           >
             <div className="flex items-center gap-1.5 opacity-0 group-hover/slot:opacity-100 transition-opacity">
-              <Plus className="w-3.5 h-3.5 text-[#0071E3]" />
-              <span className="tracking-tight text-[#0071E3]">Mount at U{u}</span>
+              <Plus className={`w-3.5 h-3.5 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`} />
+              <span className={`tracking-tight ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`}>Mount at U{u}</span>
             </div>
           </div>
 
           {/* Right Rail Mounting Hole */}
-          <div className="w-3 h-7 flex items-center justify-center bg-black/[0.03] border-l-[0.5px] border-black/10 select-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-black/15 border-[0.5px] border-black/25" />
+          <div className={`w-3 h-7 flex items-center justify-center select-none border-l-[0.5px] ${
+            isTeslaDark ? "bg-[#141414] border-[#1F1F1F]" : "bg-black/[0.03] border-black/10"
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full border-[0.5px] ${
+              isTeslaDark ? "bg-[#2E2E2E] border-[#3E3E3E]" : "bg-black/15 border-black/25"
+            }`} />
           </div>
 
           {/* Right U Rail Number */}
-          <div className="w-7 shrink-0 text-left pl-1.5 font-mono text-[10px] text-zinc-400 select-none">
+          <div className={`w-7 shrink-0 text-left pl-1.5 font-mono text-[10px] select-none ${
+            isTeslaDark ? "text-[#666666]" : "text-zinc-400"
+          }`}>
             {u}
           </div>
 
           {/* Right Empty Finger */}
           <div className="w-12 shrink-0 h-7 flex items-center pl-1">
-            <div className="w-4 h-0.5 bg-black/10" />
+            <div className={`w-4 h-0.5 ${isTeslaDark ? "bg-[#222222]" : "bg-black/10"}`} />
           </div>
         </div>
       )
@@ -270,24 +298,38 @@ export function RackElevation({
   }, [rack.devices, activeDeviceId])
 
   return (
-    <div className="flex flex-col items-center select-none max-w-[620px] w-full font-sans text-zinc-800">
+    <div className={`flex flex-col items-center select-none max-w-[620px] w-full font-sans transition-colors ${
+      isTeslaDark ? "text-[#F5F5F7]" : "text-zinc-800"
+    }`}>
       {/* Front / Rear & Standard EIA-310 Header */}
-      <div className="w-full flex items-center justify-between p-3 mb-3 rounded-[16px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 shadow-sm text-[#1d1d1f]">
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
-          <span className="w-2 h-2 rounded-full bg-[#0071E3] animate-pulse" />
-          <span className="font-semibold text-[#1d1d1f] tracking-[-0.011em]">EIA-310-D 19&quot; SPEC</span>
-          <span className="text-black/20">•</span>
-          <span className="text-[#0071E3] font-medium">2N Dual Power Redundancy</span>
+      <div className={`w-full flex items-center justify-between p-3 mb-3 rounded-[16px] backdrop-blur-xl border shadow-sm transition-colors ${
+        isTeslaDark
+          ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+          : "bg-white/75 border-black/10 text-[#1d1d1f]"
+      }`}>
+        <div className={`flex items-center gap-2 text-xs ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
+          <span className={`w-2 h-2 rounded-full animate-pulse ${isTeslaDark ? "bg-[#3E6AE1]" : "bg-[#0071E3]"}`} />
+          <span className={`font-semibold tracking-[-0.011em] ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>EIA-310-D 19&quot; SPEC</span>
+          <span className={isTeslaDark ? "text-[#333333]" : "text-black/20"}>•</span>
+          <span className={`font-medium ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`}>2N Dual Power Redundancy</span>
         </div>
 
-        {/* Front / Rear Hardware Selector (Apple Segmented Pill) */}
-        <div className="flex items-center p-1 rounded-[10px] bg-black/[0.04] border-[0.5px] border-black/10">
+        {/* Front / Rear Hardware Selector */}
+        <div className={`flex items-center p-1 rounded-[10px] border ${
+          isTeslaDark
+            ? "bg-[#181818] border-[#262626]"
+            : "bg-black/[0.04] border-black/10"
+        }`}>
           <button
             type="button"
             onClick={() => setFace('Front')}
             className={`min-h-[30px] px-3.5 py-1 rounded-[8px] text-xs font-semibold tracking-[-0.011em] transition-all duration-200 cursor-pointer ${
               face === 'Front'
-                ? 'bg-white text-[#1d1d1f] shadow-sm'
+                ? isTeslaDark
+                  ? 'bg-[#2A2A2A] text-[#F5F5F7] shadow-sm'
+                  : 'bg-white text-[#1d1d1f] shadow-sm'
+                : isTeslaDark
+                ? 'text-[#888888] hover:text-[#FFFFFF]'
                 : 'text-zinc-500 hover:text-[#1d1d1f]'
             }`}
           >
@@ -298,7 +340,11 @@ export function RackElevation({
             onClick={() => setFace('Rear')}
             className={`min-h-[30px] px-3.5 py-1 rounded-[8px] text-xs font-semibold tracking-[-0.011em] transition-all duration-200 cursor-pointer ${
               face === 'Rear'
-                ? 'bg-white text-[#1d1d1f] shadow-sm'
+                ? isTeslaDark
+                  ? 'bg-[#2A2A2A] text-[#F5F5F7] shadow-sm'
+                  : 'bg-white text-[#1d1d1f] shadow-sm'
+                : isTeslaDark
+                ? 'text-[#888888] hover:text-[#FFFFFF]'
                 : 'text-zinc-500 hover:text-[#1d1d1f]'
             }`}
           >
@@ -309,12 +355,16 @@ export function RackElevation({
 
       {/* Redundancy Hazard Banner if any single-corded device exists */}
       {singleCordedDevices.length > 0 && (
-        <div className="w-full mb-3 p-3 rounded-[16px] bg-[#ff9500]/10 border-[0.5px] border-[#ff9500]/30 flex items-center justify-between text-xs shadow-sm">
+        <div className={`w-full mb-3 p-3 rounded-[16px] border flex items-center justify-between text-xs shadow-sm ${
+          isTeslaDark
+            ? "bg-amber-950/30 border-amber-800/50"
+            : "bg-[#ff9500]/10 border-[#ff9500]/30"
+        }`}>
           <div className="flex items-center gap-2.5 text-[#ff9500]">
             <AlertTriangle className="w-4 h-4 text-[#ff9500] shrink-0 animate-pulse" />
             <div>
               <span className="font-bold">SINGLE-CORDED HAZARD: </span>
-              <span className="text-zinc-700">
+              <span className={isTeslaDark ? "text-[#CCCCCC]" : "text-zinc-700"}>
                 {singleCordedDevices[0].name} has no redundant Feed B power connection!
               </span>
             </div>
@@ -330,8 +380,12 @@ export function RackElevation({
       )}
 
       {/* Cable Tracing Filter Toolbar */}
-      <div className="w-full mb-3 p-2 rounded-[16px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 flex flex-wrap items-center justify-between gap-2 text-xs shadow-sm text-[#1d1d1f]">
-        <div className="flex items-center gap-1.5 text-zinc-500 pl-1 font-medium">
+      <div className={`w-full mb-3 p-2 rounded-[16px] backdrop-blur-xl border flex flex-wrap items-center justify-between gap-2 text-xs shadow-sm transition-colors ${
+        isTeslaDark
+          ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+          : "bg-white/75 border-black/10 text-[#1d1d1f]"
+      }`}>
+        <div className={`flex items-center gap-1.5 pl-1 font-medium ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
           <Zap className="w-3.5 h-3.5 text-[#ff9500]" />
           <span>Cabling:</span>
         </div>
@@ -342,8 +396,8 @@ export function RackElevation({
             onClick={() => setCableFilter('ALL')}
             className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
               cableFilter === 'ALL'
-                ? 'bg-[#0071E3] text-white shadow-sm'
-                : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f]'
+                ? isTeslaDark ? 'bg-[#3E6AE1] text-white shadow-sm' : 'bg-[#0071E3] text-white shadow-sm'
+                : isTeslaDark ? 'bg-[#181818] text-[#888888] hover:text-[#FFFFFF]' : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f]'
             }`}
           >
             ALL
@@ -353,11 +407,11 @@ export function RackElevation({
             onClick={() => setCableFilter('FEED_A')}
             className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               cableFilter === 'FEED_A'
-                ? 'bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/40 shadow-xs'
-                : 'bg-black/[0.04] text-zinc-600 hover:text-[#0071E3]'
+                ? isTeslaDark ? 'bg-[#3E6AE1]/20 text-[#3E6AE1] border border-[#3E6AE1]/40' : 'bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/40 shadow-xs'
+                : isTeslaDark ? 'bg-[#181818] text-[#888888] hover:text-[#3E6AE1]' : 'bg-black/[0.04] text-zinc-600 hover:text-[#0071E3]'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3]" />
+            <span className={`w-1.5 h-1.5 rounded-full ${isTeslaDark ? "bg-[#3E6AE1]" : "bg-[#0071E3]"}`} />
             FEED A
           </button>
           <button
@@ -366,7 +420,7 @@ export function RackElevation({
             className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               cableFilter === 'FEED_B'
                 ? 'bg-[#ff3b30]/15 text-[#ff3b30] border-[0.5px] border-[#ff3b30]/40 shadow-xs'
-                : 'bg-black/[0.04] text-zinc-600 hover:text-[#ff3b30]'
+                : isTeslaDark ? 'bg-[#181818] text-[#888888] hover:text-[#ff3b30]' : 'bg-black/[0.04] text-zinc-600 hover:text-[#ff3b30]'
             }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#ff3b30]" />
@@ -378,7 +432,7 @@ export function RackElevation({
             className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               cableFilter === 'NETWORK'
                 ? 'bg-[#34c759]/15 text-[#34c759] border-[0.5px] border-[#34c759]/40 shadow-xs'
-                : 'bg-black/[0.04] text-zinc-600 hover:text-[#34c759]'
+                : isTeslaDark ? 'bg-[#181818] text-[#888888] hover:text-[#34c759]' : 'bg-black/[0.04] text-zinc-600 hover:text-[#34c759]'
             }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#34c759]" />
@@ -389,8 +443,8 @@ export function RackElevation({
             onClick={() => setCableFilter('NONE')}
             className={`px-2 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
               cableFilter === 'NONE'
-                ? 'bg-black/10 text-[#1d1d1f] shadow-xs'
-                : 'bg-black/[0.04] text-zinc-500 hover:text-[#1d1d1f]'
+                ? isTeslaDark ? 'bg-[#2A2A2A] text-[#F5F5F7] shadow-xs' : 'bg-black/10 text-[#1d1d1f] shadow-xs'
+                : isTeslaDark ? 'bg-[#181818] text-[#666666] hover:text-[#FFFFFF]' : 'bg-black/[0.04] text-zinc-500 hover:text-[#1d1d1f]'
             }`}
           >
             HIDE
@@ -400,8 +454,12 @@ export function RackElevation({
 
       {/* Quick Brand Filter Chip Bar */}
       {availableBrands.length > 0 && (
-        <div className="w-full mb-3 p-2 rounded-[16px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 flex items-center gap-1.5 overflow-x-auto text-xs shadow-sm text-[#1d1d1f]">
-          <span className="text-[11px] text-zinc-500 font-medium shrink-0 px-1">
+        <div className={`w-full mb-3 p-2 rounded-[16px] backdrop-blur-xl border flex items-center gap-1.5 overflow-x-auto text-xs shadow-sm transition-colors ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+            : "bg-white/75 border-black/10 text-[#1d1d1f]"
+        }`}>
+          <span className={`text-[11px] font-medium shrink-0 px-1 ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
             Brand:
           </span>
           <button
@@ -409,8 +467,8 @@ export function RackElevation({
             onClick={() => setSelectedBrand(null)}
             className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
               selectedBrand === null
-                ? 'bg-[#0071E3] text-white shadow-sm'
-                : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f] border-[0.5px] border-black/10'
+                ? isTeslaDark ? 'bg-[#3E6AE1] text-white shadow-sm' : 'bg-[#0071E3] text-white shadow-sm'
+                : isTeslaDark ? 'bg-[#181818] text-[#888888] hover:text-[#FFFFFF] border border-[#262626]' : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f] border-[0.5px] border-black/10'
             }`}
           >
             ALL ({rack.devices.length})
@@ -424,8 +482,8 @@ export function RackElevation({
                 onClick={() => setSelectedBrand(isActive ? null : b.name)}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
                   isActive
-                    ? 'bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/30 shadow-xs'
-                    : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f] border-[0.5px] border-black/10'
+                    ? isTeslaDark ? 'bg-[#3E6AE1]/20 text-[#3E6AE1] border border-[#3E6AE1]/40 shadow-xs' : 'bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/30 shadow-xs'
+                    : isTeslaDark ? 'bg-[#181818] text-[#888888] hover:text-[#FFFFFF] border border-[#262626]' : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f] border-[0.5px] border-black/10'
                 }`}
                 title={`Filter by ${b.name} (${b.count} units)`}
               >
@@ -442,16 +500,24 @@ export function RackElevation({
       )}
 
       {/* 42U Heavy-Duty Equipment Rack Cabinet Frame with Vertical Cable Channels */}
-      <div className="w-full p-3 rounded-[20px] bg-white/80 backdrop-blur-2xl saturate-180 border-[0.5px] border-black/10 shadow-xl relative">
+      <div className={`w-full p-3 rounded-[20px] backdrop-blur-2xl saturate-180 border shadow-xl relative transition-colors ${
+        isTeslaDark
+          ? "bg-[#0A0A0A] border-[#1F1F1F]"
+          : "bg-white/80 border-black/10"
+      }`}>
         {/* Top Extrusion Header: Left PDU A, Center 42U Cabinet, Right PDU B */}
-        <div className="h-7 bg-black/[0.03] border-b-[0.5px] border-black/10 rounded-t-[14px] flex items-center justify-between px-3 text-[10px] font-mono text-zinc-500 mb-1.5">
-          <div className="flex items-center gap-1.5 text-[#0071E3] font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3] shadow-[0_0_6px_#0071E3]" />
+        <div className={`h-7 border-b rounded-t-[14px] flex items-center justify-between px-3 text-[10px] font-mono mb-1.5 ${
+          isTeslaDark
+            ? "bg-[#121212] border-[#1F1F1F] text-[#888888]"
+            : "bg-black/[0.03] border-black/10 text-zinc-500"
+        }`}>
+          <div className={`flex items-center gap-1.5 font-bold ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isTeslaDark ? "bg-[#3E6AE1] shadow-[0_0_6px_#3E6AE1]" : "bg-[#0071E3] shadow-[0_0_6px_#0071E3]"}`} />
             <span>PDU-A (FEED A)</span>
           </div>
-          <div className="flex items-center gap-2 text-zinc-600">
+          <div className={`flex items-center gap-2 ${isTeslaDark ? "text-[#AAAAAA]" : "text-zinc-600"}`}>
             <span>42U EIA-310 STANDARD RACK</span>
-            <span className="text-black/20">•</span>
+            <span className={isTeslaDark ? "text-[#333333]" : "text-black/20"}>•</span>
             <span>482.6 mm</span>
           </div>
           <div className="flex items-center gap-1.5 text-[#ff3b30] font-bold">
@@ -464,27 +530,43 @@ export function RackElevation({
         <div className="space-y-0.5">{uRows}</div>
 
         {/* Bottom Cabinet Plinth & Inlet Headers */}
-        <div className="h-7 bg-black/[0.03] border-t-[0.5px] border-black/10 rounded-b-[14px] flex items-center justify-between px-3 text-[10px] font-mono text-zinc-500 mt-1.5">
-          <span className="text-[#0071E3]">230V • 16A BREAKER A: NOMINAL</span>
-          <span className="text-zinc-600">CABLE TRAY INLET • LEVELING ENGAGED</span>
+        <div className={`h-7 border-t rounded-b-[14px] flex items-center justify-between px-3 text-[10px] font-mono mt-1.5 ${
+          isTeslaDark
+            ? "bg-[#121212] border-[#1F1F1F] text-[#888888]"
+            : "bg-black/[0.03] border-black/10 text-zinc-500"
+        }`}>
+          <span className={isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}>230V • 16A BREAKER A: NOMINAL</span>
+          <span className={isTeslaDark ? "text-[#AAAAAA]" : "text-zinc-600"}>CABLE TRAY INLET • LEVELING ENGAGED</span>
           <span className="text-[#ff3b30]">230V • 16A BREAKER B: NOMINAL</span>
         </div>
       </div>
 
       {/* Interactive Cable Inspection HUD Pill when Hovered/Selected */}
       {activeDevice && (
-        <div className="w-full mt-3 p-4 rounded-[16px] bg-white/85 backdrop-blur-2xl border-[0.5px] border-[#0071E3]/30 shadow-lg text-xs space-y-3 animate-fadeIn text-[#1d1d1f]">
-          <div className="flex items-center justify-between border-b border-black/10 pb-2">
+        <div className={`w-full mt-3 p-4 rounded-[16px] backdrop-blur-2xl border shadow-lg text-xs space-y-3 animate-fadeIn transition-colors ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+            : "bg-white/85 border-[#0071E3]/30 text-[#1d1d1f]"
+        }`}>
+          <div className={`flex items-center justify-between border-b pb-2 ${
+            isTeslaDark ? "border-[#1F1F1F]" : "border-black/10"
+          }`}>
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-[8px] bg-[#0071E3]/15 text-[#0071E3] flex items-center justify-center">
+              <div className={`w-7 h-7 rounded-[8px] flex items-center justify-center ${
+                isTeslaDark ? "bg-[#3E6AE1]/20 text-[#3E6AE1]" : "bg-[#0071E3]/15 text-[#0071E3]"
+              }`}>
                 <Activity className="w-4 h-4" />
               </div>
-              <span className="font-semibold text-[#1d1d1f] text-sm">{activeDevice.name}</span>
-              <span className="text-xs px-2 py-0.5 bg-black/[0.05] rounded-[6px] text-zinc-700 font-medium">
+              <span className={`font-semibold text-sm ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>{activeDevice.name}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-[6px] font-medium border ${
+                isTeslaDark
+                  ? "bg-[#181818] border-[#262626] text-[#A1A1A6]"
+                  : "bg-black/[0.05] border-transparent text-zinc-700"
+              }`}>
                 U{activeDevice.start_u} ({activeDevice.height_u}U)
               </span>
             </div>
-            <span className="text-xs text-zinc-500 flex items-center gap-1">
+            <span className={`text-xs flex items-center gap-1 ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
               <Layers className="w-3.5 h-3.5 text-zinc-400" />
               {activeDevice.model || activeDevice.device_type}
             </span>
@@ -492,21 +574,25 @@ export function RackElevation({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
             {/* Feed A Info */}
-            <div className="p-3 rounded-[12px] bg-black/[0.03] border-[0.5px] border-black/10">
-              <span className="text-[#0071E3] font-semibold flex items-center gap-1.5 mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3]" />
+            <div className={`p-3 rounded-[12px] border ${
+              isTeslaDark
+                ? "bg-[#161616] border-[#222222]"
+                : "bg-black/[0.03] border-black/10"
+            }`}>
+              <span className={`font-semibold flex items-center gap-1.5 mb-1 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isTeslaDark ? "bg-[#3E6AE1]" : "bg-[#0071E3]"}`} />
                 Feed A (Primary)
               </span>
-              <span className="text-zinc-800 block text-[11px] font-medium">PDU-A Outlet #{activeDevice.start_u}</span>
-              <span className="text-[10px] text-zinc-500 mt-0.5 block">228V • 1.1A • 251W Nominal</span>
+              <span className={`block text-[11px] font-medium ${isTeslaDark ? "text-[#E0E0E0]" : "text-zinc-800"}`}>PDU-A Outlet #{activeDevice.start_u}</span>
+              <span className={`text-[10px] mt-0.5 block ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>228V • 1.1A • 251W Nominal</span>
             </div>
 
             {/* Feed B Info */}
             <div
-              className={`p-3 rounded-[12px] border-[0.5px] ${
+              className={`p-3 rounded-[12px] border ${
                 singleCordedDevices.some((sc) => sc.id === activeDevice.id)
-                  ? 'bg-[#ff9500]/15 border-[#ff9500]/40'
-                  : 'bg-black/[0.03] border-black/10'
+                  ? isTeslaDark ? 'bg-amber-950/30 border-amber-800/50' : 'bg-[#ff9500]/15 border-[#ff9500]/40'
+                  : isTeslaDark ? 'bg-[#161616] border-[#222222]' : 'bg-black/[0.03] border-black/10'
               }`}
             >
               <span
@@ -531,19 +617,23 @@ export function RackElevation({
                 </span>
               ) : (
                 <>
-                  <span className="text-zinc-800 block text-[11px] font-medium">PDU-B Outlet #{activeDevice.start_u}</span>
-                  <span className="text-[10px] text-zinc-500 mt-0.5 block">228V • 0.1A • Standby Active</span>
+                  <span className={`block text-[11px] font-medium ${isTeslaDark ? "text-[#E0E0E0]" : "text-zinc-800"}`}>PDU-B Outlet #{activeDevice.start_u}</span>
+                  <span className={`text-[10px] mt-0.5 block ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>228V • 0.1A • Standby Active</span>
                 </>
               )}
             </div>
 
             {/* Network Uplink Info */}
-            <div className="p-3 rounded-[12px] bg-black/[0.03] border-[0.5px] border-black/10">
+            <div className={`p-3 rounded-[12px] border ${
+              isTeslaDark
+                ? "bg-[#161616] border-[#222222]"
+                : "bg-black/[0.03] border-black/10"
+            }`}>
               <span className="text-[#34c759] font-semibold flex items-center gap-1.5 mb-1">
                 <Wifi className="w-3.5 h-3.5 text-[#34c759]" />
                 Network Uplink
               </span>
-              <span className="text-zinc-800 block text-[11px] font-medium">SW-TOR-01 (Gi1/0/{activeDevice.start_u})</span>
+              <span className={`block text-[11px] font-medium ${isTeslaDark ? "text-[#E0E0E0]" : "text-zinc-800"}`}>SW-TOR-01 (Gi1/0/{activeDevice.start_u})</span>
               <span className="text-[10px] text-[#34c759] font-medium mt-0.5 block">10/25 GbE SFP28 Link UP</span>
             </div>
           </div>

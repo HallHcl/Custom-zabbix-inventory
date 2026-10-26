@@ -11,6 +11,7 @@ import {
   Box,
 } from 'lucide-react'
 import type { ChassisSpecs, BrandInfo } from '../../types'
+import { useTheme } from '../../lib/theme'
 
 interface ChassisVisualCardProps {
   deviceType: string
@@ -29,6 +30,7 @@ export function ChassisVisualCard({
   chassisSpecs,
   brandInfo,
 }: ChassisVisualCardProps) {
+  const { isTeslaDark } = useTheme()
   const [viewFace, setViewFace] = useState<'front' | 'rear'>('front')
 
   const brand = brandInfo?.name || chassisSpecs?.brand || manufacturer || 'Enterprise Hardware'
@@ -338,33 +340,65 @@ export function ChassisVisualCard({
   }
 
   return (
-    <div className="w-full bg-white/70 backdrop-blur-xl border-[0.5px] border-black/10 rounded-[16px] p-5 space-y-4 text-[#1d1d1f]">
+    <div
+      className={`w-full rounded-[16px] p-5 space-y-4 ${
+        isTeslaDark
+          ? 'bg-[#111111] border border-[#1F1F1F] text-zinc-100 font-mono shadow-none'
+          : "bg-white/70 backdrop-blur-xl border-[0.5px] border-black/10 text-[#1d1d1f] font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display','SF_Pro_Text',sans-serif]"
+      }`}
+    >
       {/* Visual Header & View Angle Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b-[0.5px] border-black/10">
+      <div
+        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b ${
+          isTeslaDark ? 'border-[#1F1F1F]' : 'border-black/10'
+        }`}
+      >
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-[12px] bg-[#0071E3]/10 text-[#0071E3] border-[0.5px] border-[#0071E3]/20">
+          <div
+            className={`p-2.5 rounded-[12px] border ${
+              isTeslaDark
+                ? 'bg-[#3E6AE1]/15 text-[#3E6AE1] border-[#3E6AE1]/30'
+                : 'bg-[#0071E3]/10 text-[#0071E3] border-[#0071E3]/20'
+            }`}
+          >
             <Server className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-[#1d1d1f] tracking-tight">{modelName}</h3>
-              <span className="px-2 py-0.5 rounded-[6px] bg-black/[0.04] border-[0.5px] border-black/10 text-[10px] font-medium text-zinc-700">
+              <h3 className={`text-sm font-semibold tracking-tight ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
+                {modelName}
+              </h3>
+              <span
+                className={`px-2 py-0.5 rounded-[6px] text-[10px] font-medium ${
+                  isTeslaDark
+                    ? 'bg-[#161616] border border-[#1F1F1F] text-zinc-300'
+                    : 'bg-black/[0.04] border-[0.5px] border-black/10 text-zinc-700'
+                }`}
+              >
                 {formFactor}
               </span>
             </div>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              Manufacturer: <span className="text-[#1d1d1f] font-semibold">{brand}</span> • Device Class: {deviceType}
+            <p className={`text-xs mt-0.5 ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              Manufacturer: <span className={`font-semibold ${isTeslaDark ? 'text-zinc-200' : 'text-[#1d1d1f]'}`}>{brand}</span> • Device Class: {deviceType}
             </p>
           </div>
         </div>
 
         {/* Front / Rear Toggle Controls */}
-        <div className="flex items-center p-1 rounded-[10px] bg-black/[0.04] border-[0.5px] border-black/10">
+        <div
+          className={`flex items-center p-1 rounded-[10px] ${
+            isTeslaDark ? 'bg-[#161616] border border-[#1F1F1F]' : 'bg-black/[0.04] border-[0.5px] border-black/10'
+          }`}
+        >
           <button
             onClick={() => setViewFace('front')}
             className={`px-3 py-1.5 text-xs font-medium rounded-[8px] transition-all cursor-pointer flex items-center gap-1.5 ${
               viewFace === 'front'
-                ? 'bg-white text-[#1d1d1f] shadow-xs'
+                ? isTeslaDark
+                  ? 'bg-[#3E6AE1] text-white'
+                  : 'bg-white text-[#1d1d1f] shadow-xs'
+                : isTeslaDark
+                ? 'text-zinc-400 hover:text-white'
                 : 'text-zinc-600 hover:text-[#1d1d1f]'
             }`}
           >
@@ -375,7 +409,11 @@ export function ChassisVisualCard({
             onClick={() => setViewFace('rear')}
             className={`px-3 py-1.5 text-xs font-medium rounded-[8px] transition-all cursor-pointer flex items-center gap-1.5 ${
               viewFace === 'rear'
-                ? 'bg-white text-[#1d1d1f] shadow-xs'
+                ? isTeslaDark
+                  ? 'bg-[#3E6AE1] text-white'
+                  : 'bg-white text-[#1d1d1f] shadow-xs'
+                : isTeslaDark
+                ? 'text-zinc-400 hover:text-white'
                 : 'text-zinc-600 hover:text-[#1d1d1f]'
             }`}
           >
@@ -389,39 +427,75 @@ export function ChassisVisualCard({
       {viewFace === 'front' ? renderFrontChassis() : renderRearChassis()}
 
       {/* Physical Hardware Dimension Specs Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t-[0.5px] border-black/10 text-xs">
-        <div className="p-2.5 rounded-[12px] bg-black/[0.02] border-[0.5px] border-black/10">
-          <span className="text-[10px] text-zinc-500 block uppercase font-semibold flex items-center gap-1.5">
-            <HardDrive className="w-3.5 h-3.5 text-[#0071E3]" /> Drive Config
+      <div
+        className={`grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t text-xs ${
+          isTeslaDark ? 'border-[#1F1F1F]' : 'border-black/10'
+        }`}
+      >
+        <div
+          className={`p-2.5 rounded-[12px] ${
+            isTeslaDark ? 'bg-[#161616] border border-[#1F1F1F]' : 'bg-black/[0.02] border-[0.5px] border-black/10'
+          }`}
+        >
+          <span
+            className={`text-[10px] block uppercase font-semibold flex items-center gap-1.5 ${
+              isTeslaDark ? 'text-[#8E8E93] tracking-[1.5px]' : 'text-zinc-500'
+            }`}
+          >
+            <HardDrive className={`w-3.5 h-3.5 ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`} /> Drive Config
           </span>
-          <span className="text-[#1d1d1f] text-xs font-bold mt-1 block truncate">
+          <span className={`text-xs font-bold mt-1 block truncate ${isTeslaDark ? 'text-zinc-100 font-mono' : 'text-[#1d1d1f]'}`}>
             {chassisSpecs?.drive_bays || '8x 2.5" SAS/NVMe'}
           </span>
         </div>
 
-        <div className="p-2.5 rounded-[12px] bg-black/[0.02] border-[0.5px] border-black/10">
-          <span className="text-[10px] text-zinc-500 block uppercase font-semibold flex items-center gap-1.5">
+        <div
+          className={`p-2.5 rounded-[12px] ${
+            isTeslaDark ? 'bg-[#161616] border border-[#1F1F1F]' : 'bg-black/[0.02] border-[0.5px] border-black/10'
+          }`}
+        >
+          <span
+            className={`text-[10px] block uppercase font-semibold flex items-center gap-1.5 ${
+              isTeslaDark ? 'text-[#8E8E93] tracking-[1.5px]' : 'text-zinc-500'
+            }`}
+          >
             <Zap className="w-3.5 h-3.5 text-amber-500" /> Power Rating
           </span>
-          <span className="text-amber-600 text-xs font-bold mt-1 block truncate">
+          <span className="text-amber-500 text-xs font-bold mt-1 block truncate font-mono">
             {chassisSpecs?.max_power_watt || 800}W (Dual Redundant)
           </span>
         </div>
 
-        <div className="p-2.5 rounded-[12px] bg-black/[0.02] border-[0.5px] border-black/10">
-          <span className="text-[10px] text-zinc-500 block uppercase font-semibold flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-purple-600" /> Dimensions / Weight
+        <div
+          className={`p-2.5 rounded-[12px] ${
+            isTeslaDark ? 'bg-[#161616] border border-[#1F1F1F]' : 'bg-black/[0.02] border-[0.5px] border-black/10'
+          }`}
+        >
+          <span
+            className={`text-[10px] block uppercase font-semibold flex items-center gap-1.5 ${
+              isTeslaDark ? 'text-[#8E8E93] tracking-[1.5px]' : 'text-zinc-500'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-purple-400" /> Dimensions / Weight
           </span>
-          <span className="text-[#1d1d1f] text-xs font-bold mt-1 block truncate">
+          <span className={`text-xs font-bold mt-1 block truncate ${isTeslaDark ? 'text-zinc-100 font-mono' : 'text-[#1d1d1f]'}`}>
             {chassisSpecs?.weight_kg || 28.6} kg ({heightU}U Standard)
           </span>
         </div>
 
-        <div className="p-2.5 rounded-[12px] bg-black/[0.02] border-[0.5px] border-black/10">
-          <span className="text-[10px] text-zinc-500 block uppercase font-semibold flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5 text-emerald-600" /> OOB Management
+        <div
+          className={`p-2.5 rounded-[12px] ${
+            isTeslaDark ? 'bg-[#161616] border border-[#1F1F1F]' : 'bg-black/[0.02] border-[0.5px] border-black/10'
+          }`}
+        >
+          <span
+            className={`text-[10px] block uppercase font-semibold flex items-center gap-1.5 ${
+              isTeslaDark ? 'text-[#8E8E93] tracking-[1.5px]' : 'text-zinc-500'
+            }`}
+          >
+            <Cpu className={`w-3.5 h-3.5 ${isTeslaDark ? 'text-[#00C853]' : 'text-emerald-600'}`} /> OOB Management
           </span>
-          <span className="text-emerald-700 text-xs font-bold mt-1 block truncate">
+          <span className={`text-xs font-bold mt-1 block truncate font-mono ${isTeslaDark ? 'text-[#00C853]' : 'text-emerald-700'}`}>
             {chassisSpecs?.management_port || 'Dedicated 1GbE'}
           </span>
         </div>

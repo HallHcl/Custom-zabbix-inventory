@@ -1,6 +1,4 @@
-/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
-
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Activity,
   BarChart3,
@@ -8,13 +6,13 @@ import {
   Search,
   ChevronRight,
   Inbox,
-  ChevronDown,
   Command,
   ShieldAlert,
+  Sun,
+  Zap,
 } from "lucide-react";
 import { useTwinStore } from "../../store/useTwinStore";
-import { useTheme, NEXUS_THEMES } from "../../lib/theme";
-import type { ThemeMetadata } from "../../lib/theme";
+import { useTheme } from "../../lib/theme";
 
 interface TopGlassmorphicHUDProps {
   onOpenUnassigned?: () => void;
@@ -38,23 +36,7 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
     zabbixStatus,
   } = useTwinStore();
 
-  const { theme, setTheme, themeMeta } = useTheme();
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
-  const themeMenuRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        themeMenuRef.current &&
-        !themeMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsThemeMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const { toggleDualSystem, isTeslaDark } = useTheme();
 
   // Keyboard shortcut listener for Cmd/Ctrl + K (Spotlight)
   useEffect(() => {
@@ -70,10 +52,15 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
 
   const itLoadKw = facilityTelemetry?.total_it_load_kw ?? 98.0;
   const problemCount = activeAlarms.filter((a) => a.event_status === "PROBLEM").length;
-  const themeList = Object.values(NEXUS_THEMES);
 
   return (
-    <header className="relative h-14 shrink-0 px-5 flex items-center justify-between z-30 select-none bg-white/75 backdrop-blur-2xl border-b border-black/10 text-[#1d1d1f] font-sans tracking-[-0.011em]">
+    <header
+      className={`relative h-14 shrink-0 px-5 flex items-center justify-between z-30 select-none transition-colors duration-200 border-b ${
+        isTeslaDark
+          ? "bg-[#000000] border-[#1F1F1F] text-[#F5F5F7] font-sans"
+          : "bg-white/75 backdrop-blur-2xl border-black/10 text-[#1d1d1f] font-sans tracking-[-0.011em]"
+      }`}
+    >
       {/* =====================================================================
           LEFT: CLEAN SPATIAL BREADCRUMB
           ===================================================================== */}
@@ -82,11 +69,21 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
         <button
           type="button"
           onClick={resetSpatialSelection}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-zinc-700 hover:text-black hover:bg-black/[0.04] transition-colors cursor-pointer font-medium"
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] transition-colors cursor-pointer font-medium ${
+            isTeslaDark
+              ? "text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#111111]"
+              : "text-zinc-700 hover:text-black hover:bg-black/[0.04]"
+          }`}
           title="Return to Site Overview"
         >
-          <span className="w-2 h-2 rounded-full bg-[#0071E3]" />
-          <span>{spatialBreadcrumb.siteName || "Bangkok DC-1"}</span>
+          <span
+            className={`w-2 h-2 rounded-full ${
+              isTeslaDark ? "bg-[#3E6AE1]" : "bg-[#0071E3]"
+            }`}
+          />
+          <span className={isTeslaDark ? "font-mono" : ""}>
+            {spatialBreadcrumb.siteName || "Bangkok DC-1"}
+          </span>
         </button>
 
         {/* Dynamic Spatial Path */}
@@ -96,7 +93,11 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
             <button
               type="button"
               onClick={() => setSpatialLevel("building", null, spatialBreadcrumb.buildingName)}
-              className="px-2 py-1 rounded-[8px] text-zinc-600 hover:text-black hover:bg-black/[0.04] transition-colors cursor-pointer"
+              className={`px-2 py-1 rounded-[6px] transition-colors cursor-pointer ${
+                isTeslaDark
+                  ? "text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#111111] font-mono"
+                  : "text-zinc-600 hover:text-black hover:bg-black/[0.04]"
+              }`}
             >
               {spatialBreadcrumb.buildingName}
             </button>
@@ -109,7 +110,11 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
             <button
               type="button"
               onClick={() => setSpatialLevel("room", null, spatialBreadcrumb.roomName)}
-              className="px-2 py-1 rounded-[8px] text-zinc-600 hover:text-black hover:bg-black/[0.04] transition-colors cursor-pointer"
+              className={`px-2 py-1 rounded-[6px] transition-colors cursor-pointer ${
+                isTeslaDark
+                  ? "text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#111111] font-mono"
+                  : "text-zinc-600 hover:text-black hover:bg-black/[0.04]"
+              }`}
             >
               {spatialBreadcrumb.roomName}
             </button>
@@ -119,7 +124,13 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
         {spatialBreadcrumb.rackName && (
           <div className="flex items-center gap-1 shrink-0">
             <ChevronRight className="w-3.5 h-3.5 opacity-60 text-zinc-400" />
-            <span className="px-2.5 py-0.5 rounded-[8px] bg-[#0071E3]/10 border-[0.5px] border-[#0071E3]/30 text-[#0071E3] font-semibold text-xs">
+            <span
+              className={`px-2.5 py-0.5 rounded-[4px] border font-semibold text-xs font-mono ${
+                isTeslaDark
+                  ? "bg-[#3E6AE1]/20 border-[#3E6AE1]/50 text-[#3E6AE1]"
+                  : "bg-[#0071E3]/10 border-[#0071E3]/30 text-[#0071E3]"
+              }`}
+            >
               {spatialBreadcrumb.rackName}
             </span>
           </div>
@@ -127,79 +138,125 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
       </div>
 
       {/* =====================================================================
-          CENTER: APPLE SEGMENTED PERSONA PILLS
+          CENTER: PERSONA PILLS (Apple Rounded / Tesla Utilitarian)
           ===================================================================== */}
       <div className="hidden md:flex items-center justify-center">
-        <div className="flex items-center p-1 rounded-[10px] bg-black/[0.04] border-[0.5px] border-black/10">
+        <div
+          className={`flex items-center p-1 border ${
+            isTeslaDark
+              ? "bg-[#111111] border-[#1F1F1F] rounded-[6px]"
+              : "bg-black/[0.04] border-black/10 rounded-[10px]"
+          }`}
+        >
           <button
             type="button"
             onClick={() => setPersona("NOC")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-[8px] text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
               persona === "NOC"
-                ? "bg-white text-[#1d1d1f] shadow-sm"
-                : "text-zinc-500 hover:text-black"
+                ? isTeslaDark
+                  ? "bg-[#1C1C1E] text-white border border-[#2E2E2E] rounded-[4px]"
+                  : "bg-white text-[#1d1d1f] shadow-sm rounded-[8px]"
+                : isTeslaDark
+                ? "text-[#636366] hover:text-[#A1A1A6] rounded-[4px]"
+                : "text-zinc-500 hover:text-black rounded-[8px]"
             }`}
             title="NOC Mode: 24/7 Operations, Video Wall, Heatmaps & Alarms"
           >
-            <Activity className={`w-3.5 h-3.5 ${persona === "NOC" ? "text-[#0071E3]" : ""}`} />
+            <Activity
+              className={`w-3.5 h-3.5 ${
+                persona === "NOC"
+                  ? isTeslaDark
+                    ? "text-[#3E6AE1]"
+                    : "text-[#0071E3]"
+                  : ""
+              }`}
+            />
             <span>NOC Twin</span>
           </button>
 
           <button
             type="button"
             onClick={() => setPersona("Supervisor")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-[8px] text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
               persona === "Supervisor"
-                ? "bg-white text-[#1d1d1f] shadow-sm"
-                : "text-zinc-500 hover:text-black"
+                ? isTeslaDark
+                  ? "bg-[#1C1C1E] text-white border border-[#2E2E2E] rounded-[4px]"
+                  : "bg-white text-[#1d1d1f] shadow-sm rounded-[8px]"
+                : isTeslaDark
+                ? "text-[#636366] hover:text-[#A1A1A6] rounded-[4px]"
+                : "text-zinc-500 hover:text-black rounded-[8px]"
             }`}
             title="Supervisor Mode: Floor Layout Builder, Space & Discovery"
           >
-            <Layers className={`w-3.5 h-3.5 ${persona === "Supervisor" ? "text-emerald-600" : ""}`} />
+            <Layers
+              className={`w-3.5 h-3.5 ${
+                persona === "Supervisor" ? "text-emerald-500" : ""
+              }`}
+            />
             <span>Supervisor</span>
           </button>
 
           <button
             type="button"
             onClick={() => setPersona("Manager")}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-[8px] text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
               persona === "Manager"
-                ? "bg-white text-[#1d1d1f] shadow-sm"
-                : "text-zinc-500 hover:text-black"
+                ? isTeslaDark
+                  ? "bg-[#1C1C1E] text-white border border-[#2E2E2E] rounded-[4px]"
+                  : "bg-white text-[#1d1d1f] shadow-sm rounded-[8px]"
+                : isTeslaDark
+                ? "text-[#636366] hover:text-[#A1A1A6] rounded-[4px]"
+                : "text-zinc-500 hover:text-black rounded-[8px]"
             }`}
             title="Executive Mode: Capacity, PUE Benchmarks & Cost"
           >
-            <BarChart3 className={`w-3.5 h-3.5 ${persona === "Manager" ? "text-amber-600" : ""}`} />
+            <BarChart3
+              className={`w-3.5 h-3.5 ${
+                persona === "Manager" ? "text-amber-500" : ""
+              }`}
+            />
             <span>Executive</span>
           </button>
         </div>
       </div>
 
       {/* =====================================================================
-          RIGHT: MINIMALIST CONSOLIDATED ACTIONS & STATUS
+          RIGHT: CONSOLIDATED ACTIONS, DUAL-SYSTEM TOGGLE & STATUS
           ===================================================================== */}
-      <div className="flex items-center gap-3">
-        {/* Consolidated Apple Live Status Pill */}
+      <div className="flex items-center gap-2.5">
+        {/* Consolidated Live Status Pill */}
         <div
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-medium border-[0.5px] transition-all cursor-default ${
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium border transition-all cursor-default ${
             problemCount > 0
-              ? "bg-[#ff3b30]/10 border-[#ff3b30]/30 text-[#ff3b30]"
-              : "bg-black/[0.03] border-black/10 text-zinc-700"
+              ? isTeslaDark
+                ? "bg-[#E82127]/15 border-[#E82127]/40 text-[#E82127] rounded-[6px]"
+                : "bg-[#ff3b30]/10 border-[#ff3b30]/30 text-[#ff3b30] rounded-[10px]"
+              : isTeslaDark
+              ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7] rounded-[6px]"
+              : "bg-black/[0.03] border-black/10 text-zinc-700 rounded-[10px]"
           }`}
           title={`Zabbix Engine: ${zabbixStatus?.status || "CONNECTED"} • Total IT Load: ${itLoadKw.toFixed(1)} kW • WebSocket: ${wsConnected ? "Connected" : "Disconnected"}`}
         >
           {problemCount > 0 ? (
             <>
-              <ShieldAlert className="w-3.5 h-3.5 text-[#ff3b30] animate-pulse" />
-              <span className="font-semibold">{problemCount} Alarms</span>
+              <ShieldAlert className="w-3.5 h-3.5 text-[#E82127] animate-pulse" />
+              <span className="font-semibold font-mono">{problemCount} Alarms</span>
             </>
           ) : (
             <>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]" />
-              <div className="flex items-center gap-1.5">
-                <span className="text-[#1d1d1f] font-semibold">{itLoadKw.toFixed(1)} kW</span>
-                <span className="text-zinc-300">•</span>
-                <span className="text-zinc-500 text-[11px]">Nominal</span>
+              <span
+                className={`w-2 h-2 rounded-full animate-pulse ${
+                  isTeslaDark ? "bg-[#00C853]" : "bg-emerald-500 shadow-[0_0_6px_#10b981]"
+                }`}
+              />
+              <div className="flex items-center gap-1.5 font-mono">
+                <span className={isTeslaDark ? "text-white font-bold" : "text-[#1d1d1f] font-semibold"}>
+                  {itLoadKw.toFixed(1)} kW
+                </span>
+                <span className={isTeslaDark ? "text-[#636366]" : "text-zinc-300"}>•</span>
+                <span className={isTeslaDark ? "text-[#00C853] text-[11px]" : "text-zinc-500 text-[11px]"}>
+                  Nominal
+                </span>
               </div>
             </>
           )}
@@ -209,12 +266,22 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
         <button
           type="button"
           onClick={openSpotlight}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-[10px] bg-black/[0.03] hover:bg-black/[0.06] border-[0.5px] border-black/10 text-xs text-zinc-700 hover:text-black transition-all cursor-pointer shadow-sm"
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs transition-all cursor-pointer border ${
+            isTeslaDark
+              ? "bg-[#111111] hover:bg-[#161616] border-[#1F1F1F] text-[#A1A1A6] hover:text-[#F5F5F7] rounded-[6px]"
+              : "bg-black/[0.03] hover:bg-black/[0.06] border-black/10 text-zinc-700 hover:text-black rounded-[10px] shadow-sm"
+          }`}
           title="Open Spotlight Search (⌘K / Ctrl+K)"
         >
-          <Search className="w-3.5 h-3.5 text-zinc-500" />
-          <span className="hidden sm:inline text-zinc-600 text-xs">Search</span>
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500 bg-black/[0.05] rounded-[6px]">
+          <Search className={`w-3.5 h-3.5 ${isTeslaDark ? "text-[#636366]" : "text-zinc-500"}`} />
+          <span className="hidden sm:inline text-xs">Search</span>
+          <kbd
+            className={`hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold rounded-[4px] ${
+              isTeslaDark
+                ? "bg-[#1C1C1E] text-[#636366] border border-[#1F1F1F]"
+                : "bg-black/[0.05] text-zinc-500"
+            }`}
+          >
             <Command className="w-2.5 h-2.5" />
             <span>K</span>
           </kbd>
@@ -225,74 +292,49 @@ export const TopGlassmorphicHUD: React.FC<TopGlassmorphicHUDProps> = ({
           <button
             type="button"
             onClick={onOpenUnassigned}
-            className="relative p-2 rounded-[10px] bg-black/[0.03] hover:bg-black/[0.06] border-[0.5px] border-black/10 text-zinc-700 hover:text-black transition-all cursor-pointer"
+            className={`relative p-2 text-xs transition-all cursor-pointer border ${
+              isTeslaDark
+                ? "bg-[#111111] hover:bg-[#161616] border-[#1F1F1F] text-[#A1A1A6] hover:text-[#F5F5F7] rounded-[6px]"
+                : "bg-black/[0.03] hover:bg-black/[0.06] border-black/10 text-zinc-700 hover:text-black rounded-[10px]"
+            }`}
             title="Discovery Inbox"
           >
-            <Inbox className="w-4 h-4 text-zinc-600" />
+            <Inbox className={`w-4 h-4 ${isTeslaDark ? "text-[#A1A1A6]" : "text-zinc-600"}`} />
             {unassignedCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0071E3] text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+              <span
+                className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center ${
+                  isTeslaDark ? "bg-[#3E6AE1]" : "bg-[#0071E3] shadow-sm"
+                }`}
+              >
                 {unassignedCount}
               </span>
             )}
           </button>
         )}
 
-        {/* Theme Selector Pill */}
-        <div className="relative" ref={themeMenuRef}>
-          <button
-            type="button"
-            onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[10px] bg-black/[0.03] hover:bg-black/[0.06] border-[0.5px] border-black/10 text-xs text-zinc-700 hover:text-black transition-all cursor-pointer"
-            title={`Active Theme: ${themeMeta.name}`}
-          >
-            <div
-              className="w-3.5 h-3.5 rounded-full border border-black/20 shadow-sm"
-              style={{ backgroundColor: themeMeta.accentHex }}
-            />
-            <ChevronDown className="w-3 h-3 text-zinc-500" />
-          </button>
-
-          {isThemeMenuOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-[16px] bg-white/95 backdrop-blur-2xl border-[0.5px] border-black/10 p-2 shadow-xl z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
-              <div className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                Display Theme
-              </div>
-              <div className="space-y-1 mt-1">
-                {themeList.map((t: ThemeMetadata) => {
-                  const isActive = theme === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => {
-                        setTheme(t.id);
-                        setIsThemeMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-[10px] text-left transition-colors cursor-pointer ${
-                        isActive
-                          ? "bg-[#0071E3] text-white"
-                          : "text-zinc-700 hover:bg-black/[0.04] hover:text-black"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
-                          style={{ backgroundColor: t.accentHex }}
-                        />
-                        <span className="font-medium text-xs truncate">
-                          {t.name}
-                        </span>
-                      </div>
-                      {isActive && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+        {/* Strictly 2 Modes Only: Apple Light <-> Tesla Dark */}
+        <button
+          type="button"
+          onClick={toggleDualSystem}
+          className={`flex items-center gap-2 px-3 py-1.5 text-xs font-mono transition-all cursor-pointer border ${
+            isTeslaDark
+              ? "bg-[#111111] hover:bg-[#161616] border-[#3E6AE1]/60 text-[#3E6AE1] rounded-[6px] shadow-[0_0_12px_rgba(62,106,225,0.2)]"
+              : "bg-white/80 hover:bg-white border-black/15 text-[#1d1d1f] hover:text-black rounded-[10px] shadow-sm"
+          }`}
+          title={isTeslaDark ? "Current: Tesla Dark (Click to switch to Apple Light)" : "Current: Apple Light (Click to switch to Tesla Dark)"}
+        >
+          {isTeslaDark ? (
+            <>
+              <Zap className="w-3.5 h-3.5 text-[#3E6AE1]" />
+              <span className="font-bold tracking-[0.5px]">TESLA DARK</span>
+            </>
+          ) : (
+            <>
+              <Sun className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+              <span className="font-semibold text-zinc-800">APPLE LIGHT</span>
+            </>
           )}
-        </div>
+        </button>
       </div>
     </header>
   );

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import type { RoomOverview, RackSummary } from '../../types'
 import { fetchDevices } from '../../api/client'
+import { useTheme } from '../../lib/theme'
 
 interface ReportsViewProps {
   overview: RoomOverview | null
@@ -24,6 +25,7 @@ interface ReportsViewProps {
 }
 
 export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
+  const { isTeslaDark } = useTheme()
   const [cabinetSearch, setCabinetSearch] = useState('')
   const [isExportingDevices, setIsExportingDevices] = useState(false)
 
@@ -83,14 +85,22 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
 
   if (!overview || !computedMetrics) {
     return (
-      <div className="max-w-[1600px] mx-auto p-16 rounded-[20px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 text-center shadow-sm">
-        <div className="w-12 h-12 mx-auto mb-4 rounded-[14px] bg-[#0071E3]/15 border-[0.5px] border-[#0071E3]/30 flex items-center justify-center">
-          <Activity className="w-6 h-6 text-[#0071E3] animate-pulse" />
+      <div className={`max-w-[1600px] mx-auto p-16 rounded-[20px] backdrop-blur-2xl border text-center shadow-sm transition-colors ${
+        isTeslaDark
+          ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+          : "bg-white/75 border-black/10 text-[#1d1d1f]"
+      }`}>
+        <div className={`w-12 h-12 mx-auto mb-4 rounded-[14px] flex items-center justify-center border ${
+          isTeslaDark
+            ? "bg-[#3E6AE1]/20 border-[#3E6AE1]/40 text-[#3E6AE1]"
+            : "bg-[#0071E3]/15 border-[#0071E3]/30 text-[#0071E3]"
+        }`}>
+          <Activity className="w-6 h-6 animate-pulse" />
         </div>
-        <h3 className="text-base font-semibold tracking-[-0.022em] text-[#1d1d1f]">
+        <h3 className={`text-base font-semibold tracking-[-0.022em] ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
           Compiling Audit Telemetry
         </h3>
-        <p className="text-xs text-zinc-500 mt-1 tracking-[-0.011em]">
+        <p className={`text-xs mt-1 tracking-[-0.011em] ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
           Loading Data Center telemetry &amp; capacity analytics...
         </p>
       </div>
@@ -158,24 +168,42 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-6 select-none font-sans text-[#1d1d1f] pb-12">
+    <div className={`max-w-[1600px] mx-auto space-y-6 select-none font-sans pb-12 transition-colors ${
+      isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"
+    }`}>
       {/* Executive Header & Audit Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-[20px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-sm text-[#1d1d1f]">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-[20px] backdrop-blur-2xl border shadow-sm transition-colors ${
+        isTeslaDark
+          ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+          : "bg-white/75 border-black/10 text-[#1d1d1f]"
+      }`}>
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-[-0.022em] text-[#1d1d1f]">
+            <h1 className={`text-2xl font-bold tracking-[-0.022em] ${
+              isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"
+            }`}>
               Capacity &amp; Telemetry Audit
             </h1>
-            <span className="px-2.5 py-1 rounded-[8px] bg-[#34c759]/15 border-[0.5px] border-[#34c759]/30 text-[#34c759] text-xs font-semibold">
+            <span className={`px-2.5 py-1 rounded-[8px] border text-xs font-semibold ${
+              isTeslaDark
+                ? "bg-emerald-950/40 border-emerald-800/60 text-emerald-400"
+                : "bg-[#34c759]/15 border-[#34c759]/30 text-[#34c759]"
+            }`}>
               AUDIT READY
             </span>
             {zabbixStatus && (
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] border-[0.5px] text-[11px] font-semibold tracking-wide uppercase ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] border text-[11px] font-semibold tracking-wide uppercase ${
                   zabbixStatus.status === 'CONNECTED'
-                    ? 'bg-[#34c759]/15 border-[#34c759]/30 text-[#34c759]'
+                    ? isTeslaDark
+                      ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-400'
+                      : 'bg-[#34c759]/15 border-[#34c759]/30 text-[#34c759]'
                     : zabbixStatus.status === 'STALE'
-                    ? 'bg-[#ff9500]/15 border-[#ff9500]/30 text-[#ff9500]'
+                    ? isTeslaDark
+                      ? 'bg-amber-950/40 border-amber-800/60 text-amber-400'
+                      : 'bg-[#ff9500]/15 border-[#ff9500]/30 text-[#ff9500]'
+                    : isTeslaDark
+                    ? 'bg-rose-950/40 border-rose-800/60 text-rose-400'
                     : 'bg-[#ff3b30]/15 border-[#ff3b30]/30 text-[#ff3b30]'
                 }`}
               >
@@ -192,7 +220,7 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
               </span>
             )}
           </div>
-          <p className="text-xs text-zinc-500 tracking-[-0.011em]">
+          <p className={`text-xs tracking-[-0.011em] ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
             Space, electrical load, thermal posture, and hardware asset accounting for {overview.site_name} • {overview.room_name}
           </p>
         </div>
@@ -203,26 +231,38 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
               href={zabbixStatus.zabbix_web_console_url}
               target="_blank"
               rel="noreferrer"
-              className="min-h-[38px] px-3.5 py-1.5 rounded-[10px] bg-black/[0.04] hover:bg-black/[0.08] border-[0.5px] border-black/10 text-zinc-700 hover:text-black text-xs font-medium flex items-center gap-1.5 transition-all"
+              className={`min-h-[38px] px-3.5 py-1.5 rounded-[10px] border text-xs font-medium flex items-center gap-1.5 transition-all ${
+                isTeslaDark
+                  ? "bg-[#181818] hover:bg-[#222222] border-[#262626] text-[#A1A1A6] hover:text-[#FFFFFF]"
+                  : "bg-black/[0.04] hover:bg-black/[0.08] border-black/10 text-zinc-700 hover:text-black"
+              }`}
               title="Open Zabbix 7.0 Web Console"
             >
               <span>Zabbix Console</span>
-              <ExternalLink className="w-3.5 h-3.5 text-[#0071E3]" />
+              <ExternalLink className={`w-3.5 h-3.5 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`} />
             </a>
           )}
           <button
             type="button"
             onClick={handleExportDevicesCSV}
             disabled={isExportingDevices}
-            className="min-h-[38px] px-3.5 py-1.5 rounded-[10px] bg-black/[0.04] hover:bg-black/[0.08] border-[0.5px] border-black/10 text-zinc-700 hover:text-black text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+            className={`min-h-[38px] px-3.5 py-1.5 rounded-[10px] border text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 ${
+              isTeslaDark
+                ? "bg-[#181818] hover:bg-[#222222] border-[#262626] text-[#A1A1A6] hover:text-[#FFFFFF]"
+                : "bg-black/[0.04] hover:bg-black/[0.08] border-black/10 text-zinc-700 hover:text-black"
+            }`}
           >
-            <Download className="w-3.5 h-3.5 text-[#0071E3]" />
+            <Download className={`w-3.5 h-3.5 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`} />
             <span>{isExportingDevices ? 'Exporting...' : 'Export Devices CSV'}</span>
           </button>
           <button
             type="button"
             onClick={handleExportEnclosuresCSV}
-            className="min-h-[38px] px-4 py-1.5 rounded-[10px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+            className={`min-h-[38px] px-4 py-1.5 rounded-[10px] text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer ${
+              isTeslaDark
+                ? "bg-[#3E6AE1] hover:bg-[#4E7BF1]"
+                : "bg-[#0071E3] hover:bg-[#0077ED]"
+            }`}
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export Enclosures CSV</span>
@@ -233,71 +273,93 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
       {/* 4 Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* 1. Rack Space Utilization */}
-        <div className="rounded-[20px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 p-5 shadow-sm flex flex-col justify-between hover:border-black/20 hover:shadow-md transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01]">
-          <div className="flex items-center justify-between text-zinc-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Rack Space (RU)</span>
-            <div className="w-8 h-8 rounded-[10px] bg-[#0071E3]/15 text-[#0071E3] flex items-center justify-center">
+        <div className={`rounded-[20px] backdrop-blur-xl border p-5 shadow-sm flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F] hover:border-[#2A2A2A]"
+            : "bg-white/75 border-black/10 hover:border-black/20 hover:shadow-md"
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-xs font-semibold uppercase tracking-wider ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>Rack Space (RU)</span>
+            <div className={`w-8 h-8 rounded-[10px] flex items-center justify-center ${
+              isTeslaDark
+                ? "bg-[#3E6AE1]/20 text-[#3E6AE1]"
+                : "bg-[#0071E3]/15 text-[#0071E3]"
+            }`}>
               <Server className="w-4 h-4" />
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-bold tracking-tight text-[#1d1d1f]">
-              {totalUsedU} / {totalCapacityU} <span className="text-lg font-normal text-zinc-500">U</span>
+            <div className={`text-3xl font-bold tracking-tight ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
+              {totalUsedU} / {totalCapacityU} <span className={`text-lg font-normal ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>U</span>
             </div>
           </div>
-          <div className="w-full bg-black/[0.06] h-1.5 rounded-full overflow-hidden mb-2">
+          <div className={`w-full h-1.5 rounded-full overflow-hidden mb-2 ${
+            isTeslaDark ? "bg-[#1E1E1E]" : "bg-black/[0.06]"
+          }`}>
             <div
               className={`h-full transition-all duration-500 rounded-full ${
-                capacityPercent > 85 ? 'bg-[#ff3b30]' : capacityPercent > 70 ? 'bg-[#ff9500]' : 'bg-[#0071E3]'
+                capacityPercent > 85 ? 'bg-[#ff3b30]' : capacityPercent > 70 ? 'bg-[#ff9500]' : isTeslaDark ? 'bg-[#3E6AE1]' : 'bg-[#0071E3]'
               }`}
               style={{ width: `${Math.min(capacityPercent, 100)}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs text-zinc-500 tracking-[-0.011em]">
-            <span className="text-[#1d1d1f] font-semibold">{capacityPercent}% Allocated</span>
+          <div className={`flex items-center justify-between text-xs tracking-[-0.011em] ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
+            <span className={`font-semibold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>{capacityPercent}% Allocated</span>
             <span>{freeU} U Available</span>
           </div>
         </div>
 
         {/* 2. Facility Power Draw */}
-        <div className="rounded-[20px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 p-5 shadow-sm flex flex-col justify-between hover:border-black/20 hover:shadow-md transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01]">
-          <div className="flex items-center justify-between text-zinc-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Active Load</span>
+        <div className={`rounded-[20px] backdrop-blur-xl border p-5 shadow-sm flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F] hover:border-[#2A2A2A]"
+            : "bg-white/75 border-black/10 hover:border-black/20 hover:shadow-md"
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-xs font-semibold uppercase tracking-wider ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>Total Active Load</span>
             <div className="w-8 h-8 rounded-[10px] bg-[#ff9500]/15 text-[#ff9500] flex items-center justify-center">
               <Zap className="w-4 h-4" />
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-bold tracking-tight text-[#1d1d1f]">
-              {totalPowerKW.toFixed(1)} <span className="text-lg font-normal text-zinc-500">kW</span>
+            <div className={`text-3xl font-bold tracking-tight ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
+              {totalPowerKW.toFixed(1)} <span className={`text-lg font-normal ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>kW</span>
             </div>
           </div>
-          <div className="w-full bg-black/[0.06] h-1.5 rounded-full overflow-hidden mb-2">
+          <div className={`w-full h-1.5 rounded-full overflow-hidden mb-2 ${
+            isTeslaDark ? "bg-[#1E1E1E]" : "bg-black/[0.06]"
+          }`}>
             <div
               className="h-full bg-[#ff9500] transition-all duration-500 rounded-full"
               style={{ width: `${Math.min((totalPowerKW / (totalRacks * 5.0)) * 100, 100)}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs text-zinc-500 tracking-[-0.011em]">
+          <div className={`flex items-center justify-between text-xs tracking-[-0.011em] ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
             <span>Avg {avgPowerPerRack} kW / Cabinet</span>
             <span>{totalRacks} Enclosures</span>
           </div>
         </div>
 
         {/* 3. Inlet Thermal Ambient */}
-        <div className="rounded-[20px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 p-5 shadow-sm flex flex-col justify-between hover:border-black/20 hover:shadow-md transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01]">
-          <div className="flex items-center justify-between text-zinc-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Thermal Posture</span>
+        <div className={`rounded-[20px] backdrop-blur-xl border p-5 shadow-sm flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F] hover:border-[#2A2A2A]"
+            : "bg-white/75 border-black/10 hover:border-black/20 hover:shadow-md"
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-xs font-semibold uppercase tracking-wider ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>Thermal Posture</span>
             <div className="w-8 h-8 rounded-[10px] bg-[#34c759]/15 text-[#34c759] flex items-center justify-center">
               <Thermometer className="w-4 h-4" />
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-bold tracking-tight text-[#1d1d1f]">
-              {avgTemp} <span className="text-lg font-normal text-zinc-500">°C</span>
+            <div className={`text-3xl font-bold tracking-tight ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
+              {avgTemp} <span className={`text-lg font-normal ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>°C</span>
             </div>
           </div>
-          <div className="w-full bg-black/[0.06] h-1.5 rounded-full overflow-hidden mb-2">
+          <div className={`w-full h-1.5 rounded-full overflow-hidden mb-2 ${
+            isTeslaDark ? "bg-[#1E1E1E]" : "bg-black/[0.06]"
+          }`}>
             <div
               className={`h-full transition-all duration-500 rounded-full ${
                 Number(avgTemp) > 28 ? 'bg-[#ff3b30]' : Number(avgTemp) > 25 ? 'bg-[#ff9500]' : 'bg-[#34c759]'
@@ -305,26 +367,32 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
               style={{ width: `${Math.min((Number(avgTemp) / 35) * 100, 100)}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-xs text-zinc-500 tracking-[-0.011em]">
+          <div className={`flex items-center justify-between text-xs tracking-[-0.011em] ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
             <span>Target: {overview.room_temp_c}°C</span>
-            <span className="text-[#1d1d1f] font-semibold">Peak: {peakTemp}°C</span>
+            <span className={`font-semibold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>Peak: {peakTemp}°C</span>
           </div>
         </div>
 
         {/* 4. Monitored Assets & Trigger Health */}
-        <div className="rounded-[20px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 p-5 shadow-sm flex flex-col justify-between hover:border-black/20 hover:shadow-md transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01]">
-          <div className="flex items-center justify-between text-zinc-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Hardware Assets</span>
+        <div className={`rounded-[20px] backdrop-blur-xl border p-5 shadow-sm flex flex-col justify-between transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F] hover:border-[#2A2A2A]"
+            : "bg-white/75 border-black/10 hover:border-black/20 hover:shadow-md"
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-xs font-semibold uppercase tracking-wider ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>Hardware Assets</span>
             <div className="w-8 h-8 rounded-[10px] bg-[#5856d6]/15 text-[#5856d6] flex items-center justify-center">
               <Layers className="w-4 h-4" />
             </div>
           </div>
           <div className="my-2">
-            <div className="text-3xl font-bold tracking-tight text-[#1d1d1f]">
-              {overview.total_devices} <span className="text-lg font-normal text-zinc-500">Units</span>
+            <div className={`text-3xl font-bold tracking-tight ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
+              {overview.total_devices} <span className={`text-lg font-normal ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>Units</span>
             </div>
           </div>
-          <div className="w-full bg-black/[0.06] h-1.5 rounded-full overflow-hidden mb-2">
+          <div className={`w-full h-1.5 rounded-full overflow-hidden mb-2 ${
+            isTeslaDark ? "bg-[#1E1E1E]" : "bg-black/[0.06]"
+          }`}>
             <div
               className="h-full bg-[#34c759] transition-all duration-500 rounded-full"
               style={{
@@ -339,7 +407,7 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
             <span className="text-[#34c759] font-semibold">
               {overview.status_counts.healthy} / {overview.total_racks} Healthy Cabinets
             </span>
-            <span className={overview.total_alerts > 0 ? 'text-[#ff3b30] font-semibold' : 'text-zinc-500'}>
+            <span className={overview.total_alerts > 0 ? 'text-[#ff3b30] font-semibold' : isTeslaDark ? 'text-[#888888]' : 'text-zinc-500'}>
               {overview.total_alerts} Active Alarms
             </span>
           </div>
@@ -347,34 +415,48 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
       </div>
 
       {/* Hardware Category Breakdown Bar & Cards */}
-      <div className="rounded-[20px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 p-6 shadow-sm space-y-4 text-[#1d1d1f]">
+      <div className={`rounded-[20px] backdrop-blur-xl border p-6 shadow-sm space-y-4 transition-colors ${
+        isTeslaDark
+          ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+          : "bg-white/75 border-black/10 text-[#1d1d1f]"
+      }`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[10px] bg-[#0071E3]/15 text-[#0071E3] flex items-center justify-center">
+            <div className={`w-8 h-8 rounded-[10px] flex items-center justify-center ${
+              isTeslaDark
+                ? "bg-[#3E6AE1]/20 text-[#3E6AE1]"
+                : "bg-[#0071E3]/15 text-[#0071E3]"
+            }`}>
               <Cpu className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-semibold tracking-[-0.022em] text-[#1d1d1f]">
+              <h3 className={`text-base font-semibold tracking-[-0.022em] ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
                 Hardware Category Inventory Breakdown
               </h3>
-              <p className="text-xs text-zinc-500 tracking-[-0.011em]">
+              <p className={`text-xs tracking-[-0.011em] ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
                 Total {overview.total_devices} mounted hardware devices categorized by role
               </p>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-[8px] bg-black/[0.05] text-xs font-semibold text-zinc-700">
+          <span className={`px-2.5 py-1 rounded-[8px] text-xs font-semibold border ${
+            isTeslaDark
+              ? "bg-[#181818] border-[#262626] text-[#A1A1A6]"
+              : "bg-black/[0.05] border-transparent text-zinc-700"
+          }`}>
             {Object.keys(deviceTypes).length} Categories
           </span>
         </div>
 
         {/* Proportional distribution bar */}
         {overview.total_devices > 0 && (
-          <div className="w-full h-2.5 rounded-full bg-black/[0.06] overflow-hidden flex">
+          <div className={`w-full h-2.5 rounded-full overflow-hidden flex ${
+            isTeslaDark ? "bg-[#1E1E1E]" : "bg-black/[0.06]"
+          }`}>
             {Object.entries(deviceTypes).map(([type, count]) => {
               const pct = (count / overview.total_devices) * 100
               const colorClass =
                 type === 'Server'
-                  ? 'bg-[#0071E3]'
+                  ? isTeslaDark ? 'bg-[#3E6AE1]' : 'bg-[#0071E3]'
                   : type === 'Switch'
                   ? 'bg-[#5856d6]'
                   : type === 'Firewall'
@@ -383,7 +465,7 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
                   ? 'bg-[#ff9500]'
                   : type === 'UPS' || type === 'PDU'
                   ? 'bg-[#34c759]'
-                  : 'bg-zinc-400'
+                  : isTeslaDark ? 'bg-[#333333]' : 'bg-zinc-400'
               return (
                 <div
                   key={type}
@@ -399,12 +481,12 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
         {/* Category Pills Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 pt-2">
           {[
-            { type: 'Server', icon: Server, color: 'text-[#0071E3]' },
+            { type: 'Server', icon: Server, color: isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]' },
             { type: 'Switch', icon: Network, color: 'text-[#5856d6]' },
             { type: 'Firewall', icon: ShieldCheck, color: 'text-[#ff3b30]' },
             { type: 'Storage', icon: HardDrive, color: 'text-[#ff9500]' },
             { type: 'UPS', icon: Zap, color: 'text-[#34c759]' },
-            { type: 'Patch Panel', icon: Layers, color: 'text-zinc-500' },
+            { type: 'Patch Panel', icon: Layers, color: isTeslaDark ? 'text-[#888888]' : 'text-zinc-500' },
           ].map(({ type, icon: Icon, color }) => {
             const count = deviceTypes[type] || 0
             const pct =
@@ -414,15 +496,21 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
             return (
               <div
                 key={type}
-                className="p-3.5 rounded-[14px] bg-black/[0.03] border-[0.5px] border-black/10 hover:border-black/20 transition-all flex flex-col justify-between space-y-2"
+                className={`p-3.5 rounded-[14px] border transition-all flex flex-col justify-between space-y-2 ${
+                  isTeslaDark
+                    ? "bg-[#161616] border-[#222222] hover:border-[#2C2C2C]"
+                    : "bg-black/[0.03] border-black/10 hover:border-black/20"
+                }`}
               >
-                <div className="flex items-center justify-between text-xs text-zinc-600 font-medium">
+                <div className={`flex items-center justify-between text-xs font-medium ${
+                  isTeslaDark ? "text-[#CCCCCC]" : "text-zinc-600"
+                }`}>
                   <span className="truncate">{type}</span>
                   <Icon className={`w-4 h-4 ${color} shrink-0`} />
                 </div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-xl font-bold text-[#1d1d1f]">{count}</span>
-                  <span className="text-xs text-zinc-500">{pct}%</span>
+                  <span className={`text-xl font-bold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>{count}</span>
+                  <span className={`text-xs ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>{pct}%</span>
                 </div>
               </div>
             )
@@ -431,33 +519,49 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
       </div>
 
       {/* Enclosure Distribution Matrix Table */}
-      <div className="rounded-[20px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 overflow-hidden shadow-sm text-[#1d1d1f]">
-        <div className="p-5 border-b border-black/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className={`rounded-[20px] backdrop-blur-xl border overflow-hidden shadow-sm transition-colors ${
+        isTeslaDark
+          ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+          : "bg-white/75 border-black/10 text-[#1d1d1f]"
+      }`}>
+        <div className={`p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+          isTeslaDark ? "border-[#1F1F1F]" : "border-black/10"
+        }`}>
           <div>
-            <h3 className="text-base font-semibold tracking-[-0.022em] text-[#1d1d1f]">
+            <h3 className={`text-base font-semibold tracking-[-0.022em] ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
               Enclosure Distribution Matrix
             </h3>
-            <p className="text-xs text-zinc-500 tracking-[-0.011em]">
+            <p className={`text-xs tracking-[-0.011em] ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
               Showing {filteredRacks.length} of {overview.racks.length} data cabinets
             </p>
           </div>
 
           {/* Quick Search */}
           <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${
+              isTeslaDark ? "text-[#666666]" : "text-zinc-400"
+            }`} />
             <input
               type="text"
               value={cabinetSearch}
               onChange={(e) => setCabinetSearch(e.target.value)}
               placeholder="Search cabinet or row..."
-              className="w-full h-[36px] pl-9 pr-3 text-xs bg-black/[0.04] border-[0.5px] border-black/10 rounded-[10px] text-[#1d1d1f] placeholder-zinc-400 focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all"
+              className={`w-full h-[36px] pl-9 pr-3 text-xs border rounded-[10px] transition-all focus:outline-none ${
+                isTeslaDark
+                  ? "bg-[#181818] border-[#262626] text-[#F5F5F7] placeholder-[#666666] focus:border-[#3E6AE1] focus:bg-[#1E1E1E]"
+                  : "bg-black/[0.04] border-black/10 text-[#1d1d1f] placeholder-zinc-400 focus:outline-none focus:border-[#0071E3] focus:bg-white"
+              }`}
             />
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs min-w-[700px]">
-            <thead className="bg-black/[0.02] border-b border-black/10 text-zinc-500 text-xs font-semibold uppercase tracking-wider">
+            <thead className={`border-b text-xs font-semibold uppercase tracking-wider ${
+              isTeslaDark
+                ? "bg-[#161616] border-[#1F1F1F] text-[#888888]"
+                : "bg-black/[0.02] border-black/10 text-zinc-500"
+            }`}>
               <tr>
                 <th className="py-3 px-4">Cabinet</th>
                 <th className="py-3 px-4">Position</th>
@@ -469,36 +573,46 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
                 <th className="py-3 px-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/5">
+            <tbody className={`divide-y ${
+              isTeslaDark ? "divide-[#1A1A1A]" : "divide-black/5"
+            }`}>
               {filteredRacks.map((r) => {
                 const freeSlotU = Math.max(0, r.total_u - r.used_u)
                 return (
                   <tr
                     key={r.id}
                     onClick={() => onSelectRack && onSelectRack(r)}
-                    className={`hover:bg-black/[0.02] transition-colors ${
+                    className={`transition-colors ${
+                      isTeslaDark
+                        ? "hover:bg-[#181818]"
+                        : "hover:bg-black/[0.02]"
+                    } ${
                       onSelectRack ? 'cursor-pointer' : ''
                     }`}
                   >
-                    <td className="py-3 px-4 font-semibold text-[#1d1d1f] flex items-center gap-2">
+                    <td className={`py-3 px-4 font-semibold flex items-center gap-2 ${
+                      isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"
+                    }`}>
                       <span>{r.name}</span>
                       {onSelectRack && (
-                        <ExternalLink className="w-3 h-3 text-[#0071E3] opacity-70" />
+                        <ExternalLink className={`w-3 h-3 opacity-70 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`} />
                       )}
                     </td>
-                    <td className="py-3 px-4 text-zinc-500">
+                    <td className={`py-3 px-4 ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
                       Row {r.row} • Col {r.col}
                     </td>
-                    <td className="py-3 px-4 text-zinc-700">
+                    <td className={`py-3 px-4 ${isTeslaDark ? "text-[#D1D1D6]" : "text-zinc-700"}`}>
                       <div className="flex items-center gap-2.5">
-                        <div className="w-16 h-1.5 rounded-full bg-black/[0.06] overflow-hidden">
+                        <div className={`w-16 h-1.5 rounded-full overflow-hidden ${
+                          isTeslaDark ? "bg-[#222222]" : "bg-black/[0.06]"
+                        }`}>
                           <div
                             className={`h-full rounded-full ${
                               r.usage_percent > 85
                                 ? 'bg-[#ff3b30]'
                                 : r.usage_percent > 70
                                 ? 'bg-[#ff9500]'
-                                : 'bg-[#0071E3]'
+                                : isTeslaDark ? 'bg-[#3E6AE1]' : 'bg-[#0071E3]'
                             }`}
                             style={{ width: `${Math.min(r.usage_percent, 100)}%` }}
                           />
@@ -508,10 +622,10 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-zinc-500">
+                    <td className={`py-3 px-4 ${isTeslaDark ? "text-[#888888]" : "text-zinc-500"}`}>
                       {freeSlotU} U
                     </td>
-                    <td className="py-3 px-4 text-[#1d1d1f] font-medium">
+                    <td className={`py-3 px-4 font-medium ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
                       {r.device_count}
                     </td>
                     <td className="py-3 px-4 text-[#ff9500] font-semibold">
@@ -522,12 +636,18 @@ export function ReportsView({ overview, onSelectRack }: ReportsViewProps) {
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-[8px] text-[10px] font-semibold uppercase tracking-wider ${
+                        className={`inline-block px-2 py-0.5 rounded-[8px] text-[10px] font-semibold uppercase tracking-wider border ${
                           r.status === 'critical'
-                            ? 'bg-[#ff3b30]/15 text-[#ff3b30] border-[0.5px] border-[#ff3b30]/30'
+                            ? isTeslaDark
+                              ? 'bg-rose-950/40 text-rose-400 border-rose-800/60'
+                              : 'bg-[#ff3b30]/15 text-[#ff3b30] border-[#ff3b30]/30'
                             : r.status === 'warning'
-                            ? 'bg-[#ff9500]/15 text-[#ff9500] border-[0.5px] border-[#ff9500]/30'
-                            : 'bg-[#34c759]/15 text-[#34c759] border-[0.5px] border-[#34c759]/30'
+                            ? isTeslaDark
+                              ? 'bg-amber-950/40 text-amber-400 border-amber-800/60'
+                              : 'bg-[#ff9500]/15 text-[#ff9500] border-[#ff9500]/30'
+                            : isTeslaDark
+                            ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/60'
+                            : 'bg-[#34c759]/15 text-[#34c759] border-[#34c759]/30'
                         }`}
                       >
                         {r.status}

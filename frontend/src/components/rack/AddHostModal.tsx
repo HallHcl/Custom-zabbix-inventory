@@ -32,6 +32,7 @@ import {
   fetchZabbixTemplates,
   createZabbixHost,
 } from '../../api/client'
+import { useTheme } from '../../lib/theme'
 
 interface AddHostModalProps {
   isOpen: boolean
@@ -55,6 +56,7 @@ export function AddHostModal({
   onSuccess,
   racks,
 }: AddHostModalProps) {
+  const { isTeslaDark } = useTheme()
   const [step, setStep] = useState<WizardStep>(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -271,12 +273,25 @@ export function AddHostModal({
   const selectedRack = racks.find((r) => String(r.id) === selectedRackId)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black/40 backdrop-blur-2xl transition-all duration-300">
-      {/* macOS Pro Sheet Window */}
-      <div className="w-full max-w-5xl h-[88vh] max-h-[820px] bg-white/95 backdrop-blur-3xl saturate-180 border-[0.5px] border-black/15 rounded-[20px] shadow-[0_24px_64px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display','SF_Pro_Text',sans-serif] text-[#1d1d1f]">
-        
-        {/* macOS Window Header & Traffic Lights */}
-        <div className="h-[52px] px-6 bg-black/[0.02] border-b-[0.5px] border-black/10 flex items-center justify-between select-none">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 transition-all duration-300 ${
+        isTeslaDark ? 'bg-black/80 backdrop-blur-md font-mono' : 'bg-black/40 backdrop-blur-2xl font-sans'
+      }`}
+    >
+      {/* macOS Pro Sheet Window / Tesla Digital Station */}
+      <div
+        className={`w-full max-w-5xl h-[88vh] max-h-[820px] overflow-hidden flex flex-col ${
+          isTeslaDark
+            ? 'rounded-[12px] bg-[#111111] border border-[#1F1F1F] text-[#F5F5F7] shadow-none'
+            : "rounded-[20px] bg-white/95 backdrop-blur-3xl saturate-180 border-[0.5px] border-black/15 shadow-[0_24px_64px_rgba(0,0,0,0.2)] font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display','SF_Pro_Text',sans-serif] text-[#1d1d1f]"
+        }`}
+      >
+        {/* Window Header & Traffic Lights */}
+        <div
+          className={`h-[52px] px-6 border-b flex items-center justify-between select-none ${
+            isTeslaDark ? 'bg-[#0A0A0A] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+          }`}
+        >
           <div className="flex items-center gap-4">
             {/* Window Traffic Lights */}
             <div className="flex items-center gap-2">
@@ -290,13 +305,23 @@ export function AddHostModal({
               <div className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]" />
             </div>
 
-            <div className="h-4 w-px bg-black/10 mx-1" />
+            <div className={`h-4 w-px mx-1 ${isTeslaDark ? 'bg-[#1F1F1F]' : 'bg-black/10'}`} />
 
             <div className="flex items-center gap-2">
-              <h2 className="text-[14px] font-semibold text-[#1d1d1f] tracking-[-0.022em]">
+              <h2
+                className={`text-[14px] font-semibold ${
+                  isTeslaDark ? 'text-white font-mono' : 'tracking-[-0.022em] text-[#1d1d1f]'
+                }`}
+              >
                 Provision Zabbix Host
               </h2>
-              <span className="rounded-[8px] px-2 py-0.5 text-[10px] font-medium bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/30 tracking-[-0.011em]">
+              <span
+                className={`rounded-[8px] px-2 py-0.5 text-[10px] font-medium border ${
+                  isTeslaDark
+                    ? 'bg-[#3E6AE1]/15 text-[#3E6AE1] border-[#3E6AE1]/30 font-mono'
+                    : 'bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/30 tracking-[-0.011em]'
+                }`}
+              >
                 Zabbix 7.0 API
               </span>
             </div>
@@ -305,21 +330,32 @@ export function AddHostModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-black/[0.05] hover:bg-black/[0.1] text-zinc-600 hover:text-black flex items-center justify-center transition-all duration-200 active:scale-[0.96] cursor-pointer"
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              isTeslaDark
+                ? 'bg-[#161616] hover:bg-[#1F1F1F] text-zinc-400 hover:text-white'
+                : 'bg-black/[0.05] hover:bg-black/[0.1] text-zinc-600 hover:text-black active:scale-[0.96]'
+            }`}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Main Content: 2-Column macOS Layout */}
+        {/* Modal Main Content: 2-Column Layout */}
         <div className="flex-1 flex overflow-hidden">
-          
-          {/* Left Glass Sidebar (Step Navigation & Live Hardware Card) */}
-          <div className="w-72 sm:w-80 shrink-0 bg-black/[0.02] border-r-[0.5px] border-black/10 p-6 flex flex-col justify-between overflow-y-auto">
+          {/* Left Sidebar (Step Navigation & Live Hardware Card) */}
+          <div
+            className={`w-72 sm:w-80 shrink-0 border-r p-6 flex flex-col justify-between overflow-y-auto ${
+              isTeslaDark ? 'bg-[#0A0A0A] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+            }`}
+          >
             {/* Step Navigation */}
             <div className="space-y-6">
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-zinc-500 mb-3 px-2">
+                <p
+                  className={`text-[11px] font-medium uppercase tracking-[0.06em] mb-3 px-2 ${
+                    isTeslaDark ? 'text-[#8E8E93] font-mono' : 'text-zinc-500'
+                  }`}
+                >
                   Workflow Steps
                 </p>
                 <nav className="space-y-2">
@@ -339,22 +375,40 @@ export function AddHostModal({
                         }}
                         className={`w-full text-left p-3 rounded-[12px] flex items-center gap-3 transition-all duration-300 cursor-pointer ${
                           isActive
-                            ? 'bg-[#0071E3] text-white shadow-md shadow-[#0071E3]/25 scale-[1.01]'
+                            ? isTeslaDark
+                              ? 'bg-[#3E6AE1] text-white shadow-none'
+                              : 'bg-[#0071E3] text-white shadow-md shadow-[#0071E3]/25 scale-[1.01]'
                             : isDone
-                            ? 'bg-black/[0.04] text-[#1d1d1f] hover:bg-black/[0.08]'
+                            ? isTeslaDark
+                              ? 'bg-[#161616] text-white'
+                              : 'bg-black/[0.04] text-[#1d1d1f] hover:bg-black/[0.08]'
+                            : isTeslaDark
+                            ? 'text-zinc-400 hover:bg-[#161616] hover:text-white'
                             : 'text-zinc-600 hover:bg-black/[0.03] hover:text-black'
                         }`}
                       >
                         <div
                           className={`w-8 h-8 rounded-[8px] flex items-center justify-center text-xs font-semibold shrink-0 transition-all ${
                             isActive
-                              ? 'bg-white/20 text-white'
+                              ? isTeslaDark
+                                ? 'bg-black/30 text-white'
+                                : 'bg-white/20 text-white'
                               : isDone
-                              ? 'bg-[#34c759]/20 text-[#34c759] border-[0.5px] border-[#34c759]/30'
+                              ? isTeslaDark
+                                ? 'bg-[#00C853]/20 text-[#00C853] border border-[#00C853]/40'
+                                : 'bg-[#34c759]/20 text-[#34c759] border-[0.5px] border-[#34c759]/30'
+                              : isTeslaDark
+                              ? 'bg-[#161616] text-zinc-500 border border-[#1F1F1F]'
                               : 'bg-black/[0.04] text-zinc-500 border-[0.5px] border-black/10'
                           }`}
                         >
-                          {isDone ? <Check className="w-4 h-4 text-[#34c759]" /> : <Icon className="w-4 h-4" />}
+                          {isDone ? (
+                            <Check
+                              className={`w-4 h-4 ${isTeslaDark ? 'text-[#00C853]' : 'text-[#34c759]'}`}
+                            />
+                          ) : (
+                            <Icon className="w-4 h-4" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-semibold tracking-[-0.011em] truncate">
@@ -362,7 +416,11 @@ export function AddHostModal({
                           </p>
                           <p
                             className={`text-[11px] tracking-[-0.011em] truncate ${
-                              isActive ? 'text-white/80' : 'text-zinc-500'
+                              isActive
+                                ? 'text-white/80'
+                                : isTeslaDark
+                                ? 'text-[#8E8E93]'
+                                : 'text-zinc-500'
                             }`}
                           >
                             {s.subtitle}
@@ -376,15 +434,21 @@ export function AddHostModal({
             </div>
 
             {/* Live Hardware Inspector Preview Card */}
-            <div className="mt-6 p-4 rounded-[16px] bg-black/[0.03] border-[0.5px] border-black/10 space-y-3">
+            <div className={`mt-6 p-4 rounded-[16px] space-y-3 border-[0.5px] ${
+              isTeslaDark
+                ? 'bg-[#141414] border-[#1F1F1F]'
+                : 'bg-black/[0.03] border-black/10'
+            }`}>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                <span className={`text-[10px] font-semibold uppercase tracking-wider ${isTeslaDark ? 'text-zinc-400 font-mono' : 'text-zinc-500'}`}>
                   Target Spec Preview
                 </span>
                 <span
                   className={`rounded-[8px] px-2 py-0.5 text-[10px] font-medium tracking-[-0.011em] ${
                     status === 0
-                      ? 'bg-[#34c759]/15 text-[#34c759] border-[0.5px] border-[#34c759]/30'
+                      ? isTeslaDark
+                        ? 'bg-[#00C853]/20 text-[#00C853] border-[0.5px] border-[#00C853]/40'
+                        : 'bg-[#34c759]/15 text-[#34c759] border-[0.5px] border-[#34c759]/30'
                       : 'bg-[#ff9500]/15 text-[#ff9500] border-[0.5px] border-[#ff9500]/30'
                   }`}
                 >
@@ -393,18 +457,18 @@ export function AddHostModal({
               </div>
 
               <div>
-                <p className="text-[14px] font-semibold text-[#1d1d1f] tracking-[-0.022em] truncate">
+                <p className={`text-[14px] font-semibold tracking-[-0.022em] truncate ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
                   {hostname || 'Unspecified Host'}
                 </p>
-                <p className="text-[11px] text-zinc-500 tracking-[-0.011em] truncate">
+                <p className={`text-[11px] tracking-[-0.011em] truncate ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                   {visibleName || 'No visible alias assigned'}
                 </p>
               </div>
 
-              <div className="pt-2 border-t-[0.5px] border-black/10 space-y-1.5 text-[11px] tracking-[-0.011em]">
-                <div className="flex items-center justify-between text-zinc-500">
+              <div className={`pt-2 border-t-[0.5px] space-y-1.5 text-[11px] tracking-[-0.011em] ${isTeslaDark ? 'border-[#1F1F1F]' : 'border-black/10'}`}>
+                <div className={`flex items-center justify-between ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                   <span>Interface:</span>
-                  <span className="text-[#1d1d1f] font-medium">
+                  <span className={`font-medium ${isTeslaDark ? 'text-zinc-200' : 'text-[#1d1d1f]'}`}>
                     {interfaceType === 1
                       ? 'Agent'
                       : interfaceType === 2
@@ -415,17 +479,17 @@ export function AddHostModal({
                     • {connectVia === 'ip' ? ipAddress || '-' : dnsName || '-'}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-zinc-500">
+                <div className={`flex items-center justify-between ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                   <span>Groups:</span>
-                  <span className="text-[#1d1d1f] font-medium">{selectedGroupIds.length} selected</span>
+                  <span className={`font-medium ${isTeslaDark ? 'text-zinc-200' : 'text-[#1d1d1f]'}`}>{selectedGroupIds.length} selected</span>
                 </div>
-                <div className="flex items-center justify-between text-zinc-500">
+                <div className={`flex items-center justify-between ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                   <span>Templates:</span>
-                  <span className="text-[#1d1d1f] font-medium">{selectedTemplateIds.length} linked</span>
+                  <span className={`font-medium ${isTeslaDark ? 'text-zinc-200' : 'text-[#1d1d1f]'}`}>{selectedTemplateIds.length} linked</span>
                 </div>
-                <div className="flex items-center justify-between text-zinc-500">
+                <div className={`flex items-center justify-between ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                   <span>DCIM Slot:</span>
-                  <span className="text-[#0071E3] font-medium">
+                  <span className={`font-medium ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`}>
                     {mountToRack && selectedRack
                       ? `${selectedRack.name} (U${startU}..${startU + heightU - 1})`
                       : 'Floating / Virtual'}
@@ -436,21 +500,21 @@ export function AddHostModal({
           </div>
 
           {/* Right Content Canvas (Form Stages & Action Bar) */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-[#fbfbfd]">
+          <div className={`flex-1 flex flex-col overflow-hidden ${isTeslaDark ? 'bg-[#0A0A0A]' : 'bg-[#18181b]'}`}>
             {/* Scrollable Stage Body */}
             <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
               
               {/* Header for Active Step */}
-              <div className="space-y-1 border-b-[0.5px] border-black/10 pb-4">
+              <div className={`space-y-1 border-b-[0.5px] pb-4 ${isTeslaDark ? 'border-[#1F1F1F]' : 'border-white/10'}`}>
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-semibold text-[#0071E3] tracking-[0.04em] uppercase">
+                  <span className={`text-[12px] font-semibold tracking-[0.04em] uppercase ${isTeslaDark ? 'text-[#3E6AE1] font-mono' : 'text-[#0071E3]'}`}>
                     Step {step} of 4
                   </span>
                 </div>
-                <h3 className="text-[20px] font-semibold text-[#1d1d1f] tracking-[-0.022em]">
+                <h3 className="text-[20px] font-semibold text-white tracking-[-0.022em]">
                   {WIZARD_STEPS[step - 1].title}
                 </h3>
-                <p className="text-[13px] text-zinc-600 tracking-[-0.011em]">
+                <p className="text-[13px] text-white/60 tracking-[-0.011em]">
                   {step === 1 && 'Define host identity, system aliases, and logical monitoring group assignments.'}
                   {step === 2 && 'Configure network interface endpoints, protocol version, and telemetry ports.'}
                   {step === 3 && 'Bind pre-configured telemetry templates and associate environment tags.'}
@@ -1293,13 +1357,21 @@ export function AddHostModal({
               )}
             </div>
 
-            {/* Apple macOS Bottom Action Bar */}
-            <div className="h-[72px] px-6 sm:px-8 bg-black/[0.02] border-t-[0.5px] border-black/10 flex items-center justify-between select-none">
+            {/* Bottom Action Bar */}
+            <div
+              className={`h-[72px] px-6 sm:px-8 border-t flex items-center justify-between select-none ${
+                isTeslaDark ? 'bg-[#0A0A0A] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+              }`}
+            >
               <button
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="h-[44px] px-6 rounded-[12px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black text-[13px] font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                className={`h-[44px] px-6 text-[13px] font-semibold transition-all cursor-pointer border ${
+                  isTeslaDark
+                    ? 'rounded-[6px] bg-[#161616] hover:bg-[#1F1F1F] border-[#1F1F1F] text-zinc-300 font-mono'
+                    : 'rounded-[12px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black hover:scale-[1.02] active:scale-[0.96]'
+                }`}
               >
                 Cancel
               </button>
@@ -1310,7 +1382,11 @@ export function AddHostModal({
                     type="button"
                     onClick={handleBack}
                     disabled={loading}
-                    className="h-[44px] px-6 rounded-[12px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black text-[13px] font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                    className={`h-[44px] px-6 text-[13px] font-semibold flex items-center gap-2 transition-all cursor-pointer border ${
+                      isTeslaDark
+                        ? 'rounded-[6px] bg-[#161616] hover:bg-[#1F1F1F] border-[#1F1F1F] text-zinc-300 font-mono'
+                        : 'rounded-[12px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black hover:scale-[1.02] active:scale-[0.96]'
+                    }`}
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Back</span>
@@ -1321,7 +1397,11 @@ export function AddHostModal({
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="h-[44px] px-6 rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-[13px] font-semibold shadow-md shadow-[#0071E3]/25 flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                    className={`h-[44px] px-6 text-[13px] font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      isTeslaDark
+                        ? 'rounded-[6px] bg-[#3E6AE1] hover:bg-[#345ac2] text-white font-mono shadow-none'
+                        : 'rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-md shadow-[#0071E3]/25 hover:scale-[1.02] active:scale-[0.96]'
+                    }`}
                   >
                     <span>Continue</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1331,7 +1411,11 @@ export function AddHostModal({
                     type="button"
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="h-[44px] px-8 rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-[13px] font-semibold shadow-lg shadow-[#0071E3]/35 flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                    className={`h-[44px] px-8 text-[13px] font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      isTeslaDark
+                        ? 'rounded-[6px] bg-[#00C853] hover:bg-[#00a846] text-black font-mono shadow-none'
+                        : 'rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-lg shadow-[#0071E3]/35 hover:scale-[1.02] active:scale-[0.96]'
+                    }`}
                   >
                     {loading ? (
                       <>

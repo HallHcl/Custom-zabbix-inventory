@@ -28,6 +28,7 @@ import {
   fetchRoomLayout,
 } from '../../api/client'
 import { AssetPaletteDrawer, type AssetTemplate } from './AssetPaletteDrawer'
+import { useTheme } from '../../lib/theme'
 
 interface IsometricRoomProps {
   racks: RackSummary[]
@@ -71,6 +72,7 @@ export function IsometricRoom({
   hideViewModeControls = false,
   hideRotationControls = false,
 }: IsometricRoomProps) {
+  const { isTeslaDark } = useTheme()
   const [internalViewMode, setInternalViewMode] = useState<ViewMode>('3d')
   const viewMode = mode !== undefined ? mode : internalViewMode
   const handleViewModeChange = (newMode: ViewMode) => {
@@ -713,7 +715,9 @@ export function IsometricRoom({
       const topPolygon = topCorners.map((p) => `${p.x},${p.y}`).join(' ')
 
       const visibleSideFaces: { points: string; shade: string }[] = []
-      const shades = ['#e5e7eb', '#d1d5db', '#e2e8f0', '#d8dee4']
+      const shades = isTeslaDark
+        ? ['#1c1c1f', '#141417', '#222226', '#17171a']
+        : ['#e5e7eb', '#d1d5db', '#e2e8f0', '#d8dee4']
 
       for (let i = 0; i < 4; i++) {
         const j = (i + 1) % 4
@@ -801,7 +805,7 @@ export function IsometricRoom({
       allRacksSorted: racksComputed,
       emptyCells: emptyCellsComputed,
     }
-  }, [localRacks, effectiveRows, effectiveCols, cos, sin, centerIso, pickedUpRackId, autoScale, tileW, tileH, rackHeight, cornersUV])
+  }, [localRacks, effectiveRows, effectiveCols, cos, sin, centerIso, pickedUpRackId, autoScale, tileW, tileH, rackHeight, cornersUV, isTeslaDark])
 
   // ─── Scale Adjustment Handler ────────────────────────────────
   const handleSetScale = (newRows: number, newCols: number) => {
@@ -1198,21 +1202,31 @@ export function IsometricRoom({
   const pickedUpRack = localRacks.find((r) => r.id === pickedUpRackId)
 
   return (
-    <div className={`relative rounded-[20px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-sm overflow-hidden flex flex-col ${fullPage ? 'min-h-[720px] h-[750px]' : 'min-h-[580px] h-[600px]'}`}>
+    <div className={`relative overflow-hidden flex flex-col transition-colors border ${
+      isTeslaDark
+        ? 'rounded-[8px] bg-[#000000] border-[#1F1F1F]'
+        : 'rounded-[20px] bg-white/75 backdrop-blur-2xl border-black/10 shadow-sm'
+    } ${fullPage ? 'min-h-[720px] h-[750px]' : 'min-h-[580px] h-[600px]'}`}>
       {/* ─── Top Main Bar: View Modes & Edit Toggle ────────────────── */}
       {(!hideViewModeControls || !hideRotationControls || isEditMode) && (
         <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
           {/* Left Side: View Mode Toggles (or Edit Mode Indicator) */}
           <div className="pointer-events-auto flex items-center gap-2">
             {!isEditMode && !hideViewModeControls ? (
-            <div className="flex items-center gap-1 p-1 rounded-[12px] bg-white/90 backdrop-blur-xl border-[0.5px] border-black/10 shadow-sm">
+            <div className={`flex items-center gap-1 p-1 border transition-colors ${
+              isTeslaDark
+                ? 'rounded-[6px] bg-[#111111] border-[#1F1F1F]'
+                : 'rounded-[12px] bg-white/90 backdrop-blur-xl border-black/10 shadow-sm'
+            }`}>
               <button
                 type="button"
                 onClick={() => handleViewModeChange('3d')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  isTeslaDark ? 'rounded-[4px] font-mono' : 'rounded-[8px]'
+                } ${
                   viewMode === '3d'
-                    ? 'bg-[#0071E3] text-white shadow-sm'
-                    : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+                    ? isTeslaDark ? 'bg-[#3E6AE1] text-white shadow-sm' : 'bg-[#0071E3] text-white shadow-sm'
+                    : isTeslaDark ? 'text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
@@ -1221,10 +1235,12 @@ export function IsometricRoom({
               <button
                 type="button"
                 onClick={() => handleViewModeChange('status')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  isTeslaDark ? 'rounded-[4px] font-mono' : 'rounded-[8px]'
+                } ${
                   viewMode === 'status'
-                    ? 'bg-[#0071E3] text-white shadow-sm'
-                    : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+                    ? isTeslaDark ? 'bg-[#3E6AE1] text-white shadow-sm' : 'bg-[#0071E3] text-white shadow-sm'
+                    : isTeslaDark ? 'text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
                 }`}
               >
                 <Activity className="w-3.5 h-3.5" />
@@ -1233,10 +1249,12 @@ export function IsometricRoom({
               <button
                 type="button"
                 onClick={() => handleViewModeChange('temp')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  isTeslaDark ? 'rounded-[4px] font-mono' : 'rounded-[8px]'
+                } ${
                   viewMode === 'temp'
-                    ? 'bg-[#0071E3] text-white shadow-sm'
-                    : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+                    ? isTeslaDark ? 'bg-[#3E6AE1] text-white shadow-sm' : 'bg-[#0071E3] text-white shadow-sm'
+                    : isTeslaDark ? 'text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
                 }`}
               >
                 <Thermometer className="w-3.5 h-3.5" />
@@ -1245,10 +1263,12 @@ export function IsometricRoom({
               <button
                 type="button"
                 onClick={() => handleViewModeChange('power')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  isTeslaDark ? 'rounded-[4px] font-mono' : 'rounded-[8px]'
+                } ${
                   viewMode === 'power'
-                    ? 'bg-[#0071E3] text-white shadow-sm'
-                    : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+                    ? isTeslaDark ? 'bg-[#3E6AE1] text-white shadow-sm' : 'bg-[#0071E3] text-white shadow-sm'
+                    : isTeslaDark ? 'text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
                 }`}
               >
                 <Zap className="w-3.5 h-3.5" />
@@ -1394,27 +1414,39 @@ export function IsometricRoom({
 
             {/* 360 Rotation Controls */}
             {!hideRotationControls && (
-              <div className="flex items-center gap-1 p-1 rounded-[12px] bg-white/90 backdrop-blur-xl border-[0.5px] border-black/10 shadow-sm">
+              <div className={`flex items-center gap-1 p-1 border transition-colors ${
+                isTeslaDark
+                  ? 'rounded-[6px] bg-[#111111] border-[#1F1F1F]'
+                  : 'rounded-[12px] bg-white/90 backdrop-blur-xl border-black/10 shadow-sm'
+              }`}>
                 <button
                   type="button"
                   onClick={handleRotateLeft}
-                  className="p-1.5 text-zinc-600 hover:text-black hover:bg-black/[0.04] rounded-[8px] transition-colors cursor-pointer"
+                  className={`p-1.5 transition-colors cursor-pointer ${
+                    isTeslaDark ? 'rounded-[4px] text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'rounded-[8px] text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+                  }`}
                   title="Rotate Left 45° (⟲)"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
                 <div
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-zinc-700 bg-black/[0.04] rounded-[8px] border border-black/10 select-none cursor-pointer hover:bg-black/[0.08]"
+                  className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold border select-none cursor-pointer ${
+                    isTeslaDark
+                      ? 'rounded-[4px] text-[#F5F5F7] bg-[#161616] border-[#1F1F1F] font-mono hover:bg-[#1f1f1f]'
+                      : 'rounded-[8px] text-zinc-700 bg-black/[0.04] border-black/10 hover:bg-black/[0.08]'
+                  }`}
                   onClick={() => setRotationAngle(0)}
                   title="Reset rotation to 0°"
                 >
-                  <Compass className="w-3 h-3 text-[#0071E3]" />
+                  <Compass className={`w-3 h-3 ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`} />
                   <span>{Math.round(rotationAngle)}°</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleRotateRight}
-                  className="p-1.5 text-zinc-600 hover:text-black hover:bg-black/[0.04] rounded-[8px] transition-colors cursor-pointer"
+                  className={`p-1.5 transition-colors cursor-pointer ${
+                    isTeslaDark ? 'rounded-[4px] text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'rounded-[8px] text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+                  }`}
                   title="Rotate Right 45° (⟳)"
                 >
                   <RotateCw className="w-3.5 h-3.5" />
@@ -1498,12 +1530,12 @@ export function IsometricRoom({
           style={{ transform: `scale(${zoom})` }}
         >
           <defs>
-            {/* Room Floor Tiles Pattern - Modern Architectural Frost */}
+            {/* Room Floor Tiles Pattern - Modern Architectural Frost / Tesla OLED Black */}
             <pattern id="floorTilesGrid" width="40" height="20" patternUnits="userSpaceOnUse">
               <path
                 d="M 20 0 L 40 10 L 20 20 L 0 10 Z"
-                fill="#e5e5ea"
-                stroke="#d1d1d6"
+                fill={isTeslaDark ? '#0e0e0e' : '#e5e5ea'}
+                stroke={isTeslaDark ? '#1c1c1c' : '#d1d1d6'}
                 strokeWidth="0.7"
               />
             </pattern>
@@ -1512,8 +1544,8 @@ export function IsometricRoom({
             <pattern id="aisleTiles" width="40" height="20" patternUnits="userSpaceOnUse">
               <path
                 d="M 20 0 L 40 10 L 20 20 L 0 10 Z"
-                fill="#d8d8de"
-                stroke="#c7c7cc"
+                fill={isTeslaDark ? '#141414' : '#d8d8de'}
+                stroke={isTeslaDark ? '#262626' : '#c7c7cc'}
                 strokeWidth="0.8"
               />
             </pattern>
@@ -1527,13 +1559,17 @@ export function IsometricRoom({
             </filter>
           </defs>
 
-          {/* Dynamic Back Walls - Frosted Minimal Glass Boundaries */}
+          {/* Dynamic Back Walls - Frosted Minimal Glass Boundaries / Dark Outlines */}
           {roomGeometry.backWalls.map((pts, idx) => (
             <polygon
               key={`back-wall-${idx}`}
               points={pts}
-              fill={idx % 2 === 0 ? 'rgba(0, 0, 0, 0.04)' : 'rgba(0, 0, 0, 0.02)'}
-              stroke="rgba(0, 0, 0, 0.08)"
+              fill={
+                isTeslaDark
+                  ? idx % 2 === 0 ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.02)'
+                  : idx % 2 === 0 ? 'rgba(0, 0, 0, 0.04)' : 'rgba(0, 0, 0, 0.02)'
+              }
+              stroke={isTeslaDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)'}
               strokeWidth="1"
             />
           ))}
@@ -1542,7 +1578,7 @@ export function IsometricRoom({
           <polygon
             points={roomGeometry.floorPoints}
             fill="url(#floorTilesGrid)"
-            stroke={isEditMode ? '#0071E3' : 'rgba(0, 0, 0, 0.12)'}
+            stroke={isEditMode ? (isTeslaDark ? '#3E6AE1' : '#0071E3') : (isTeslaDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.12)')}
             strokeWidth={isEditMode ? '1.5' : '1'}
           />
 
@@ -1727,19 +1763,15 @@ export function IsometricRoom({
                       points={face.points}
                       fill={
                         isPickedUp
-                          ? fIdx === 0
-                            ? '#94a3b8'
-                            : '#cbd5e1'
+                          ? isTeslaDark ? (fIdx === 0 ? '#3E6AE1' : '#2A4DA8') : (fIdx === 0 ? '#94a3b8' : '#cbd5e1')
                           : isSelected
-                          ? fIdx === 0
-                            ? '#94a3b8'
-                            : '#cbd5e1'
+                          ? isTeslaDark ? (fIdx === 0 ? '#2c2c34' : '#363640') : (fIdx === 0 ? '#94a3b8' : '#cbd5e1')
                           : face.shade
                       }
                       stroke={
                         isPickedUp || isHovered || isSelected
-                          ? '#0071E3'
-                          : '#cbd5e1'
+                          ? isTeslaDark ? '#3E6AE1' : '#0071E3'
+                          : isTeslaDark ? '#2e2e34' : '#cbd5e1'
                       }
                       strokeWidth={isPickedUp || isHovered || isSelected ? '2' : '1'}
                     />
@@ -1750,15 +1782,15 @@ export function IsometricRoom({
                     points={topPolygon}
                     fill={
                       isPickedUp
-                        ? '#bfdbfe'
+                        ? isTeslaDark ? '#3E6AE1' : '#bfdbfe'
                         : isSelected
-                        ? '#dbeafe'
-                        : '#f1f5f9'
+                        ? isTeslaDark ? '#3a3a46' : '#dbeafe'
+                        : isTeslaDark ? '#26262c' : '#f1f5f9'
                     }
                     stroke={
                       isPickedUp || isHovered || isSelected
-                        ? '#0071E3'
-                        : '#cbd5e1'
+                        ? isTeslaDark ? '#3E6AE1' : '#0071E3'
+                        : isTeslaDark ? '#2e2e34' : '#cbd5e1'
                     }
                     strokeWidth={isPickedUp || isHovered || isSelected ? '2' : '1'}
                   />
@@ -1768,7 +1800,7 @@ export function IsometricRoom({
                     cx={x + Math.round(4 * autoScale)}
                     cy={y - rackHeight + Math.round(7 * autoScale)}
                     r={Math.max(3, Math.round((isSelected || isPickedUp ? 5 : 3.8) * autoScale))}
-                    fill={isPickedUp ? '#0071E3' : statusColor}
+                    fill={isPickedUp ? (isTeslaDark ? '#3E6AE1' : '#0071E3') : statusColor}
                     filter="url(#beaconGlow)"
                     className="animate-pulse"
                   />
@@ -1788,15 +1820,15 @@ export function IsometricRoom({
                           width={badgeW}
                           height={badgeH}
                           rx={Math.max(4, Math.round(6 * autoScale))}
-                          fill="rgba(255, 255, 255, 0.95)"
+                          fill={isTeslaDark ? 'rgba(14, 14, 16, 0.92)' : 'rgba(255, 255, 255, 0.95)'}
                           stroke={
                             isPickedUp || isSelected
-                              ? '#0071E3'
+                              ? isTeslaDark ? '#3E6AE1' : '#0071E3'
                               : rack.status === 'critical'
-                              ? '#ff3b30'
+                              ? isTeslaDark ? '#E82127' : '#ff3b30'
                               : rack.status === 'warning'
-                              ? '#ff9500'
-                              : '#cbd5e1'
+                              ? isTeslaDark ? '#f59e0b' : '#ff9500'
+                              : isTeslaDark ? '#2e2e34' : '#cbd5e1'
                           }
                           strokeWidth={rack.status === 'critical' ? '1.5' : '1'}
                         />
@@ -1806,12 +1838,12 @@ export function IsometricRoom({
                           textAnchor="middle"
                           fill={
                             isPickedUp || isSelected
-                              ? '#0071E3'
+                              ? isTeslaDark ? '#3E6AE1' : '#0071E3'
                               : rack.status === 'critical'
-                              ? '#d70015'
+                              ? isTeslaDark ? '#E82127' : '#d70015'
                               : rack.status === 'warning'
-                              ? '#c97a00'
-                              : '#1d1d1f'
+                              ? isTeslaDark ? '#f59e0b' : '#c97a00'
+                              : isTeslaDark ? '#F5F5F7' : '#1d1d1f'
                           }
                           fontSize={badgeFont}
                           fontWeight="700"
@@ -2073,23 +2105,35 @@ export function IsometricRoom({
       {/* ─── Bottom Status Legend & Zoom Controls ────────────────── */}
       <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
         {/* Status Legend */}
-        <div className="pointer-events-auto flex items-center gap-3 px-3.5 py-1.5 rounded-[14px] bg-white/90 backdrop-blur-xl border-[0.5px] border-black/10 shadow-sm text-xs">
+        <div className={`pointer-events-auto flex items-center gap-3 px-3.5 py-1.5 border text-xs transition-colors ${
+          isTeslaDark
+            ? 'rounded-[6px] bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]'
+            : 'rounded-[14px] bg-white/90 backdrop-blur-xl border-black/10 shadow-sm text-zinc-800'
+        }`}>
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'healthy' ? null : 'healthy')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] transition-colors cursor-pointer ${
-              statusFilter === 'healthy' ? 'bg-black/[0.06] text-black font-semibold' : 'text-zinc-600 hover:text-black'
+            className={`flex items-center gap-1.5 px-2.5 py-1 transition-colors cursor-pointer ${
+              isTeslaDark ? 'rounded-[4px] font-mono' : 'rounded-[8px]'
+            } ${
+              statusFilter === 'healthy'
+                ? isTeslaDark ? 'bg-[#1a1a1a] text-[#00C853] font-bold border border-[#00C853]/40' : 'bg-black/[0.06] text-black font-semibold'
+                : isTeslaDark ? 'text-[#A1A1A6] hover:text-[#F5F5F7]' : 'text-zinc-600 hover:text-black'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-[#34c759] shadow-sm" />
+            <span className={`w-2.5 h-2.5 rounded-full ${isTeslaDark ? 'bg-[#00C853]' : 'bg-[#34c759] shadow-sm'}`} />
             <span>Healthy ({statusCounts.healthy})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'warning' ? null : 'warning')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] transition-colors cursor-pointer ${
-              statusFilter === 'warning' ? 'bg-black/[0.06] text-black font-semibold' : 'text-zinc-600 hover:text-black'
+            className={`flex items-center gap-1.5 px-2.5 py-1 transition-colors cursor-pointer ${
+              isTeslaDark ? 'rounded-[4px] font-mono' : 'rounded-[8px]'
+            } ${
+              statusFilter === 'warning'
+                ? isTeslaDark ? 'bg-[#1a1a1a] text-[#ff9500] font-bold border border-[#ff9500]/40' : 'bg-black/[0.06] text-black font-semibold'
+                : isTeslaDark ? 'text-[#A1A1A6] hover:text-[#F5F5F7]' : 'text-zinc-600 hover:text-black'
             }`}
           >
             <span className="w-2.5 h-2.5 rounded-full bg-[#ff9500] shadow-sm" />
@@ -2099,19 +2143,27 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'critical' ? null : 'critical')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] transition-colors cursor-pointer ${
-              statusFilter === 'critical' ? 'bg-black/[0.06] text-black font-semibold' : 'text-zinc-600 hover:text-black'
+            className={`flex items-center gap-1.5 px-2.5 py-1 transition-colors cursor-pointer ${
+              isTeslaDark ? 'rounded-[4px] font-mono' : 'rounded-[8px]'
+            } ${
+              statusFilter === 'critical'
+                ? isTeslaDark ? 'bg-[#1a1a1a] text-[#E82127] font-bold border border-[#E82127]/40' : 'bg-black/[0.06] text-black font-semibold'
+                : isTeslaDark ? 'text-[#A1A1A6] hover:text-[#F5F5F7]' : 'text-zinc-600 hover:text-black'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ff3b30] shadow-sm" />
+            <span className={`w-2.5 h-2.5 rounded-full ${isTeslaDark ? 'bg-[#E82127]' : 'bg-[#ff3b30] shadow-sm'}`} />
             <span>Critical ({statusCounts.critical})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'offline' ? null : 'offline')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] transition-colors cursor-pointer ${
-              statusFilter === 'offline' ? 'bg-black/[0.06] text-black font-semibold' : 'text-zinc-600 hover:text-black'
+            className={`flex items-center gap-1.5 px-2.5 py-1 transition-colors cursor-pointer ${
+              isTeslaDark ? 'rounded-[4px] font-mono' : 'rounded-[8px]'
+            } ${
+              statusFilter === 'offline'
+                ? isTeslaDark ? 'bg-[#1a1a1a] text-[#8E8E93] font-bold border border-[#8E8E93]/40' : 'bg-black/[0.06] text-black font-semibold'
+                : isTeslaDark ? 'text-[#8E8E93] hover:text-[#F5F5F7]' : 'text-zinc-600 hover:text-black'
             }`}
           >
             <span className="w-2.5 h-2.5 rounded-full bg-zinc-400" />
@@ -2120,14 +2172,22 @@ export function IsometricRoom({
         </div>
 
         {/* Zoom & Reset Controls */}
-        <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-[14px] bg-white/90 backdrop-blur-xl border-[0.5px] border-black/10 shadow-sm">
-          <span className="text-[11px] font-medium text-zinc-500 px-2 select-none hidden md:inline">
+        <div className={`pointer-events-auto flex items-center gap-1 p-1 border transition-colors ${
+          isTeslaDark
+            ? 'rounded-[6px] bg-[#111111] border-[#1F1F1F]'
+            : 'rounded-[14px] bg-white/90 backdrop-blur-xl border-black/10 shadow-sm'
+        }`}>
+          <span className={`text-[11px] font-medium px-2 select-none hidden md:inline ${
+            isTeslaDark ? 'text-[#8E8E93] font-mono' : 'text-zinc-500'
+          }`}>
             Drag to rotate 360°
           </span>
           <button
             type="button"
             onClick={handleZoomIn}
-            className="p-1.5 text-zinc-600 hover:text-black hover:bg-black/[0.04] rounded-[8px] transition-colors cursor-pointer"
+            className={`p-1.5 transition-colors cursor-pointer ${
+              isTeslaDark ? 'rounded-[4px] text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'rounded-[8px] text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+            }`}
             title="Zoom In"
           >
             <Plus className="w-4 h-4" />
@@ -2135,7 +2195,9 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-1.5 text-zinc-600 hover:text-black hover:bg-black/[0.04] rounded-[8px] transition-colors cursor-pointer"
+            className={`p-1.5 transition-colors cursor-pointer ${
+              isTeslaDark ? 'rounded-[4px] text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'rounded-[8px] text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+            }`}
             title="Zoom Out"
           >
             <Minus className="w-4 h-4" />
@@ -2143,7 +2205,9 @@ export function IsometricRoom({
           <button
             type="button"
             onClick={handleReset}
-            className="p-1.5 text-zinc-600 hover:text-black hover:bg-black/[0.04] rounded-[8px] transition-colors cursor-pointer"
+            className={`p-1.5 transition-colors cursor-pointer ${
+              isTeslaDark ? 'rounded-[4px] text-[#A1A1A6] hover:text-[#F5F5F7] hover:bg-[#161616]' : 'rounded-[8px] text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+            }`}
             title="Reset View"
           >
             <RotateCcw className="w-4 h-4" />

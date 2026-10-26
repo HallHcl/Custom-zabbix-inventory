@@ -13,6 +13,7 @@ import { IsometricRoom } from "../floorplan/IsometricRoom";
 import { DataCenter3DView, type ColorMode } from "../floorplan/DataCenter3DView";
 import type { RoomOverview, RackSummary } from "../../types";
 import type { HeatmapOverlay } from "../../types/twin";
+import { useTheme } from "../../lib/theme";
 
 interface NOCPersonaViewProps {
   overview: RoomOverview | null;
@@ -29,6 +30,7 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
   onNavigateToAlerts,
   onLayoutUpdated,
 }) => {
+  const { isTeslaDark } = useTheme();
   const {
     viewportMode,
     activeOverlay,
@@ -91,31 +93,43 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
   const viewportControlElement = null;
 
   const telemetryElement = (
-    <div className="px-3.5 py-1.5 rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-xs text-xs flex items-center gap-2">
+    <div className={`px-3.5 py-1.5 border text-xs flex items-center gap-2 transition-colors ${
+      isTeslaDark
+        ? 'rounded-[6px] bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]'
+        : 'rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-black/10 shadow-xs text-zinc-800'
+    }`}>
       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-      <span className="text-[#86868B]">Live Racks:</span>
-      <span className="font-bold text-[#1D1D1F]">{racks.length}</span>
-      <span className="text-black/15">|</span>
-      <span className="text-[#86868B]">Target Temp:</span>
-      <span className="font-bold text-[#007AFF]">{roomTempTarget.toFixed(1)}°C</span>
+      <span className={isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'}>Live Racks:</span>
+      <span className={`font-bold ${isTeslaDark ? 'text-[#F5F5F7] font-mono' : 'text-[#1D1D1F]'}`}>{racks.length}</span>
+      <span className={isTeslaDark ? 'text-white/15' : 'text-black/15'}>|</span>
+      <span className={isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'}>Target Temp:</span>
+      <span className={`font-bold ${isTeslaDark ? 'text-[#3E6AE1] font-mono' : 'text-[#007AFF]'}`}>{roomTempTarget.toFixed(1)}°C</span>
     </div>
   );
 
   return (
-    <div className="relative w-full h-[calc(100vh-8.5rem)] flex flex-col overflow-hidden rounded-[20px] border-[0.5px] border-black/10 bg-white/70 backdrop-blur-xl saturate-180 shadow-sm select-none">
+    <div className={`relative w-full h-[calc(100vh-8.5rem)] flex flex-col overflow-hidden border select-none transition-colors ${
+      isTeslaDark
+        ? 'rounded-[8px] border-[#1F1F1F] bg-[#000000]'
+        : 'rounded-[20px] border-black/10 bg-white/70 backdrop-blur-xl saturate-180 shadow-sm'
+    }`}>
       {/* In 2D Isometric mode, render floating HUD ribbon above canvas. In 3D mode, DataCenter3DView renders the unified ribbon */}
       {viewportMode === "2D" && (
         <div className="absolute top-3 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
           <div className="flex items-center gap-2 pointer-events-auto">
             {viewportControlElement}
-            <div className="hidden sm:flex items-center p-1 rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-xs text-xs">
+            <div className={`hidden sm:flex items-center p-1 border text-xs transition-colors ${
+              isTeslaDark
+                ? 'rounded-[6px] bg-[#111111] border-[#1F1F1F]'
+                : 'rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-black/10 shadow-xs'
+            }`}>
               <button
                 type="button"
                 onClick={() => setActiveOverlay("STATUS")}
                 className={`px-3 py-1 rounded-[8px] transition-colors cursor-pointer flex items-center gap-1.5 ${
                   activeOverlay === "STATUS"
-                    ? "bg-[#007AFF] text-white font-semibold shadow-xs"
-                    : "text-[#86868B] hover:text-[#1D1D1F]"
+                    ? isTeslaDark ? "bg-[#3E6AE1] text-white font-semibold" : "bg-[#007AFF] text-white font-semibold shadow-xs"
+                    : isTeslaDark ? "text-[#8E8E93] hover:text-[#F5F5F7]" : "text-[#86868B] hover:text-[#1D1D1F]"
                 }`}
               >
                 <ShieldAlert className="w-3.5 h-3.5" />
@@ -127,7 +141,7 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
                 className={`px-3 py-1 rounded-[8px] transition-colors cursor-pointer flex items-center gap-1.5 ${
                   activeOverlay === "THERMAL"
                     ? "bg-[#ff3b30] text-white font-semibold shadow-xs"
-                    : "text-[#86868B] hover:text-[#1D1D1F]"
+                    : isTeslaDark ? "text-[#8E8E93] hover:text-[#F5F5F7]" : "text-[#86868B] hover:text-[#1D1D1F]"
                 }`}
               >
                 <Flame className="w-3.5 h-3.5" />
@@ -139,7 +153,7 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
                 className={`px-3 py-1 rounded-[8px] transition-colors cursor-pointer flex items-center gap-1.5 ${
                   activeOverlay === "POWER"
                     ? "bg-[#ff9500] text-white font-semibold shadow-xs"
-                    : "text-[#86868B] hover:text-[#1D1D1F]"
+                    : isTeslaDark ? "text-[#8E8E93] hover:text-[#F5F5F7]" : "text-[#86868B] hover:text-[#1D1D1F]"
                 }`}
               >
                 <Zap className="w-3.5 h-3.5" />
@@ -151,7 +165,7 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
                 className={`px-3 py-1 rounded-[8px] transition-colors cursor-pointer flex items-center gap-1.5 ${
                   activeOverlay === "SPACE"
                     ? "bg-[#5856d6] text-white font-semibold shadow-xs"
-                    : "text-[#86868B] hover:text-[#1D1D1F]"
+                    : isTeslaDark ? "text-[#8E8E93] hover:text-[#F5F5F7]" : "text-[#86868B] hover:text-[#1D1D1F]"
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -169,7 +183,9 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
       {/* =====================================================================
           MAIN DIGITAL TWIN CANVAS (3D OR 2.5D)
           ===================================================================== */}
-      <div className="relative flex-1 w-full h-full bg-[#f5f5f7] overflow-hidden">
+      <div className={`relative flex-1 w-full h-full overflow-hidden transition-colors ${
+        isTeslaDark ? 'bg-[#000000]' : 'bg-[#f5f5f7]'
+      }`}>
         {viewportMode === "3D" ? (
           <DataCenter3DView
             racks={racks}
@@ -213,20 +229,32 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
             FLOATING SELECTED RACK QUICK-HUD PEEK
             ===================================================================== */}
         {selectedRack && (
-          <div className="absolute top-16 right-4 z-20 w-80 rounded-[20px] bg-white/90 backdrop-blur-2xl p-4 shadow-2xl border-[0.5px] border-black/10 animate-in fade-in slide-in-from-right-4 duration-200">
-            <div className="flex items-center justify-between pb-2 border-b border-black/10">
+          <div className={`absolute top-16 right-4 z-20 w-80 p-4 border animate-in fade-in slide-in-from-right-4 duration-200 ${
+            isTeslaDark
+              ? 'rounded-[8px] bg-[#111111] border-[#1F1F1F] text-[#F5F5F7] shadow-[0_0_24px_rgba(0,0,0,0.8)]'
+              : 'rounded-[20px] bg-white/90 backdrop-blur-2xl border-black/10 shadow-2xl text-[#1D1D1F]'
+          }`}>
+            <div className={`flex items-center justify-between pb-2 border-b ${
+              isTeslaDark ? 'border-[#1F1F1F]' : 'border-black/10'
+            }`}>
               <div>
-                <div className="text-[10px] uppercase text-[#007AFF] font-bold tracking-wider">
+                <div className={`text-[10px] uppercase font-bold tracking-wider ${
+                  isTeslaDark ? 'text-[#3E6AE1] font-mono' : 'text-[#007AFF]'
+                }`}>
                   Selected Cabinet
                 </div>
-                <h3 className="text-base font-bold text-[#1D1D1F]">
+                <h3 className={`text-base font-bold ${
+                  isTeslaDark ? 'text-[#F5F5F7] font-mono' : 'text-[#1D1D1F]'
+                }`}>
                   {selectedRack.name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedRack(null)}
-                className="w-6 h-6 rounded-[8px] flex items-center justify-center text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 text-xs"
+                className={`w-6 h-6 rounded-[8px] flex items-center justify-center text-xs transition-colors ${
+                  isTeslaDark ? 'text-[#8E8E93] hover:text-white hover:bg-[#1a1a1a]' : 'text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5'
+                }`}
               >
                 ✕
               </button>
@@ -234,19 +262,23 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
 
             {/* Quick Metrics Grid */}
             <div className="grid grid-cols-2 gap-2 my-3 text-xs">
-              <div className="p-2.5 rounded-[12px] bg-black/[0.03] border-[0.5px] border-black/10">
-                <span className="text-[10px] text-[#86868B] block uppercase font-medium">Slot Space</span>
-                <span className="font-bold text-[#1D1D1F]">
+              <div className={`p-2.5 border ${
+                isTeslaDark ? 'rounded-[6px] bg-[#161616] border-[#222222]' : 'rounded-[12px] bg-black/[0.03] border-black/10'
+              }`}>
+                <span className={`text-[10px] block uppercase font-medium ${isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'}`}>Slot Space</span>
+                <span className={`font-bold ${isTeslaDark ? 'text-[#F5F5F7] font-mono' : 'text-[#1D1D1F]'}`}>
                   {selectedRack.used_u} / {selectedRack.total_u} U
                 </span>
-                <span className="text-[10px] text-[#86868B] ml-1">
+                <span className={`text-[10px] ml-1 ${isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'}`}>
                   ({Math.round((selectedRack.used_u / (selectedRack.total_u || 42)) * 100)}%)
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-[12px] bg-black/[0.03] border-[0.5px] border-black/10">
-                <span className="text-[10px] text-[#86868B] block uppercase font-medium">Power Load</span>
-                <span className="font-bold text-[#ff9500]">
+              <div className={`p-2.5 border ${
+                isTeslaDark ? 'rounded-[6px] bg-[#161616] border-[#222222]' : 'rounded-[12px] bg-black/[0.03] border-black/10'
+              }`}>
+                <span className={`text-[10px] block uppercase font-medium ${isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'}`}>Power Load</span>
+                <span className={`font-bold text-[#ff9500] ${isTeslaDark ? 'font-mono' : ''}`}>
                   {selectedRackTelem
                     ? (selectedRackTelem.total_power_watts / 1000).toFixed(2)
                     : selectedRack.power_kw.toFixed(2)}{" "}
@@ -254,9 +286,11 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-[12px] bg-black/[0.03] border-[0.5px] border-black/10">
-                <span className="text-[10px] text-[#86868B] block uppercase font-medium">Inlet Temp</span>
-                <span className="font-bold text-[#007AFF]">
+              <div className={`p-2.5 border ${
+                isTeslaDark ? 'rounded-[6px] bg-[#161616] border-[#222222]' : 'rounded-[12px] bg-black/[0.03] border-black/10'
+              }`}>
+                <span className={`text-[10px] block uppercase font-medium ${isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'}`}>Inlet Temp</span>
+                <span className={`font-bold ${isTeslaDark ? 'text-[#3E6AE1] font-mono' : 'text-[#007AFF]'}`}>
                   {selectedRackTelem
                     ? selectedRackTelem.inlet_temp_c.toFixed(1)
                     : selectedRack.inlet_temp_c.toFixed(1)}{" "}
@@ -264,13 +298,15 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-[12px] bg-black/[0.03] border-[0.5px] border-black/10">
-                <span className="text-[10px] text-[#86868B] block uppercase font-medium">PDU Failover</span>
+              <div className={`p-2.5 border ${
+                isTeslaDark ? 'rounded-[6px] bg-[#161616] border-[#222222]' : 'rounded-[12px] bg-black/[0.03] border-black/10'
+              }`}>
+                <span className={`text-[10px] block uppercase font-medium ${isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'}`}>PDU Failover</span>
                 <span
                   className={`font-bold ${
                     selectedRackTelem?.redundancy_failover_risk
                       ? "text-rose-600 animate-pulse"
-                      : "text-emerald-600"
+                      : isTeslaDark ? "text-[#00C853]" : "text-emerald-600"
                   }`}
                 >
                   {selectedRackTelem?.redundancy_failover_risk ? "RISK (Single)" : "Redundant"}
@@ -282,7 +318,11 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
             <button
               type="button"
               onClick={() => onViewRackElevation(selectedRack)}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-[12px] bg-[#007AFF] hover:bg-[#0071E3] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
+              className={`w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold transition-all cursor-pointer ${
+                isTeslaDark
+                  ? 'rounded-[6px] bg-[#3E6AE1] hover:bg-[#3459c5] text-white font-mono tracking-wide shadow-[0_0_12px_rgba(62,106,225,0.3)]'
+                  : 'rounded-[12px] bg-[#007AFF] hover:bg-[#0071E3] text-white shadow-sm'
+              }`}
             >
               <span>View 42U Interactive Rack Elevation</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -294,33 +334,47 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
       {/* =====================================================================
           BOTTOM LIVE ALARM STREAM & VIDEO WALL TICKER
           ===================================================================== */}
-      <div className="h-16 shrink-0 border-t border-[0.5px] border-black/10 bg-white/80 backdrop-blur-xl px-4 flex items-center justify-between z-20 text-xs">
+      <div className={`h-16 shrink-0 border-t px-4 flex items-center justify-between z-20 text-xs transition-colors ${
+        isTeslaDark
+          ? 'border-[#1F1F1F] bg-[#0c0c0e] text-[#F5F5F7]'
+          : 'border-black/10 bg-white/80 backdrop-blur-xl text-zinc-800'
+      }`}>
         {/* Left: Ticker Label & Root-Cause vs Suppressed Count */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span
               className={`w-2.5 h-2.5 rounded-full ${
-                rootAlarms.length > 0 ? "bg-rose-500 animate-pulse" : "bg-emerald-500"
+                rootAlarms.length > 0 ? "bg-rose-500 animate-pulse" : isTeslaDark ? "bg-[#00C853]" : "bg-emerald-500"
               }`}
             />
-            <span className="font-semibold text-[#1D1D1F] text-xs tracking-wider uppercase">
+            <span className={`font-semibold text-xs tracking-wider uppercase ${
+              isTeslaDark ? 'text-[#F5F5F7] font-mono' : 'text-[#1D1D1F]'
+            }`}>
               Live Alarm Stream
             </span>
           </div>
 
-          <span className="px-2.5 py-0.5 rounded-full bg-black/5 border-[0.5px] border-black/10 text-[11px] text-[#86868B]">
-            <span className="font-bold text-rose-600">{rootAlarms.length}</span> Root Problems
+          <span className={`px-2.5 py-0.5 rounded-full border text-[11px] ${
+            isTeslaDark
+              ? 'bg-[#161616] border-[#222222] text-[#8E8E93] font-mono'
+              : 'bg-black/5 border-black/10 text-[#86868B]'
+          }`}>
+            <span className="font-bold text-rose-500">{rootAlarms.length}</span> Root Problems
           </span>
 
           {childAlarms.length > 0 && (
             <button
               type="button"
               onClick={() => setShowSuppressed(!showSuppressed)}
-              className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/5 hover:bg-black/10 border-[0.5px] border-black/10 text-[10px] text-[#1D1D1F] transition-colors cursor-pointer"
+              className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] transition-colors cursor-pointer ${
+                isTeslaDark
+                  ? 'bg-[#161616] hover:bg-[#202020] border-[#222222] text-[#A1A1A6]'
+                  : 'bg-black/5 hover:bg-black/10 border-black/10 text-[#1D1D1F]'
+              }`}
               title="Click to toggle blast-radius suppressed child alarms"
             >
               <span>{childAlarms.length} Suppressed by Blast Radius</span>
-              <span className="underline ml-1 font-semibold text-[#007AFF]">
+              <span className={`underline ml-1 font-semibold ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#007AFF]'}`}>
                 {showSuppressed ? "Hide" : "Show"}
               </span>
             </button>
@@ -330,7 +384,9 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
         {/* Center: Live Alarm Ticker Cards */}
         <div className="flex-1 mx-4 overflow-x-auto no-scrollbar flex items-center gap-2">
           {displayedAlarms.length === 0 ? (
-            <div className="text-[#86868B] text-[11px] flex items-center gap-1.5">
+            <div className={`text-[11px] flex items-center gap-1.5 ${
+              isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'
+            }`}>
               <span>All 24 cabinets operating within ASHRAE thermal and power thresholds.</span>
             </div>
           ) : (
@@ -342,22 +398,22 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
                   key={alarm.event_id || idx}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-[10px] border shrink-0 transition-all ${
                     isRoot
-                      ? "bg-rose-50 border-rose-200 text-rose-800"
+                      ? isTeslaDark ? "bg-[#250d11] border-rose-900/60 text-rose-300" : "bg-rose-50 border-rose-200 text-rose-800"
                       : isSuppressed
-                      ? "bg-zinc-100 border-zinc-200 text-zinc-600 opacity-80"
-                      : "bg-white border-[0.5px] border-black/10 text-[#1D1D1F]"
+                      ? isTeslaDark ? "bg-[#18181b] border-zinc-800 text-zinc-400 opacity-80" : "bg-zinc-100 border-zinc-200 text-zinc-600 opacity-80"
+                      : isTeslaDark ? "bg-[#161616] border-[#222222] text-[#F5F5F7]" : "bg-white border-black/10 text-[#1D1D1F]"
                   }`}
                 >
                   <AlertTriangle
                     className={`w-3.5 h-3.5 shrink-0 ${
-                      isRoot ? "text-rose-600 animate-pulse" : "text-amber-500"
+                      isRoot ? "text-rose-500 animate-pulse" : "text-amber-500"
                     }`}
                   />
                   <div className="flex flex-col leading-tight max-w-[200px] truncate">
                     <span className="font-bold text-[11px] truncate">
                       {alarm.trigger_name}
                     </span>
-                    <span className="text-[9px] text-[#86868B] truncate">
+                    <span className={`text-[9px] truncate ${isTeslaDark ? 'text-[#8E8E93]' : 'text-[#86868B]'}`}>
                       {isRoot
                         ? `[ROOT CAUSE] +${alarm.correlation?.suppressed_children_count || 0} downstream`
                         : isSuppressed
@@ -376,7 +432,11 @@ export const NOCPersonaView: React.FC<NOCPersonaViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToAlerts}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] bg-black/5 hover:bg-black/10 border-[0.5px] border-black/10 text-xs font-semibold text-[#1D1D1F] transition-colors cursor-pointer shrink-0"
+            className={`flex items-center gap-1 px-3 py-1.5 border text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
+              isTeslaDark
+                ? 'rounded-[6px] bg-[#161616] hover:bg-[#202020] border-[#222222] text-[#F5F5F7]'
+                : 'rounded-[10px] bg-black/5 hover:bg-black/10 border-black/10 text-[#1D1D1F]'
+            }`}
           >
             <span>View All</span>
             <ChevronRight className="w-3.5 h-3.5" />

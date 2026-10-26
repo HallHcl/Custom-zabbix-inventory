@@ -26,10 +26,12 @@ import { DevicesView } from './components/views/DevicesView'
 import { AlertsView } from './components/views/AlertsView'
 import { ReportsView } from './components/views/ReportsView'
 import { DevicePageView } from './components/views/DevicePageView'
+import { useTheme } from './lib/theme'
 
 const VALID_TABS: NavTab[] = ['overview', 'floor_plan', 'racks', 'devices', 'alerts', 'reports']
 
 export function App() {
+  const { isTeslaDark } = useTheme()
   const [activeNav, setActiveNav] = useState<NavTab>(() => {
     const saved = localStorage.getItem('dc_vision_active_tab') as NavTab | null
     return saved && VALID_TABS.includes(saved) ? saved : 'overview'
@@ -260,21 +262,33 @@ export function App() {
           ) : currentView === 'rack_elevation' && rackElevation ? (
             <div className="max-w-[1600px] mx-auto space-y-4 select-none">
               {/* Rack Header Sub-bar */}
-              <div className="p-3.5 rounded-[18px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-sm flex items-center justify-between text-[#1d1d1f]">
+              <div className={`p-3.5 rounded-[18px] backdrop-blur-2xl border shadow-sm flex items-center justify-between transition-colors ${
+                isTeslaDark
+                  ? "bg-[#111111] border-[#1F1F1F] text-[#F5F5F7]"
+                  : "bg-white/75 border-black/10 text-[#1d1d1f]"
+              }`}>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="flex items-center gap-2 min-h-[36px] px-3.5 py-1.5 rounded-[10px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black border-[0.5px] border-black/10 text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer"
+                    className={`flex items-center gap-2 min-h-[36px] px-3.5 py-1.5 rounded-[10px] border text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
+                      isTeslaDark
+                        ? "bg-[#181818] hover:bg-[#222222] text-[#E0E0E0] hover:text-[#FFFFFF] border-[#262626]"
+                        : "bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black border-black/10"
+                    }`}
                   >
-                    <ArrowLeft className="w-3.5 h-3.5 text-[#0071E3]" />
+                    <ArrowLeft className={`w-3.5 h-3.5 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`} />
                     <span>RETURN</span>
                   </button>
                   <div className="flex items-center gap-2.5">
-                    <h2 className="text-base font-semibold text-[#1d1d1f] tracking-[-0.015em]">
+                    <h2 className={`text-base font-semibold tracking-[-0.015em] ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
                       {rackElevation.name}
                     </h2>
-                    <span className="px-2.5 py-1 rounded-[8px] text-[11px] font-semibold bg-black/[0.04] text-zinc-600 border-[0.5px] border-black/10">
+                    <span className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold border ${
+                      isTeslaDark
+                        ? "bg-[#181818] text-[#A1A1A6] border-[#262626]"
+                        : "bg-black/[0.04] text-zinc-600 border-black/10"
+                    }`}>
                       ROW {rackElevation.row} / COL {rackElevation.col}
                     </span>
                   </div>
@@ -283,24 +297,24 @@ export function App() {
                 {/* Top Rack Quick Stats */}
                 <div className="flex items-center gap-6 text-xs">
                   <div className="text-right">
-                    <span className="text-zinc-400 block text-[10px] font-medium uppercase tracking-wider">Slot Capacity</span>
-                    <span className="font-semibold text-[#1d1d1f]">
+                    <span className={`block text-[10px] font-medium uppercase tracking-wider ${isTeslaDark ? "text-[#888888]" : "text-zinc-400"}`}>Slot Capacity</span>
+                    <span className={`font-semibold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
                       {rackElevation.used_u} / {rackElevation.total_u} U
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-zinc-400 block text-[10px] font-medium uppercase tracking-wider">Equipment</span>
-                    <span className="font-semibold text-[#1d1d1f]">
+                    <span className={`block text-[10px] font-medium uppercase tracking-wider ${isTeslaDark ? "text-[#888888]" : "text-zinc-400"}`}>Equipment</span>
+                    <span className={`font-semibold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1d1d1f]"}`}>
                       {rackElevation.devices.length} Units
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-zinc-400 block text-[10px] font-medium uppercase tracking-wider">Power Load</span>
+                    <span className={`block text-[10px] font-medium uppercase tracking-wider ${isTeslaDark ? "text-[#888888]" : "text-zinc-400"}`}>Power Load</span>
                     <span className="font-semibold text-[#ff9500]">{rackElevation.power_kw} kW</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-zinc-400 block text-[10px] font-medium uppercase tracking-wider">Inlet Temp</span>
-                    <span className="font-semibold text-[#0071E3]">
+                    <span className={`block text-[10px] font-medium uppercase tracking-wider ${isTeslaDark ? "text-[#888888]" : "text-zinc-400"}`}>Inlet Temp</span>
+                    <span className={`font-semibold ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#0071E3]"}`}>
                       {rackElevation.inlet_temp_c} °C
                     </span>
                   </div>
@@ -416,15 +430,25 @@ export function App() {
             /* TAB 2: Dedicated 2.5D Isometric Floor Plan View */
             <div className="max-w-[1600px] mx-auto space-y-5">
               {/* Floor Plan Sub-header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/10">
+              <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b transition-colors ${
+                isTeslaDark ? 'border-[#1F1F1F]' : 'border-black/10'
+              }`}>
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight text-[#1d1d1f] flex items-center gap-2">
+                  <h2 className={`text-xl font-bold tracking-tight flex items-center gap-2 ${
+                    isTeslaDark ? 'text-[#F5F5F7]' : 'text-[#1d1d1f]'
+                  }`}>
                     <span>Data Center Floor Plan</span>
-                    <span className="text-xs font-semibold text-zinc-700 bg-black/[0.04] px-2.5 py-0.5 rounded-[8px] border-[0.5px] border-black/10">
+                    <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-[8px] border ${
+                      isTeslaDark
+                        ? 'text-[#A1A1A6] bg-[#111111] border-[#1F1F1F] font-mono'
+                        : 'text-zinc-700 bg-black/[0.04] border-black/10'
+                    }`}>
                       ROOM A • {overview?.total_racks || 12} RACKS
                     </span>
                   </h2>
-                  <p className="text-xs text-zinc-600 mt-0.5 font-normal">
+                  <p className={`text-xs mt-0.5 font-normal ${
+                    isTeslaDark ? 'text-[#8E8E93]' : 'text-zinc-600'
+                  }`}>
                     2.5D spatial layout • Click any rack cabinet to inspect telemetry and 42U elevation
                   </p>
                 </div>
@@ -434,9 +458,13 @@ export function App() {
                   <button
                     type="button"
                     onClick={() => setCurrentView('floor_plan_editor')}
-                    className="flex items-center gap-2 text-xs font-semibold text-zinc-700 hover:text-black px-3.5 py-1.5 rounded-[10px] bg-black/[0.04] hover:bg-black/[0.08] border-[0.5px] border-black/10 transition-all cursor-pointer shadow-xs"
+                    className={`flex items-center gap-2 text-xs font-semibold px-3.5 py-1.5 transition-all cursor-pointer ${
+                      isTeslaDark
+                        ? 'text-[#F5F5F7] hover:text-white bg-[#111111] hover:bg-[#161616] border border-[#1F1F1F] rounded-[6px]'
+                        : 'text-zinc-700 hover:text-black bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 rounded-[10px] shadow-xs'
+                    }`}
                   >
-                    <Pencil className="w-3.5 h-3.5 text-[#0071E3]" />
+                    <Pencil className={`w-3.5 h-3.5 ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`} />
                     <span>Edit 2D Layout</span>
                   </button>
                 </div>

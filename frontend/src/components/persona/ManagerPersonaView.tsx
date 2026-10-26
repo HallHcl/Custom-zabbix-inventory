@@ -8,6 +8,7 @@ import {
   Layers,
 } from "lucide-react";
 import { useTwinStore } from "../../store/useTwinStore";
+import { useTheme } from "../../lib/theme";
 import type { RoomOverview } from "../../types";
 
 interface ManagerPersonaViewProps {
@@ -15,6 +16,7 @@ interface ManagerPersonaViewProps {
 }
 
 export const ManagerPersonaView: React.FC<ManagerPersonaViewProps> = ({ overview }) => {
+  const { isTeslaDark } = useTheme();
   const { facilityTelemetry, racksTelemetry } = useTwinStore();
 
   const itLoadKw = facilityTelemetry?.total_it_load_kw ?? 142.5;
@@ -57,60 +59,80 @@ export const ManagerPersonaView: React.FC<ManagerPersonaViewProps> = ({ overview
           ===================================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* PUE Efficiency Gauge */}
-        <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm relative overflow-hidden">
+        <div className={`p-4 rounded-[20px] backdrop-blur-xl saturate-180 border shadow-sm relative overflow-hidden transition-colors ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F]"
+            : "bg-white/70 border-black/10"
+        }`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#86868B] uppercase font-semibold">PUE Efficiency</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+            <span className={`text-xs uppercase font-semibold ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>PUE Efficiency</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              isTeslaDark
+                ? "bg-emerald-950/40 text-emerald-400 border border-emerald-800/60"
+                : "bg-emerald-50 text-emerald-600 border border-emerald-200"
+            }`}>
               {pueRating}
             </span>
           </div>
-          <div className="text-3xl font-bold text-[#1D1D1F] mt-2">
+          <div className={`text-3xl font-bold mt-2 ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>
             {pue.toFixed(2)}
           </div>
-          <p className="text-[11px] text-[#86868B] mt-1">
-            ASHRAE TC 9.9 Compliant (<span className="text-emerald-600 font-bold">&lt; 1.20</span> optimal)
+          <p className={`text-[11px] mt-1 ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>
+            ASHRAE TC 9.9 Compliant (<span className={isTeslaDark ? "text-emerald-400 font-bold" : "text-emerald-600 font-bold"}>&lt; 1.20</span> optimal)
           </p>
         </div>
 
         {/* Total IT & Cooling Load */}
-        <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm">
+        <div className={`p-4 rounded-[20px] backdrop-blur-xl saturate-180 border shadow-sm transition-colors ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F]"
+            : "bg-white/70 border-black/10"
+        }`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#86868B] uppercase font-semibold">Total Facility Power</span>
+            <span className={`text-xs uppercase font-semibold ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>Total Facility Power</span>
             <Zap className="w-4 h-4 text-[#ff9500]" />
           </div>
           <div className="text-3xl font-bold text-[#ff9500] mt-2">
-            {totalFacilityKw.toFixed(1)} <span className="text-sm text-[#86868B] font-normal">kW</span>
+            {totalFacilityKw.toFixed(1)} <span className={`text-sm font-normal ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>kW</span>
           </div>
-          <p className="text-[11px] text-[#86868B] mt-1">
-            IT Load: <span className="text-[#1D1D1F] font-semibold">{itLoadKw.toFixed(1)} kW</span> | Cooling:{" "}
-            <span className="text-[#007AFF] font-semibold">{coolingLoadKw.toFixed(1)} kW</span>
+          <p className={`text-[11px] mt-1 ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>
+            IT Load: <span className={`font-semibold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>{itLoadKw.toFixed(1)} kW</span> | Cooling:{" "}
+            <span className={isTeslaDark ? "text-[#3E6AE1] font-semibold" : "text-[#007AFF] font-semibold"}>{coolingLoadKw.toFixed(1)} kW</span>
           </p>
         </div>
 
         {/* Estimated Monthly Electricity Cost */}
-        <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm">
+        <div className={`p-4 rounded-[20px] backdrop-blur-xl saturate-180 border shadow-sm transition-colors ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F]"
+            : "bg-white/70 border-black/10"
+        }`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#86868B] uppercase font-semibold">Est. Monthly Power Cost</span>
-            <DollarSign className="w-4 h-4 text-emerald-600" />
+            <span className={`text-xs uppercase font-semibold ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>Est. Monthly Power Cost</span>
+            <DollarSign className={`w-4 h-4 ${isTeslaDark ? "text-emerald-400" : "text-emerald-600"}`} />
           </div>
-          <div className="text-3xl font-bold text-[#1D1D1F] mt-2">
+          <div className={`text-3xl font-bold mt-2 ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>
             ฿{estMonthlyCostThb.toLocaleString()}
           </div>
-          <p className="text-[11px] text-[#86868B] mt-1">
+          <p className={`text-[11px] mt-1 ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>
             Based on ~{Math.round(monthlyKwh).toLocaleString()} kWh/mo @ ฿4.2/kWh
           </p>
         </div>
 
         {/* Physical Space Utilization */}
-        <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm">
+        <div className={`p-4 rounded-[20px] backdrop-blur-xl saturate-180 border shadow-sm transition-colors ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F]"
+            : "bg-white/70 border-black/10"
+        }`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#86868B] uppercase font-semibold">Floor Space Utilization</span>
-            <Layers className="w-4 h-4 text-[#007AFF]" />
+            <span className={`text-xs uppercase font-semibold ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>Floor Space Utilization</span>
+            <Layers className={`w-4 h-4 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#007AFF]"}`} />
           </div>
-          <div className="text-3xl font-bold text-[#007AFF] mt-2">
+          <div className={`text-3xl font-bold mt-2 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#007AFF]"}`}>
             {spaceUtilPct}%
           </div>
-          <p className="text-[11px] text-[#86868B] mt-1">
+          <p className={`text-[11px] mt-1 ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>
             {usedSlots} U Active | {totalSlots - usedSlots} U Contiguous Headroom
           </p>
         </div>
@@ -119,73 +141,101 @@ export const ManagerPersonaView: React.FC<ManagerPersonaViewProps> = ({ overview
       {/* =====================================================================
           2. STRANDED CAPACITY & BOTTLENECK ANALYSIS
           ===================================================================== */}
-      <div className="p-5 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-black/10">
+      <div className={`p-5 rounded-[20px] backdrop-blur-xl saturate-180 border shadow-sm space-y-4 transition-colors ${
+        isTeslaDark
+          ? "bg-[#111111] border-[#1F1F1F]"
+          : "bg-white/70 border-black/10"
+      }`}>
+        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b ${
+          isTeslaDark ? "border-[#1F1F1F]" : "border-black/10"
+        }`}>
           <div>
-            <h3 className="font-semibold text-sm text-[#1D1D1F] flex items-center gap-2">
+            <h3 className={`font-semibold text-sm flex items-center gap-2 ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>
               <AlertCircle className="w-4 h-4 text-[#ff9500]" />
               <span>3-Way Stranded Capacity Bottleneck Analysis</span>
             </h3>
-            <p className="text-xs text-[#86868B] mt-0.5">
+            <p className={`text-xs mt-0.5 ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>
               Identifies stranded capital where rack space, power capacity, or cooling density prevents optimal server deployment.
             </p>
           </div>
-          <span className="text-xs px-3 py-1 rounded-[8px] bg-black/5 border-[0.5px] border-black/10 text-[#86868B]">
+          <span className={`text-xs px-3 py-1 rounded-[8px] border ${
+            isTeslaDark
+              ? "bg-[#181818] border-[#262626] text-[#A1A1A6]"
+              : "bg-black/5 border-black/10 text-[#86868B]"
+          }`}>
             Bangkok DC-1 Assessment
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Space Bottleneck */}
-          <div className="p-4 rounded-[16px] bg-white/60 border-[0.5px] border-black/10 flex flex-col justify-between shadow-xs">
+          <div className={`p-4 rounded-[16px] border flex flex-col justify-between shadow-xs transition-colors ${
+            isTeslaDark
+              ? "bg-[#161616] border-[#222222]"
+              : "bg-white/60 border-black/10"
+          }`}>
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#1D1D1F]">Space Bottleneck</span>
-                <span className="text-xs text-[#007AFF] font-semibold">Low Risk</span>
+                <span className={`text-xs font-semibold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>Space Bottleneck</span>
+                <span className={`text-xs font-semibold ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#007AFF]"}`}>Low Risk</span>
               </div>
-              <p className="text-[11px] text-[#86868B] mt-2">
+              <p className={`text-[11px] mt-2 ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>
                 Cabinets with &lt; 4U remaining where blade expansions cannot physically mount.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-black/10 flex items-center justify-between text-xs">
-              <span className="text-[#86868B]">Affected Cabinets:</span>
-              <span className="font-bold text-[#1D1D1F]">
+            <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
+              isTeslaDark ? "border-[#222222]" : "border-black/10"
+            }`}>
+              <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Affected Cabinets:</span>
+              <span className={`font-bold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>
                 {spaceConstrainedRacks} of {totalRacks} Racks
               </span>
             </div>
           </div>
 
           {/* Power Bottleneck */}
-          <div className="p-4 rounded-[16px] bg-white/60 border-[0.5px] border-black/10 flex flex-col justify-between shadow-xs">
+          <div className={`p-4 rounded-[16px] border flex flex-col justify-between shadow-xs transition-colors ${
+            isTeslaDark
+              ? "bg-[#161616] border-[#222222]"
+              : "bg-white/60 border-black/10"
+          }`}>
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#1D1D1F]">Power Headroom Stranding</span>
+                <span className={`text-xs font-semibold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>Power Headroom Stranding</span>
                 <span className="text-xs text-[#ff9500] font-semibold">Moderate Risk</span>
               </div>
-              <p className="text-[11px] text-[#86868B] mt-2">
+              <p className={`text-[11px] mt-2 ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>
                 Cabinets with &gt; 75% PDU power load where high-density servers cannot be added despite free RU.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-black/10 flex items-center justify-between text-xs">
-              <span className="text-[#86868B]">Affected Cabinets:</span>
+            <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
+              isTeslaDark ? "border-[#222222]" : "border-black/10"
+            }`}>
+              <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Affected Cabinets:</span>
               <span className="font-bold text-[#ff9500]">{powerConstrainedRacks} Racks</span>
             </div>
           </div>
 
           {/* Thermal / Hot Spots Bottleneck */}
-          <div className="p-4 rounded-[16px] bg-white/60 border-[0.5px] border-black/10 flex flex-col justify-between shadow-xs">
+          <div className={`p-4 rounded-[16px] border flex flex-col justify-between shadow-xs transition-colors ${
+            isTeslaDark
+              ? "bg-[#161616] border-[#222222]"
+              : "bg-white/60 border-black/10"
+          }`}>
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#1D1D1F]">Thermal Hot-Spot Stranding</span>
-                <span className="text-xs text-emerald-600 font-semibold">Optimal</span>
+                <span className={`text-xs font-semibold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>Thermal Hot-Spot Stranding</span>
+                <span className={`text-xs font-semibold ${isTeslaDark ? "text-emerald-400" : "text-emerald-600"}`}>Optimal</span>
               </div>
-              <p className="text-[11px] text-[#86868B] mt-2">
+              <p className={`text-[11px] mt-2 ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>
                 Cabinets with inlet temperature &gt; 25.5°C requiring CRAC airflow rebalancing.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-black/10 flex items-center justify-between text-xs">
-              <span className="text-[#86868B]">Hot Cabinets:</span>
-              <span className="font-bold text-emerald-600">{thermallyConstrainedRacks} Racks</span>
+            <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs ${
+              isTeslaDark ? "border-[#222222]" : "border-black/10"
+            }`}>
+              <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Hot Cabinets:</span>
+              <span className={`font-bold ${isTeslaDark ? "text-emerald-400" : "text-emerald-600"}`}>{thermallyConstrainedRacks} Racks</span>
             </div>
           </div>
         </div>
@@ -196,23 +246,33 @@ export const ManagerPersonaView: React.FC<ManagerPersonaViewProps> = ({ overview
           ===================================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Hardware Lifecycle & Warranty Distribution */}
-        <div className="p-5 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm space-y-3">
+        <div className={`p-5 rounded-[20px] backdrop-blur-xl saturate-180 border shadow-sm space-y-3 transition-colors ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F]"
+            : "bg-white/70 border-black/10"
+        }`}>
           <div className="flex items-center justify-between">
-            <h4 className="font-semibold text-xs text-[#1D1D1F] uppercase tracking-wider flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#007AFF]" />
+            <h4 className={`font-semibold text-xs uppercase tracking-wider flex items-center gap-2 ${
+              isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"
+            }`}>
+              <Clock className={`w-4 h-4 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#007AFF]"}`} />
               <span>Asset Lifecycle & Warranty Health</span>
             </h4>
-            <span className="text-[11px] text-[#86868B]">77 Tracked Assets</span>
+            <span className={`text-[11px] ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>77 Tracked Assets</span>
           </div>
 
           <div className="space-y-3 pt-2 text-xs">
             {/* Active Warranty */}
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-[#86868B]">Under Active Vendor Warranty (&lt; 3 yrs):</span>
-                <span className="font-bold text-emerald-600">58 Units (75%)</span>
+                <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Under Active Vendor Warranty (&lt; 3 yrs):</span>
+                <span className={`font-bold ${isTeslaDark ? "text-emerald-400" : "text-emerald-600"}`}>58 Units (75%)</span>
               </div>
-              <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
+              <div className={`w-full h-2 rounded-full overflow-hidden border ${
+                isTeslaDark
+                  ? "bg-[#1E1E1E] border-[#2A2A2A]"
+                  : "bg-black/5 border-black/5"
+              }`}>
                 <div className="bg-emerald-500 h-full rounded-full" style={{ width: "75%" }} />
               </div>
             </div>
@@ -220,10 +280,14 @@ export const ManagerPersonaView: React.FC<ManagerPersonaViewProps> = ({ overview
             {/* Expiring Soon */}
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-[#86868B]">Warranty Expiring within 90 Days:</span>
+                <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Warranty Expiring within 90 Days:</span>
                 <span className="font-bold text-[#ff9500]">12 Units (16%)</span>
               </div>
-              <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
+              <div className={`w-full h-2 rounded-full overflow-hidden border ${
+                isTeslaDark
+                  ? "bg-[#1E1E1E] border-[#2A2A2A]"
+                  : "bg-black/5 border-black/5"
+              }`}>
                 <div className="bg-[#ff9500] h-full rounded-full" style={{ width: "16%" }} />
               </div>
             </div>
@@ -231,10 +295,14 @@ export const ManagerPersonaView: React.FC<ManagerPersonaViewProps> = ({ overview
             {/* EOL / Out of Warranty */}
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-[#86868B]">Out of Warranty / Refresh Candidates:</span>
-                <span className="font-bold text-rose-600">7 Units (9%)</span>
+                <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Out of Warranty / Refresh Candidates:</span>
+                <span className="font-bold text-rose-500">7 Units (9%)</span>
               </div>
-              <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
+              <div className={`w-full h-2 rounded-full overflow-hidden border ${
+                isTeslaDark
+                  ? "bg-[#1E1E1E] border-[#2A2A2A]"
+                  : "bg-black/5 border-black/5"
+              }`}>
                 <div className="bg-rose-500 h-full rounded-full" style={{ width: "9%" }} />
               </div>
             </div>
@@ -242,52 +310,74 @@ export const ManagerPersonaView: React.FC<ManagerPersonaViewProps> = ({ overview
         </div>
 
         {/* Tenant / Project Allocation */}
-        <div className="p-5 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm space-y-3">
+        <div className={`p-5 rounded-[20px] backdrop-blur-xl saturate-180 border shadow-sm space-y-3 transition-colors ${
+          isTeslaDark
+            ? "bg-[#111111] border-[#1F1F1F]"
+            : "bg-white/70 border-black/10"
+        }`}>
           <div className="flex items-center justify-between">
-            <h4 className="font-semibold text-xs text-[#1D1D1F] uppercase tracking-wider flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-[#007AFF]" />
+            <h4 className={`font-semibold text-xs uppercase tracking-wider flex items-center gap-2 ${
+              isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"
+            }`}>
+              <PieChart className={`w-4 h-4 ${isTeslaDark ? "text-[#3E6AE1]" : "text-[#007AFF]"}`} />
               <span>Tenant / Workload Distribution</span>
             </h4>
-            <span className="text-[11px] text-[#86868B]">Bangkok DC-1</span>
+            <span className={`text-[11px] ${isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}`}>Bangkok DC-1</span>
           </div>
 
           <div className="space-y-3 pt-2 text-xs">
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-[#86868B]">Production Cloud & Kubernetes:</span>
-                <span className="font-bold text-[#1D1D1F]">42% (10 Racks)</span>
+                <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Production Cloud & Kubernetes:</span>
+                <span className={`font-bold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>42% (10 Racks)</span>
               </div>
-              <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
-                <div className="bg-[#007AFF] h-full rounded-full" style={{ width: "42%" }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-[#86868B]">Enterprise Core & Database:</span>
-                <span className="font-bold text-[#1D1D1F]">28% (7 Racks)</span>
-              </div>
-              <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
-                <div className="bg-[#007AFF]/80 h-full rounded-full" style={{ width: "28%" }} />
+              <div className={`w-full h-2 rounded-full overflow-hidden border ${
+                isTeslaDark
+                  ? "bg-[#1E1E1E] border-[#2A2A2A]"
+                  : "bg-black/5 border-black/5"
+              }`}>
+                <div className={isTeslaDark ? "bg-[#3E6AE1] h-full rounded-full" : "bg-[#007AFF] h-full rounded-full"} style={{ width: "42%" }} />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-[#86868B]">AI Training & pgvector RAG Cluster:</span>
-                <span className="font-bold text-[#1D1D1F]">18% (4 Racks)</span>
+                <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Enterprise Core & Database:</span>
+                <span className={`font-bold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>28% (7 Racks)</span>
               </div>
-              <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
+              <div className={`w-full h-2 rounded-full overflow-hidden border ${
+                isTeslaDark
+                  ? "bg-[#1E1E1E] border-[#2A2A2A]"
+                  : "bg-black/5 border-black/5"
+              }`}>
+                <div className={isTeslaDark ? "bg-[#3E6AE1]/80 h-full rounded-full" : "bg-[#007AFF]/80 h-full rounded-full"} style={{ width: "28%" }} />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-[11px] mb-1">
+                <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>AI Training & pgvector RAG Cluster:</span>
+                <span className={`font-bold ${isTeslaDark ? "text-[#F5F5F7]" : "text-[#1D1D1F]"}`}>18% (4 Racks)</span>
+              </div>
+              <div className={`w-full h-2 rounded-full overflow-hidden border ${
+                isTeslaDark
+                  ? "bg-[#1E1E1E] border-[#2A2A2A]"
+                  : "bg-black/5 border-black/5"
+              }`}>
                 <div className="bg-[#af52de] h-full rounded-full" style={{ width: "18%" }} />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between text-[11px] mb-1">
-                <span className="text-[#86868B]">Reserved Expansion Buffer:</span>
-                <span className="font-bold text-emerald-600">12% (3 Racks)</span>
+                <span className={isTeslaDark ? "text-[#888888]" : "text-[#86868B]"}>Reserved Expansion Buffer:</span>
+                <span className={`font-bold ${isTeslaDark ? "text-emerald-400" : "text-emerald-600"}`}>12% (3 Racks)</span>
               </div>
-              <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
+              <div className={`w-full h-2 rounded-full overflow-hidden border ${
+                isTeslaDark
+                  ? "bg-[#1E1E1E] border-[#2A2A2A]"
+                  : "bg-black/5 border-black/5"
+              }`}>
                 <div className="bg-emerald-500 h-full rounded-full" style={{ width: "12%" }} />
               </div>
             </div>
