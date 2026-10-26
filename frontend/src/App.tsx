@@ -219,7 +219,7 @@ export function App() {
   }, [overview?.racks, searchQuery])
 
   return (
-    <div className="flex h-screen w-screen bg-[var(--bg-base)] text-[var(--text-primary)] font-sans overflow-hidden">
+    <div className="flex h-screen w-screen bg-[var(--bg-base)] text-[var(--text-primary)] font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display','SF_Pro_Text',sans-serif] tracking-[-0.011em] overflow-hidden select-none">
       {/* Left Sidebar */}
       <Sidebar
         activeTab={activeNav}
@@ -260,47 +260,47 @@ export function App() {
           ) : currentView === 'rack_elevation' && rackElevation ? (
             <div className="max-w-[1600px] mx-auto space-y-4 select-none">
               {/* Rack Header Sub-bar */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#394650]">
+              <div className="p-3.5 rounded-[18px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-sm flex items-center justify-between text-[#1d1d1f]">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="flex items-center gap-1.5 text-xs font-mono font-medium text-[#caedde] hover:text-white px-2.5 py-1 rounded-[2px] bg-[#34424b] border border-[#50626f] transition-colors cursor-pointer"
+                    className="flex items-center gap-2 min-h-[36px] px-3.5 py-1.5 rounded-[10px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black border-[0.5px] border-black/10 text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5 text-[#8bd7d1]" />
+                    <ArrowLeft className="w-3.5 h-3.5 text-[#0071E3]" />
                     <span>RETURN</span>
                   </button>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-white font-mono tracking-tight">
+                  <div className="flex items-center gap-2.5">
+                    <h2 className="text-base font-semibold text-[#1d1d1f] tracking-[-0.015em]">
                       {rackElevation.name}
                     </h2>
-                    <span className="px-2 py-0.2 rounded-[2px] text-[10px] font-mono bg-[#34424b] text-[#8bd7d1] border border-[#50626f]">
+                    <span className="px-2.5 py-1 rounded-[8px] text-[11px] font-semibold bg-black/[0.04] text-zinc-600 border-[0.5px] border-black/10">
                       ROW {rackElevation.row} / COL {rackElevation.col}
                     </span>
                   </div>
                 </div>
 
                 {/* Top Rack Quick Stats */}
-                <div className="flex items-center gap-5 text-xs font-mono text-[#85a6b1]">
+                <div className="flex items-center gap-6 text-xs">
                   <div className="text-right">
-                    <span className="text-[#85a6b1] block text-[9px] uppercase">Slot Capacity</span>
-                    <span className="font-bold text-[#caedde]">
+                    <span className="text-zinc-400 block text-[10px] font-medium uppercase tracking-wider">Slot Capacity</span>
+                    <span className="font-semibold text-[#1d1d1f]">
                       {rackElevation.used_u} / {rackElevation.total_u} U
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[#85a6b1] block text-[9px] uppercase">Equipment</span>
-                    <span className="font-bold text-[#caedde]">
+                    <span className="text-zinc-400 block text-[10px] font-medium uppercase tracking-wider">Equipment</span>
+                    <span className="font-semibold text-[#1d1d1f]">
                       {rackElevation.devices.length} Units
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[#85a6b1] block text-[9px] uppercase">Power Load</span>
-                    <span className="font-bold text-amber-400">{rackElevation.power_kw} kW</span>
+                    <span className="text-zinc-400 block text-[10px] font-medium uppercase tracking-wider">Power Load</span>
+                    <span className="font-semibold text-[#ff9500]">{rackElevation.power_kw} kW</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[#85a6b1] block text-[9px] uppercase">Inlet Temp</span>
-                    <span className="font-bold text-[#8bd7d1]">
+                    <span className="text-zinc-400 block text-[10px] font-medium uppercase tracking-wider">Inlet Temp</span>
+                    <span className="font-semibold text-[#0071E3]">
                       {rackElevation.inlet_temp_c} °C
                     </span>
                   </div>
@@ -416,15 +416,15 @@ export function App() {
             /* TAB 2: Dedicated 2.5D Isometric Floor Plan View */
             <div className="max-w-[1600px] mx-auto space-y-5">
               {/* Floor Plan Sub-header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#394650]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/10">
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2 font-mono">
+                  <h2 className="text-xl font-bold tracking-tight text-[#1d1d1f] flex items-center gap-2">
                     <span>Data Center Floor Plan</span>
-                    <span className="text-xs font-mono font-semibold text-[#8bd7d1] bg-[#1a2329] px-2.5 py-0.5 rounded-[2px] border border-[#394650]">
+                    <span className="text-xs font-semibold text-zinc-700 bg-black/[0.04] px-2.5 py-0.5 rounded-[8px] border-[0.5px] border-black/10">
                       ROOM A • {overview?.total_racks || 12} RACKS
                     </span>
                   </h2>
-                  <p className="text-xs text-[#85a6b1] mt-0.5 font-mono">
+                  <p className="text-xs text-zinc-600 mt-0.5 font-normal">
                     2.5D spatial layout • Click any rack cabinet to inspect telemetry and 42U elevation
                   </p>
                 </div>
@@ -434,9 +434,9 @@ export function App() {
                   <button
                     type="button"
                     onClick={() => setCurrentView('floor_plan_editor')}
-                    className="flex items-center gap-2 text-xs font-mono font-semibold text-[#caedde] hover:text-white px-3 py-1.5 rounded-[2px] bg-[#273139] border border-[#394650] hover:border-[#8bd7d1] transition-all cursor-pointer"
+                    className="flex items-center gap-2 text-xs font-semibold text-zinc-700 hover:text-black px-3.5 py-1.5 rounded-[10px] bg-black/[0.04] hover:bg-black/[0.08] border-[0.5px] border-black/10 transition-all cursor-pointer shadow-xs"
                   >
-                    <Pencil className="w-3.5 h-3.5 text-[#8bd7d1]" />
+                    <Pencil className="w-3.5 h-3.5 text-[#0071E3]" />
                     <span>Edit 2D Layout</span>
                   </button>
                 </div>

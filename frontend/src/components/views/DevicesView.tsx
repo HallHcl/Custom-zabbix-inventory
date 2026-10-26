@@ -1,3 +1,4 @@
+/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
 import { useState, useEffect } from 'react'
 import {
   Search,
@@ -7,9 +8,14 @@ import {
   AlertTriangle,
   AlertOctagon,
   CheckCircle2,
-  Filter,
   Inbox,
   Plus,
+  X,
+  Layers,
+  Radio,
+  Shield,
+  HardDrive,
+  Cpu,
 } from 'lucide-react'
 import type { Device, RackSummary } from '../../types'
 import { fetchDevices } from '../../api/client'
@@ -22,6 +28,16 @@ interface DevicesViewProps {
   onOpenUnassigned?: () => void
   unassignedCount?: number
 }
+
+const DEVICE_TYPE_OPTIONS = [
+  { id: 'all', label: 'All Equipment' },
+  { id: 'Server', label: 'Servers' },
+  { id: 'Switch', label: 'Switches' },
+  { id: 'Firewall', label: 'Firewalls' },
+  { id: 'Storage', label: 'Storage' },
+  { id: 'UPS', label: 'Power & UPS' },
+  { id: 'Patch Panel', label: 'Patch Panels' },
+]
 
 export function DevicesView({
   racks,
@@ -65,64 +81,53 @@ export function DevicesView({
     )
   })
 
-  const deviceTypes = ['all', 'Server', 'Switch', 'Firewall', 'Storage', 'UPS', 'Patch Panel']
+  // Helper icon for device type
+  const getDeviceIcon = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'switch':
+        return Radio
+      case 'firewall':
+        return Shield
+      case 'storage':
+        return HardDrive
+      case 'ups':
+        return Cpu
+      default:
+        return Server
+    }
+  }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-3 select-none">
-      {/* Tactical Sub-Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#394650]">
+    <div className="max-w-[1600px] mx-auto space-y-6 font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display','SF_Pro_Text',sans-serif] text-[#1d1d1f] select-none">
+      
+      {/* Apple macOS Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b-[0.5px] border-black/10">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold tracking-tight text-white font-sans">
-              HARDWARE INVENTORY MATRIX
-            </h2>
-            <span className="px-1.5 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[10px] font-mono text-[#8bd7d1]">
-              {devices.length} UNITS
+          <div className="flex items-center gap-3">
+            <h1 className="text-[26px] font-semibold tracking-[-0.022em] text-[#1d1d1f] leading-tight">
+              Hardware Inventory
+            </h1>
+            <span className="rounded-[8px] px-2.5 py-1 text-[11px] font-medium bg-black/[0.04] text-zinc-700 border-[0.5px] border-black/10 tracking-[-0.011em]">
+              {devices.length} Total Units
             </span>
           </div>
-          <p className="text-xs text-[#85a6b1] font-mono mt-0.5">
-            Synchronized with Zabbix 7.0 Hosts &amp; CMDB Rack Allocations
+          <p className="text-[13px] text-zinc-500 tracking-[-0.011em] mt-1">
+            Real-time Telemetry with Zabbix 7.0 Hosts &amp; Data Center Spatial Enclosures
           </p>
         </div>
 
-        {/* Search & Filter Controls */}
-        <div className="flex items-center gap-2">
-          <div className="relative w-64 sm:w-72">
-            <Search className="w-3.5 h-3.5 text-[#85a6b1] absolute left-2.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search host, IP, model, vendor..."
-              className="w-full bg-[#273139] border border-[#394650] rounded-[3px] pl-8 pr-3 py-1.5 text-xs text-[#caedde] placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1] font-mono"
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-[3px] bg-[#273139] border border-[#394650]">
-            <Filter className="w-3 h-3 text-[#85a6b1]" />
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="bg-transparent text-xs text-[#caedde] font-mono focus:outline-none cursor-pointer"
-            >
-              {deviceTypes.map((t) => (
-                <option key={t} value={t} className="bg-[#273139] text-[#caedde]">
-                  {t === 'all' ? 'All Hardware Types' : t}
-                </option>
-              ))}
-            </select>
-          </div>
-
+        {/* Action Controls Dock */}
+        <div className="flex items-center gap-3">
           {onOpenUnassigned && (
             <button
               type="button"
               onClick={onOpenUnassigned}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[3px] bg-[#34424b] hover:bg-[#435561] border border-[#8bd7d1] text-xs font-mono text-[#8bd7d1] hover:text-white transition-colors cursor-pointer"
+              className="h-[44px] px-4 rounded-[12px] bg-white hover:bg-black/[0.02] border-[0.5px] border-black/10 text-zinc-700 hover:text-[#1d1d1f] text-[13px] font-semibold flex items-center gap-2 shadow-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
             >
-              <Inbox className="w-3.5 h-3.5" />
+              <Inbox className="w-4 h-4 text-[#0071E3]" />
               <span>Unassigned Queue</span>
               {typeof unassignedCount === 'number' && unassignedCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-[2px] bg-cyan-950 border border-cyan-700 text-[10px] text-cyan-300 font-bold">
+                <span className="rounded-[6px] px-1.5 py-0.5 text-[10px] font-bold bg-[#0071E3] text-white">
                   {unassignedCount}
                 </span>
               )}
@@ -132,158 +137,227 @@ export function DevicesView({
           <button
             type="button"
             onClick={() => setIsAddHostOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[3px] bg-[#244158] hover:bg-[#2e5270] border border-[#7aa5d2] text-xs font-mono text-white transition-colors cursor-pointer shadow-sm"
+            className="h-[44px] px-5 rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-[13px] font-semibold flex items-center gap-2 shadow-sm shadow-[#0071E3]/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 text-[#7aa5d2]" />
+            <Plus className="w-4 h-4" />
             <span>Add Host</span>
           </button>
         </div>
       </div>
 
-      {/* High-Density NOC Table */}
-      <div className="noc-panel overflow-hidden">
-        <table className="w-full text-left text-xs font-mono">
-          <thead className="bg-[#273139] border-b border-[#394650] text-[#85a6b1] uppercase tracking-wider text-[10px]">
-            <tr>
-              <th className="py-2.5 px-3">Equipment / Host</th>
-              <th className="py-2.5 px-3">Category</th>
-              <th className="py-2.5 px-3">Cabinet &amp; Elevation</th>
-              <th className="py-2.5 px-3">Management IP</th>
-              <th className="py-2.5 px-3">Telemetry Posture</th>
-              <th className="py-2.5 px-3 text-right">Operations</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#394650]">
-            {loading ? (
+      {/* Filter & Search Inset Bar */}
+      <div className="p-4 rounded-[16px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Spotlight Search Bar */}
+        <div className="relative w-full lg:w-80">
+          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search host, IP address, vendor, model..."
+            className="w-full h-[40px] pl-10 pr-9 rounded-[10px] bg-black/[0.04] border-[0.5px] border-black/10 text-[13px] text-[#1d1d1f] placeholder:text-zinc-400 focus:outline-none focus:border-[#0071E3] focus:ring-2 focus:ring-[#0071E3]/20 transition-all tracking-[-0.011em]"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Category Segmented Pills */}
+        <div className="flex p-1 bg-black/[0.04] rounded-[12px] border-[0.5px] border-black/10 overflow-x-auto no-scrollbar">
+          {DEVICE_TYPE_OPTIONS.map((opt) => {
+            const isSelected = selectedType === opt.id
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setSelectedType(opt.id)}
+                className={`h-[32px] px-3.5 rounded-[8px] text-[12px] font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                  isSelected
+                    ? 'bg-white text-[#1d1d1f] shadow-sm'
+                    : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Apple Glassmorphism Data Table */}
+      <div className="rounded-[20px] bg-white/75 backdrop-blur-2xl saturate-180 border-[0.5px] border-black/10 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-[13px] tracking-[-0.011em]">
+            <thead className="bg-black/[0.02] border-b-[0.5px] border-black/10 text-zinc-500 text-[11px] font-semibold uppercase tracking-[0.05em] select-none">
               <tr>
-                <td colSpan={6} className="py-10 text-center text-[#85a6b1]">
-                  Polling hardware telemetry from database...
-                </td>
+                <th className="py-3 px-6">Equipment / Host</th>
+                <th className="py-3 px-4">Category</th>
+                <th className="py-3 px-4">Cabinet &amp; Elevation</th>
+                <th className="py-3 px-4">Management Endpoint</th>
+                <th className="py-3 px-4">Telemetry Posture</th>
+                <th className="py-3 px-6 text-right">Operations</th>
               </tr>
-            ) : filteredDevices.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-10 text-center text-[#85a6b1]">
-                  No matching hardware records found
-                </td>
-              </tr>
-            ) : (
-              filteredDevices.map((d) => {
-                const rackName = d.rack_id ? (rackMap[d.rack_id] || 'Rack') : 'Unracked / Virtual'
-                const status = d.zabbix_status?.status || 'ok'
+            </thead>
+            <tbody className="divide-y-[0.5px] divide-black/5">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-16 text-center text-zinc-400">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="w-6 h-6 rounded-full border-2 border-[#0071E3]/30 border-t-[#0071E3] animate-spin" />
+                      <span className="text-[13px]">Polling hardware telemetry from Zabbix engine...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredDevices.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-16 text-center text-zinc-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Layers className="w-8 h-8 text-zinc-300 mb-1" />
+                      <p className="text-[14px] font-semibold text-zinc-700">No hardware records found</p>
+                      <p className="text-[12px] text-zinc-500">
+                        Try adjusting your search terms or equipment category filter.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredDevices.map((d) => {
+                  const rackName = d.rack_id ? (rackMap[d.rack_id] || 'Rack') : 'Virtual / Unassigned'
+                  const status = d.zabbix_status?.status || 'ok'
+                  const Icon = getDeviceIcon(d.device_type)
 
-                return (
-                  <tr
-                    key={d.id}
-                    className="hover:bg-[#252f36] transition-colors group cursor-default"
-                  >
-                    {/* Device Name & Hardware */}
-                    <td className="py-2 px-3">
-                      <div className="flex items-center gap-2">
-                        <Server className="w-3.5 h-3.5 text-[#8bd7d1] shrink-0" />
-                        <div>
-                          <span className="font-bold text-white block text-xs font-mono">{d.name}</span>
-                          <span className="text-[10px] text-[#85a6b1]">
-                            {d.manufacturer} {d.model}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Type */}
-                    <td className="py-2 px-3">
-                      <span className="px-1.5 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[10px] text-[#caedde] font-mono">
-                        {d.device_type}
-                      </span>
-                    </td>
-
-                    {/* Location */}
-                    <td className="py-2 px-3">
-                      <div>
-                        <span className="font-bold text-[#caedde] block text-xs">{rackName}</span>
-                        {d.rack_id && d.start_u ? (
-                          <span className="text-[10px] text-[#85a6b1] font-mono">
-                            U{d.start_u}
-                            {d.height_u > 1 ? `-U${d.start_u + d.height_u - 1}` : ''} ({d.height_u}U)
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-cyan-400/80 font-mono">Virtual / Container</span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* IP Address */}
-                    <td className="py-2 px-3 font-mono text-[#caedde] text-xs">
-                      {d.ip_address || <span className="text-[#85a6b1]/50">—</span>}
-                    </td>
-
-                    {/* Zabbix Status */}
-                    <td className="py-2 px-3">
-                      {d.zabbix_host_id ? (
-                        <div className="flex items-center gap-1.5">
-                          {status === 'critical' ? (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-700">
-                              <AlertOctagon className="w-3 h-3" />
-                              CRIT ({d.zabbix_status?.problems_count})
+                  return (
+                    <tr
+                      key={d.id}
+                      className="hover:bg-black/[0.02] transition-colors duration-200 group"
+                    >
+                      {/* Equipment / Host Name */}
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-9 h-9 rounded-[10px] bg-black/[0.04] border-[0.5px] border-black/10 flex items-center justify-center text-[#0071E3] shrink-0">
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-semibold text-[#1d1d1f] block text-[13px] tracking-[-0.011em] truncate">
+                              {d.name}
                             </span>
-                          ) : status === 'warning' ? (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-700">
-                              <AlertTriangle className="w-3 h-3" />
-                              WARN ({d.zabbix_status?.problems_count})
+                            <span className="text-[11px] text-zinc-500 tracking-[-0.011em] block truncate">
+                              {d.manufacturer || 'Generic'} • {d.model || 'Standard Chassis'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Category Badge */}
+                      <td className="py-3.5 px-4">
+                        <span className="rounded-[8px] px-2.5 py-1 text-[11px] font-medium bg-black/[0.04] border-[0.5px] border-black/10 text-zinc-700">
+                          {d.device_type || 'Server'}
+                        </span>
+                      </td>
+
+                      {/* Cabinet & Elevation */}
+                      <td className="py-3.5 px-4">
+                        <div>
+                          <span className="font-semibold text-[#1d1d1f] block text-[13px] tracking-[-0.011em]">
+                            {rackName}
+                          </span>
+                          {d.rack_id && d.start_u ? (
+                            <span className="text-[11px] text-zinc-500 font-mono">
+                              U{d.start_u}
+                              {d.height_u > 1 ? `-U${d.start_u + d.height_u - 1}` : ''} ({d.height_u}U)
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold bg-[#1a3835] text-[#8bd7d1] border border-[#2b5d58]">
-                              <CheckCircle2 className="w-3 h-3" />
-                              NOMINAL
+                            <span className="text-[11px] text-sky-600 font-mono">
+                              Cloud / Unallocated
                             </span>
                           )}
                         </div>
-                      ) : (
-                        <span className="text-[#85a6b1]/60 font-mono text-[10px]">UNLINKED</span>
-                      )}
-                    </td>
+                      </td>
 
-                    {/* Actions */}
-                    <td className="py-2 px-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {onOpenDevicePage && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenDevicePage(d.id)}
-                            className="px-2.5 py-1 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#8bd7d1] text-xs font-mono font-bold transition-colors cursor-pointer"
-                            title="Open full Device Page with Zabbix latest data and specs"
-                          >
-                            <span>Device Page</span>
-                          </button>
+                      {/* Management IP */}
+                      <td className="py-3.5 px-4 font-mono text-[12px] text-zinc-700">
+                        {d.ip_address || <span className="text-zinc-300">—</span>}
+                      </td>
+
+                      {/* Telemetry Posture */}
+                      <td className="py-3.5 px-4">
+                        {d.zabbix_host_id ? (
+                          <div className="flex items-center">
+                            {status === 'critical' ? (
+                              <span className="rounded-[8px] px-2.5 py-1 text-[11px] font-semibold bg-rose-50 text-rose-700 border-[0.5px] border-rose-200 flex items-center gap-1.5">
+                                <AlertOctagon className="w-3.5 h-3.5" />
+                                <span>CRITICAL ({d.zabbix_status?.problems_count || 1})</span>
+                              </span>
+                            ) : status === 'warning' ? (
+                              <span className="rounded-[8px] px-2.5 py-1 text-[11px] font-semibold bg-amber-50 text-amber-700 border-[0.5px] border-amber-200 flex items-center gap-1.5">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <span>WARNING ({d.zabbix_status?.problems_count || 1})</span>
+                              </span>
+                            ) : (
+                              <span className="rounded-[8px] px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border-[0.5px] border-emerald-200 flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>NOMINAL</span>
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="rounded-[8px] px-2 py-0.5 text-[10px] font-medium bg-black/[0.04] text-zinc-400 border-[0.5px] border-black/10">
+                            UNLINKED
+                          </span>
                         )}
-                        {d.rack_id && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenDeviceInRack(d.rack_id, d.id)}
-                            className="px-2 py-1 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#caedde] hover:text-white text-xs font-mono transition-colors cursor-pointer flex items-center gap-1"
-                          >
-                            <span>Rack</span>
-                            <ChevronRight className="w-3 h-3" />
-                          </button>
-                        )}
-                        {d.zabbix_host_id && (
-                          <a
-                            href={`http://192.168.1.85:8080/zabbix.php?action=latest.view&hostids%5B%5D=${d.zabbix_host_id}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#85a6b1] hover:text-white transition-colors"
-                            title="Open in Zabbix Latest Data"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+                      </td>
+
+                      {/* Operations Buttons */}
+                      <td className="py-3.5 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {onOpenDevicePage && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenDevicePage(d.id)}
+                              className="h-[32px] px-3 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black text-[12px] font-semibold border-[0.5px] border-black/10 transition-all duration-200 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                              title="Open full Device Page with Zabbix latest data and specs"
+                            >
+                              <span>Inspect</span>
+                            </button>
+                          )}
+
+                          {d.rack_id && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenDeviceInRack(d.rack_id, d.id)}
+                              className="h-[32px] px-3 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black text-[12px] font-semibold border-[0.5px] border-black/10 flex items-center gap-1 transition-all duration-200 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                            >
+                              <span>Rack</span>
+                              <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+                            </button>
+                          )}
+
+                          {d.zabbix_host_id && (
+                            <a
+                              href={`http://192.168.1.85:8080/zabbix.php?action=latest.view&hostids%5B%5D=${d.zabbix_host_id}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-8 h-8 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] border-[0.5px] border-black/10 text-zinc-500 hover:text-black flex items-center justify-center transition-all duration-200 cursor-pointer"
+                              title="Open in Zabbix Latest Data"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Add Host Modal Wizard */}

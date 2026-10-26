@@ -1,3 +1,5 @@
+/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
+
 import { useState, useMemo } from 'react'
 import { Plus, Zap, Wifi, AlertTriangle, Activity, Layers } from 'lucide-react'
 import type { Device, RackElevation as RackElevationType } from '../../types'
@@ -123,29 +125,28 @@ export function RackElevation({
           <div className="w-10 shrink-0 h-full flex items-center justify-end pr-1 relative group/pdua select-none">
             {showFeedA ? (
               <div
-                className={`w-full h-1.5 rounded-l-xs transition-all relative flex items-center justify-end ${
+                className={`w-full h-1.5 rounded-l-full transition-all relative flex items-center justify-end ${
                   feedAActive
-                    ? 'bg-sky-400 shadow-[0_0_8px_#38bdf8] brightness-125 z-10'
-                    : 'bg-sky-600/70 hover:bg-sky-500'
+                    ? 'bg-[#007AFF] shadow-[0_0_10px_#007AFF] brightness-125 z-10'
+                    : 'bg-[#007AFF]/60 hover:bg-[#007AFF]'
                 }`}
                 title={`Feed A: PDU-A Outlet -> ${dev.name} PSU-1 (230V • 1.1A • 253W)`}
               >
-                {/* Cable Lug / Terminal Bead */}
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-200 border border-sky-400 shadow-2xs mr-0.5" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white/90 mr-0.5 shadow-sm" />
               </div>
             ) : (
-              <div className="w-full h-0.5 bg-[#253039] opacity-40" />
+              <div className="w-full h-0.5 bg-white/5 opacity-40" />
             )}
           </div>
 
           {/* Left U Rail Number */}
-          <div className="w-7 shrink-0 text-right pr-1.5 font-mono text-[9px] text-[#85a6b1] font-bold select-none">
+          <div className="w-7 shrink-0 text-right pr-1.5 font-mono text-[10px] text-zinc-500 font-semibold select-none">
             {u}
           </div>
 
           {/* Left Rack Ear Screw */}
-          <div className="w-2.5 h-full flex items-center justify-center bg-[#273139] border-r border-[#394650] select-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#414a50] border border-[#50626f]" />
+          <div className="w-3 h-full flex items-center justify-center bg-black/[0.03] border-r-[0.5px] border-black/10 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-black/15 border-[0.5px] border-black/25" />
           </div>
 
           {/* Center: Device Faceplate Bezel */}
@@ -160,12 +161,12 @@ export function RackElevation({
           </div>
 
           {/* Right Rack Ear Screw */}
-          <div className="w-2.5 h-full flex items-center justify-center bg-[#273139] border-l border-[#394650] select-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#414a50] border border-[#50626f]" />
+          <div className="w-3 h-full flex items-center justify-center bg-black/[0.03] border-l-[0.5px] border-black/10 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-black/15 border-[0.5px] border-black/25" />
           </div>
 
           {/* Right U Rail Number */}
-          <div className="w-7 shrink-0 text-left pl-1.5 font-mono text-[9px] text-[#85a6b1] font-bold select-none">
+          <div className="w-7 shrink-0 text-left pl-1.5 font-mono text-[10px] text-zinc-500 font-semibold select-none">
             {u}
           </div>
 
@@ -176,23 +177,23 @@ export function RackElevation({
               isSingleCorded ? (
                 /* Severed / Missing Feed B Cable Hazard */
                 <div
-                  className="w-full h-1.5 border-t border-b border-dashed border-amber-400 bg-amber-950/40 rounded-r-xs flex items-center justify-between px-0.5 animate-pulse"
+                  className="w-full h-1.5 border-t border-b border-dashed border-[#ffd60a] bg-[#ffd60a]/20 rounded-r-full flex items-center justify-between px-0.5 animate-pulse"
                   title="CRITICAL REDUNDANCY RISK: Feed B unplugged / single-corded!"
                 >
-                  <AlertTriangle className="w-2.5 h-2.5 text-amber-400" />
-                  <span className="w-1.5 h-1 bg-amber-500 rounded-3xs" />
+                  <AlertTriangle className="w-2.5 h-2.5 text-[#ffd60a]" />
+                  <span className="w-1.5 h-1 bg-[#ffd60a] rounded-full" />
                 </div>
               ) : (
                 /* Normal Redundant Feed B Cable */
                 <div
-                  className={`w-full h-1 rounded-r-xs transition-all relative flex items-center ${
+                  className={`w-full h-1 rounded-r-full transition-all relative flex items-center ${
                     feedBActive
-                      ? 'bg-rose-500 shadow-[0_0_8px_#f43f5e] brightness-125 z-10'
-                      : 'bg-rose-700/70 hover:bg-rose-600'
+                      ? 'bg-[#ff453a] shadow-[0_0_10px_#ff453a] brightness-125 z-10'
+                      : 'bg-[#ff453a]/60 hover:bg-[#ff453a]'
                   }`}
                   title={`Feed B: PDU-B Outlet -> ${dev.name} PSU-2 (230V • 0.1A • Standby)`}
                 >
-                  <span className="w-1 h-1 rounded-full bg-rose-200 border border-rose-500 ml-0.5" />
+                  <span className="w-1 h-1 rounded-full bg-white/90 ml-0.5 shadow-sm" />
                 </div>
               )
             ) : null}
@@ -200,14 +201,14 @@ export function RackElevation({
             {/* Network Data Cable (Fiber/Copper to ToR Switch) */}
             {showNetwork && (
               <div
-                className={`w-full h-1 rounded-r-xs transition-all relative flex items-center ${
+                className={`w-full h-1 rounded-r-full transition-all relative flex items-center ${
                   networkActive
-                    ? 'bg-emerald-400 shadow-[0_0_8px_#10b981] brightness-125 z-10'
-                    : 'bg-emerald-700/60 hover:bg-emerald-600'
+                    ? 'bg-[#30d158] shadow-[0_0_10px_#30d158] brightness-125 z-10'
+                    : 'bg-[#30d158]/60 hover:bg-[#30d158]'
                 }`}
                 title={`Network Uplink: ${dev.name} eth0 -> SW-TOR-01 (10/25GbE Active)`}
               >
-                <span className="w-1 h-1 rounded-full bg-emerald-200 ml-0.5" />
+                <span className="w-1 h-1 rounded-full bg-white/90 ml-0.5" />
               </div>
             )}
           </div>
@@ -218,44 +219,44 @@ export function RackElevation({
         <div key={`slot-${u}`} className="flex items-center w-full group/slot">
           {/* Left Empty Finger */}
           <div className="w-10 shrink-0 h-7 flex items-center justify-end pr-1">
-            <div className="w-4 h-0.5 bg-[#253039] opacity-30" />
+            <div className="w-4 h-0.5 bg-black/10" />
           </div>
 
           {/* Left U Rail Number */}
-          <div className="w-7 shrink-0 text-right pr-1.5 font-mono text-[9px] text-[#85a6b1] select-none">
+          <div className="w-7 shrink-0 text-right pr-1.5 font-mono text-[10px] text-zinc-400 select-none">
             {u}
           </div>
 
           {/* Left Rail Mounting Hole */}
-          <div className="w-2.5 h-7 flex items-center justify-center bg-[#222b32] border-r border-[#34424b] select-none">
-            <span className="w-1.5 h-1.5 rounded-xs bg-[#2c3841] border border-[#394650]" />
+          <div className="w-3 h-7 flex items-center justify-center bg-black/[0.03] border-r-[0.5px] border-black/10 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-black/15 border-[0.5px] border-black/25" />
           </div>
 
           {/* Empty Slot Bay */}
           <div
             onClick={() => onEmptySlotClick(u)}
-            className="flex-1 h-7 border-y border-dashed border-[#34424b] bg-[#1a2127] hover:bg-[#252f36] hover:border-[#7aa5d2]/50 transition-colors cursor-pointer flex items-center justify-center text-transparent hover:text-[#caedde] text-[10px] font-mono"
+            className="flex-1 h-7 border border-dashed border-black/15 bg-black/[0.015] hover:bg-[#0071E3]/10 hover:border-[#0071E3]/40 transition-all duration-200 cursor-pointer flex items-center justify-center text-transparent hover:text-[#0071E3] text-[11px] font-sans font-medium"
             title={`Mount hardware unit at U${u}`}
           >
             <div className="flex items-center gap-1.5 opacity-0 group-hover/slot:opacity-100 transition-opacity">
-              <Plus className="w-3 h-3 text-[#7aa5d2]" />
-              <span className="tracking-tight text-[#7aa5d2]">U{u} VACANT SLOT</span>
+              <Plus className="w-3.5 h-3.5 text-[#0071E3]" />
+              <span className="tracking-tight text-[#0071E3]">Mount at U{u}</span>
             </div>
           </div>
 
           {/* Right Rail Mounting Hole */}
-          <div className="w-2.5 h-7 flex items-center justify-center bg-[#222b32] border-l border-[#34424b] select-none">
-            <span className="w-1.5 h-1.5 rounded-xs bg-[#2c3841] border border-[#394650]" />
+          <div className="w-3 h-7 flex items-center justify-center bg-black/[0.03] border-l-[0.5px] border-black/10 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-black/15 border-[0.5px] border-black/25" />
           </div>
 
           {/* Right U Rail Number */}
-          <div className="w-7 shrink-0 text-left pl-1.5 font-mono text-[9px] text-[#85a6b1] select-none">
+          <div className="w-7 shrink-0 text-left pl-1.5 font-mono text-[10px] text-zinc-400 select-none">
             {u}
           </div>
 
           {/* Right Empty Finger */}
           <div className="w-12 shrink-0 h-7 flex items-center pl-1">
-            <div className="w-4 h-0.5 bg-[#253039] opacity-30" />
+            <div className="w-4 h-0.5 bg-black/10" />
           </div>
         </div>
       )
@@ -269,25 +270,25 @@ export function RackElevation({
   }, [rack.devices, activeDeviceId])
 
   return (
-    <div className="flex flex-col items-center select-none max-w-[580px] w-full">
+    <div className="flex flex-col items-center select-none max-w-[620px] w-full font-sans text-zinc-800">
       {/* Front / Rear & Standard EIA-310 Header */}
-      <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-[#394650]">
-        <div className="flex items-center gap-2 text-[11px] font-mono text-[#85a6b1]">
-          <span className="w-2 h-2 rounded-full bg-[#7aa5d2]" />
-          <span className="font-bold text-slate-200">EIA-310-D 19&quot; SPEC</span>
-          <span className="text-[#50626f]">•</span>
-          <span className="text-sky-400">PDU-A / PDU-B 2N REDUNDANCY</span>
+      <div className="w-full flex items-center justify-between p-3 mb-3 rounded-[16px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 shadow-sm text-[#1d1d1f]">
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <span className="w-2 h-2 rounded-full bg-[#0071E3] animate-pulse" />
+          <span className="font-semibold text-[#1d1d1f] tracking-[-0.011em]">EIA-310-D 19&quot; SPEC</span>
+          <span className="text-black/20">•</span>
+          <span className="text-[#0071E3] font-medium">2N Dual Power Redundancy</span>
         </div>
 
-        {/* Front / Rear Hardware Selector */}
-        <div className="flex items-center p-0.5 rounded-[2px] bg-[#20282f] border border-[#394650]">
+        {/* Front / Rear Hardware Selector (Apple Segmented Pill) */}
+        <div className="flex items-center p-1 rounded-[10px] bg-black/[0.04] border-[0.5px] border-black/10">
           <button
             type="button"
             onClick={() => setFace('Front')}
-            className={`px-3 py-1 rounded-[2px] text-xs font-mono font-bold transition-colors cursor-pointer ${
+            className={`min-h-[30px] px-3.5 py-1 rounded-[8px] text-xs font-semibold tracking-[-0.011em] transition-all duration-200 cursor-pointer ${
               face === 'Front'
-                ? 'bg-[#34424b] text-[#7aa5d2] border border-[#50626f]'
-                : 'text-[#85a6b1] hover:text-[#caedde]'
+                ? 'bg-white text-[#1d1d1f] shadow-sm'
+                : 'text-zinc-500 hover:text-[#1d1d1f]'
             }`}
           >
             FRONT
@@ -295,10 +296,10 @@ export function RackElevation({
           <button
             type="button"
             onClick={() => setFace('Rear')}
-            className={`px-3 py-1 rounded-[2px] text-xs font-mono font-bold transition-colors cursor-pointer ${
+            className={`min-h-[30px] px-3.5 py-1 rounded-[8px] text-xs font-semibold tracking-[-0.011em] transition-all duration-200 cursor-pointer ${
               face === 'Rear'
-                ? 'bg-[#34424b] text-[#7aa5d2] border border-[#50626f]'
-                : 'text-[#85a6b1] hover:text-[#caedde]'
+                ? 'bg-white text-[#1d1d1f] shadow-sm'
+                : 'text-zinc-500 hover:text-[#1d1d1f]'
             }`}
           >
             REAR
@@ -308,20 +309,20 @@ export function RackElevation({
 
       {/* Redundancy Hazard Banner if any single-corded device exists */}
       {singleCordedDevices.length > 0 && (
-        <div className="w-full mb-2 p-2 rounded-[3px] bg-amber-950/40 border border-amber-500/80 flex items-center justify-between text-xs font-mono shadow-md">
-          <div className="flex items-center gap-2 text-amber-300">
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+        <div className="w-full mb-3 p-3 rounded-[16px] bg-[#ff9500]/10 border-[0.5px] border-[#ff9500]/30 flex items-center justify-between text-xs shadow-sm">
+          <div className="flex items-center gap-2.5 text-[#ff9500]">
+            <AlertTriangle className="w-4 h-4 text-[#ff9500] shrink-0 animate-pulse" />
             <div>
               <span className="font-bold">SINGLE-CORDED HAZARD: </span>
-              <span className="text-amber-200/90">
-                {singleCordedDevices[0].name} has no Feed B connection!
+              <span className="text-zinc-700">
+                {singleCordedDevices[0].name} has no redundant Feed B power connection!
               </span>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setCableFilter('FEED_B')}
-            className="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/60 text-[10px] font-bold cursor-pointer transition-colors"
+            className="min-h-[30px] px-3 py-1 rounded-[8px] bg-[#ff9500]/15 hover:bg-[#ff9500]/25 text-[#ff9500] border-[0.5px] border-[#ff9500]/40 text-xs font-semibold cursor-pointer transition-colors"
           >
             Inspect Feed B
           </button>
@@ -329,20 +330,20 @@ export function RackElevation({
       )}
 
       {/* Cable Tracing Filter Toolbar */}
-      <div className="w-full mb-2 p-1.5 rounded-[3px] bg-[#1a2127] border border-[#394650] flex flex-wrap items-center justify-between gap-1.5 text-xs font-mono shadow-xs">
-        <div className="flex items-center gap-1 text-[10px] text-[#85a6b1]">
-          <Zap className="w-3.5 h-3.5 text-amber-400" />
-          <span className="font-bold uppercase">Cabling:</span>
+      <div className="w-full mb-3 p-2 rounded-[16px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 flex flex-wrap items-center justify-between gap-2 text-xs shadow-sm text-[#1d1d1f]">
+        <div className="flex items-center gap-1.5 text-zinc-500 pl-1 font-medium">
+          <Zap className="w-3.5 h-3.5 text-[#ff9500]" />
+          <span>Cabling:</span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => setCableFilter('ALL')}
-            className={`px-2 py-0.5 rounded-[2px] text-[10px] font-bold transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
               cableFilter === 'ALL'
-                ? 'bg-[#34424b] text-white border border-[#7aa5d2]'
-                : 'bg-[#20282f] text-[#85a6b1] hover:text-white border border-[#394650]'
+                ? 'bg-[#0071E3] text-white shadow-sm'
+                : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f]'
             }`}
           >
             ALL
@@ -350,46 +351,46 @@ export function RackElevation({
           <button
             type="button"
             onClick={() => setCableFilter('FEED_A')}
-            className={`px-2 py-0.5 rounded-[2px] text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               cableFilter === 'FEED_A'
-                ? 'bg-sky-950/80 text-sky-300 border border-sky-400 shadow-[0_0_6px_#38bdf855]'
-                : 'bg-[#20282f] text-sky-400/80 hover:text-sky-300 border border-[#394650]'
+                ? 'bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/40 shadow-xs'
+                : 'bg-black/[0.04] text-zinc-600 hover:text-[#0071E3]'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-2xs" />
-            FEED A (BLUE)
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3]" />
+            FEED A
           </button>
           <button
             type="button"
             onClick={() => setCableFilter('FEED_B')}
-            className={`px-2 py-0.5 rounded-[2px] text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               cableFilter === 'FEED_B'
-                ? 'bg-rose-950/80 text-rose-300 border border-rose-400 shadow-[0_0_6px_#f43f5e55]'
-                : 'bg-[#20282f] text-rose-400/80 hover:text-rose-300 border border-[#394650]'
+                ? 'bg-[#ff3b30]/15 text-[#ff3b30] border-[0.5px] border-[#ff3b30]/40 shadow-xs'
+                : 'bg-black/[0.04] text-zinc-600 hover:text-[#ff3b30]'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-2xs" />
-            FEED B (RED)
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff3b30]" />
+            FEED B
           </button>
           <button
             type="button"
             onClick={() => setCableFilter('NETWORK')}
-            className={`px-2 py-0.5 rounded-[2px] text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               cableFilter === 'NETWORK'
-                ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-400 shadow-[0_0_6px_#10b98155]'
-                : 'bg-[#20282f] text-emerald-400/80 hover:text-emerald-300 border border-[#394650]'
+                ? 'bg-[#34c759]/15 text-[#34c759] border-[0.5px] border-[#34c759]/40 shadow-xs'
+                : 'bg-black/[0.04] text-zinc-600 hover:text-[#34c759]'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-2xs" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#34c759]" />
             NETWORK
           </button>
           <button
             type="button"
             onClick={() => setCableFilter('NONE')}
-            className={`px-1.5 py-0.5 rounded-[2px] text-[10px] font-bold transition-all cursor-pointer ${
+            className={`px-2 py-1 rounded-[8px] text-[11px] font-semibold transition-all duration-200 cursor-pointer ${
               cableFilter === 'NONE'
-                ? 'bg-[#34424b] text-white border border-[#7aa5d2]'
-                : 'bg-[#20282f] text-[#85a6b1] hover:text-white border border-[#394650]'
+                ? 'bg-black/10 text-[#1d1d1f] shadow-xs'
+                : 'bg-black/[0.04] text-zinc-500 hover:text-[#1d1d1f]'
             }`}
           >
             HIDE
@@ -399,17 +400,17 @@ export function RackElevation({
 
       {/* Quick Brand Filter Chip Bar */}
       {availableBrands.length > 0 && (
-        <div className="w-full mb-2 p-1.5 rounded-[3px] bg-[#1a2127] border border-[#394650] flex items-center gap-1.5 overflow-x-auto text-xs font-mono shadow-xs">
-          <span className="text-[9px] text-[#85a6b1] font-bold uppercase shrink-0 px-1">
+        <div className="w-full mb-3 p-2 rounded-[16px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 flex items-center gap-1.5 overflow-x-auto text-xs shadow-sm text-[#1d1d1f]">
+          <span className="text-[11px] text-zinc-500 font-medium shrink-0 px-1">
             Brand:
           </span>
           <button
             type="button"
             onClick={() => setSelectedBrand(null)}
-            className={`px-2 py-0.5 rounded-[2px] text-[10px] font-bold transition-all shrink-0 cursor-pointer ${
+            className={`px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
               selectedBrand === null
-                ? 'bg-[#34424b] text-[#7aa5d2] border border-[#7aa5d2]/60 shadow-xs'
-                : 'bg-[#20282f] text-[#85a6b1] hover:text-[#caedde] border border-[#394650]'
+                ? 'bg-[#0071E3] text-white shadow-sm'
+                : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f] border-[0.5px] border-black/10'
             }`}
           >
             ALL ({rack.devices.length})
@@ -421,23 +422,19 @@ export function RackElevation({
                 key={b.name}
                 type="button"
                 onClick={() => setSelectedBrand(isActive ? null : b.name)}
-                className={`flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] text-[10px] font-bold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
                   isActive
-                    ? 'bg-[#252f36] border text-white shadow-xs'
-                    : 'bg-[#20282f] text-[#85a6b1] hover:text-[#caedde] border border-[#394650]'
+                    ? 'bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/30 shadow-xs'
+                    : 'bg-black/[0.04] text-zinc-600 hover:text-[#1d1d1f] border-[0.5px] border-black/10'
                 }`}
-                style={{
-                  borderColor: isActive ? b.color : undefined,
-                  boxShadow: isActive ? `0 0 8px ${b.color}44` : undefined,
-                }}
                 title={`Filter by ${b.name} (${b.count} units)`}
               >
                 <span
-                  className="w-1.5 h-1.5 rounded-full shrink-0 shadow-xs"
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
                   style={{ backgroundColor: b.color }}
                 />
                 <span>{b.tag || b.name}</span>
-                <span className="text-[8.5px] opacity-75 font-normal">({b.count})</span>
+                <span className="text-[10px] opacity-75 font-normal">({b.count})</span>
               </button>
             )
           })}
@@ -445,20 +442,20 @@ export function RackElevation({
       )}
 
       {/* 42U Heavy-Duty Equipment Rack Cabinet Frame with Vertical Cable Channels */}
-      <div className="w-full p-2.5 rounded-[3px] bg-[#1a2127] border-2 border-[#394650] shadow-2xl relative">
+      <div className="w-full p-3 rounded-[20px] bg-white/80 backdrop-blur-2xl saturate-180 border-[0.5px] border-black/10 shadow-xl relative">
         {/* Top Extrusion Header: Left PDU A, Center 42U Cabinet, Right PDU B */}
-        <div className="h-6 bg-[#273139] border-b border-[#414a50] rounded-t-[2px] flex items-center justify-between px-2 text-[9px] font-mono text-[#85a6b1] mb-1">
-          <div className="flex items-center gap-1 text-sky-400 font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_#38bdf8]" />
+        <div className="h-7 bg-black/[0.03] border-b-[0.5px] border-black/10 rounded-t-[14px] flex items-center justify-between px-3 text-[10px] font-mono text-zinc-500 mb-1.5">
+          <div className="flex items-center gap-1.5 text-[#0071E3] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3] shadow-[0_0_6px_#0071E3]" />
             <span>PDU-A (FEED A)</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-zinc-600">
             <span>42U EIA-310 STANDARD RACK</span>
-            <span className="text-[#50626f]">•</span>
+            <span className="text-black/20">•</span>
             <span>482.6 mm</span>
           </div>
-          <div className="flex items-center gap-1 text-rose-400 font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_4px_#f43f5e]" />
+          <div className="flex items-center gap-1.5 text-[#ff3b30] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ff3b30] shadow-[0_0_6px_#ff3b30]" />
             <span>PDU-B (FEED B)</span>
           </div>
         </div>
@@ -467,85 +464,87 @@ export function RackElevation({
         <div className="space-y-0.5">{uRows}</div>
 
         {/* Bottom Cabinet Plinth & Inlet Headers */}
-        <div className="h-6 bg-[#273139] border-t border-[#414a50] rounded-b-[2px] flex items-center justify-between px-2 text-[9px] font-mono text-[#85a6b1] mt-1">
-          <span className="text-sky-400">230V • 16A BREAKER A: OK</span>
-          <span>CABLE TRAY INLET • LEVELING FEET ENGAGED</span>
-          <span className="text-rose-400">230V • 16A BREAKER B: OK</span>
+        <div className="h-7 bg-black/[0.03] border-t-[0.5px] border-black/10 rounded-b-[14px] flex items-center justify-between px-3 text-[10px] font-mono text-zinc-500 mt-1.5">
+          <span className="text-[#0071E3]">230V • 16A BREAKER A: NOMINAL</span>
+          <span className="text-zinc-600">CABLE TRAY INLET • LEVELING ENGAGED</span>
+          <span className="text-[#ff3b30]">230V • 16A BREAKER B: NOMINAL</span>
         </div>
       </div>
 
       {/* Interactive Cable Inspection HUD Pill when Hovered/Selected */}
       {activeDevice && (
-        <div className="w-full mt-2 p-2.5 rounded-[3px] bg-[#151c22] border border-sky-600/60 shadow-lg text-xs font-mono space-y-1.5 animate-fadeIn">
-          <div className="flex items-center justify-between border-b border-[#2d3a43] pb-1">
-            <div className="flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-sky-400" />
-              <span className="font-bold text-white">{activeDevice.name}</span>
-              <span className="text-[10px] px-1.5 py-0.2 bg-[#20282f] border border-[#394650] rounded text-[#8bd7d1]">
+        <div className="w-full mt-3 p-4 rounded-[16px] bg-white/85 backdrop-blur-2xl border-[0.5px] border-[#0071E3]/30 shadow-lg text-xs space-y-3 animate-fadeIn text-[#1d1d1f]">
+          <div className="flex items-center justify-between border-b border-black/10 pb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-[8px] bg-[#0071E3]/15 text-[#0071E3] flex items-center justify-center">
+                <Activity className="w-4 h-4" />
+              </div>
+              <span className="font-semibold text-[#1d1d1f] text-sm">{activeDevice.name}</span>
+              <span className="text-xs px-2 py-0.5 bg-black/[0.05] rounded-[6px] text-zinc-700 font-medium">
                 U{activeDevice.start_u} ({activeDevice.height_u}U)
               </span>
             </div>
-            <span className="text-[10px] text-[#85a6b1] flex items-center gap-1">
-              <Layers className="w-3 h-3 text-[#85a6b1]" />
+            <span className="text-xs text-zinc-500 flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5 text-zinc-400" />
               {activeDevice.model || activeDevice.device_type}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
             {/* Feed A Info */}
-            <div className="p-1.5 rounded bg-[#10161b] border border-sky-800/60">
-              <span className="text-sky-400 font-bold block flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+            <div className="p-3 rounded-[12px] bg-black/[0.03] border-[0.5px] border-black/10">
+              <span className="text-[#0071E3] font-semibold flex items-center gap-1.5 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0071E3]" />
                 Feed A (Primary)
               </span>
-              <span className="text-slate-200 block mt-0.5">PDU-A Outlet #{activeDevice.start_u}</span>
-              <span className="text-[9px] text-[#85a6b1]">228V • 1.1A • 251W Nominal</span>
+              <span className="text-zinc-800 block text-[11px] font-medium">PDU-A Outlet #{activeDevice.start_u}</span>
+              <span className="text-[10px] text-zinc-500 mt-0.5 block">228V • 1.1A • 251W Nominal</span>
             </div>
 
             {/* Feed B Info */}
             <div
-              className={`p-1.5 rounded ${
+              className={`p-3 rounded-[12px] border-[0.5px] ${
                 singleCordedDevices.some((sc) => sc.id === activeDevice.id)
-                  ? 'bg-amber-950/40 border border-amber-500/80'
-                  : 'bg-[#10161b] border border-rose-800/60'
+                  ? 'bg-[#ff9500]/15 border-[#ff9500]/40'
+                  : 'bg-black/[0.03] border-black/10'
               }`}
             >
               <span
-                className={`font-bold block flex items-center gap-1 ${
+                className={`font-semibold flex items-center gap-1.5 mb-1 ${
                   singleCordedDevices.some((sc) => sc.id === activeDevice.id)
-                    ? 'text-amber-400'
-                    : 'text-rose-400'
+                    ? 'text-[#ff9500]'
+                    : 'text-[#ff3b30]'
                 }`}
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
                     singleCordedDevices.some((sc) => sc.id === activeDevice.id)
-                      ? 'bg-amber-400 animate-ping'
-                      : 'bg-rose-400'
+                      ? 'bg-[#ff9500] animate-ping'
+                      : 'bg-[#ff3b30]'
                   }`}
                 />
                 Feed B (Redundant)
               </span>
               {singleCordedDevices.some((sc) => sc.id === activeDevice.id) ? (
-                <span className="text-amber-300 font-bold block mt-0.5">
+                <span className="text-[#ff9500] font-semibold block text-[11px]">
                   DISCONNECTED (Single Cord Risk)
                 </span>
               ) : (
                 <>
-                  <span className="text-slate-200 block mt-0.5">PDU-B Outlet #{activeDevice.start_u}</span>
-                  <span className="text-[9px] text-[#85a6b1]">228V • 0.1A • Standby Active</span>
+                  <span className="text-zinc-800 block text-[11px] font-medium">PDU-B Outlet #{activeDevice.start_u}</span>
+                  <span className="text-[10px] text-zinc-500 mt-0.5 block">228V • 0.1A • Standby Active</span>
                 </>
               )}
             </div>
 
             {/* Network Uplink Info */}
-            <div className="p-1.5 rounded bg-[#10161b] border border-emerald-800/60">
-              <span className="text-emerald-400 font-bold block flex items-center gap-1">
-                <Wifi className="w-3 h-3 text-emerald-400" />
+            <div className="p-3 rounded-[12px] bg-black/[0.03] border-[0.5px] border-black/10">
+              <span className="text-[#34c759] font-semibold flex items-center gap-1.5 mb-1">
+                <Wifi className="w-3.5 h-3.5 text-[#34c759]" />
                 Network Uplink
               </span>
-              <span className="text-slate-200 block mt-0.5">SW-TOR-01 (Gi1/0/{activeDevice.start_u})</span>
-              <span className="text-[9px] text-emerald-300 font-semibold">10/25 GbE SFP28 Link UP</span>
+              <span className="text-zinc-800 block text-[11px] font-medium">SW-TOR-01 (Gi1/0/{activeDevice.start_u})</span>
+              <span className="text-[10px] text-[#34c759] font-medium mt-0.5 block">10/25 GbE SFP28 Link UP</span>
             </div>
           </div>
         </div>

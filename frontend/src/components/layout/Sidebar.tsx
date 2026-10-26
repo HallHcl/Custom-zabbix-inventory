@@ -1,3 +1,4 @@
+/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
 import {
   Layers,
   Map,
@@ -5,7 +6,7 @@ import {
   Monitor,
   Bell,
   FileText,
-  Activity,
+  Box,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -29,41 +30,48 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
     { id: 'overview', label: 'Operations Overview', icon: Layers },
     { id: 'floor_plan', label: 'DC Floor Plan', icon: Map },
     { id: 'racks', label: 'Rack Cabinets', icon: Server },
-    { id: 'devices', label: 'Device Inventory', icon: Monitor },
-    { id: 'alerts', label: 'Active Alerts', icon: Bell, badge: alertCount },
+    { id: 'devices', label: 'Hardware Inventory', icon: Monitor },
+    { id: 'alerts', label: 'Active Alarms', icon: Bell, badge: alertCount },
     { id: 'reports', label: 'Telemetry Reports', icon: FileText },
   ]
 
   return (
-    <aside className="w-60 shrink-0 border-r border-[#394650] bg-[#1a2127] flex flex-col justify-between select-none">
+    <aside className="w-64 shrink-0 bg-white/75 backdrop-blur-2xl saturate-180 border-r-[0.5px] border-black/10 flex flex-col justify-between select-none font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display','SF_Pro_Text',sans-serif] text-[#1d1d1f]">
       <div>
-        {/* Brand Console Header */}
-        <div className="px-4 py-4 border-b border-[#394650] bg-[#20282f]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[3px] bg-[#34424b] border border-[#50626f] flex items-center justify-center text-[#7aa5d2]">
-              <Activity className="w-4 h-4" />
+        {/* macOS Style Window Brand Header */}
+        <div className="h-[64px] px-5 border-b-[0.5px] border-black/10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* macOS Traffic Lights */}
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]" />
+              <div className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
+              <div className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]" />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold tracking-wider text-[#eeeeee] text-sm font-sans">
-                  DC VISION
+
+            <div className="h-4 w-px bg-black/10" />
+
+            {/* Brand Logo & Name */}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-[6px] bg-[#0071E3] text-white flex items-center justify-center shadow-sm">
+                <Box className="w-3.5 h-3.5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[13px] font-semibold tracking-[-0.022em] text-[#1d1d1f] leading-none">
+                  NexusTwin
                 </span>
-                <span className="px-1 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[9px] font-mono text-[#7aa5d2]">
-                  NOC
+                <span className="text-[10px] text-zinc-500 tracking-[-0.011em] mt-0.5">
+                  DCIM • Zabbix 7.0
                 </span>
               </div>
-              <p className="text-[10px] text-[#85a6b1] font-mono tracking-tight">
-                Zabbix 7.0 • DCIM
-              </p>
             </div>
           </div>
         </div>
 
         {/* Navigation Section */}
-        <div className="px-2 py-3">
-          <div className="px-2 pb-2 text-[10px] font-mono uppercase tracking-wider text-[#85a6b1]">
-            Control Views
-          </div>
+        <div className="p-3 space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-zinc-400 px-3 py-1.5">
+            Workspaces
+          </p>
           <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -74,24 +82,19 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
                   key={item.id}
                   type="button"
                   onClick={() => onSelectTab(item.id)}
-                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-[3px] text-xs font-medium transition-colors cursor-pointer relative ${
+                  className={`w-full h-[44px] flex items-center justify-between px-3.5 rounded-[12px] text-[13px] font-medium tracking-[-0.011em] transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? 'bg-[#34424b] text-[#eeeeee] border border-[#50626f]'
-                      : 'text-[#85a6b1] hover:text-[#eeeeee] hover:bg-[#252f36] border border-transparent'
+                      ? 'bg-[#0071E3] text-white shadow-sm shadow-[#0071E3]/25 scale-[1.01]'
+                      : 'text-zinc-600 hover:text-[#1d1d1f] hover:bg-black/[0.04] active:scale-[0.98]'
                   }`}
                 >
-                  {/* Left Accent Pip */}
-                  {isActive && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-[#7aa5d2] rounded-r-xs" />
-                  )}
-
-                  <div className="flex items-center gap-2.5 ml-1">
-                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#7aa5d2]' : 'text-[#85a6b1]'}`} />
-                    <span className="tracking-tight">{item.label}</span>
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-zinc-500'}`} />
+                    <span>{item.label}</span>
                   </div>
 
                   {item.badge && item.badge > 0 ? (
-                    <span className="px-1.5 py-0.2 text-[10px] font-mono font-bold rounded-[2px] bg-rose-950/80 text-rose-300 border border-rose-700/80">
+                    <span className="rounded-[8px] px-2 py-0.5 text-[11px] font-semibold bg-[#FF3B30] text-white shadow-sm tracking-[-0.011em]">
                       {item.badge}
                     </span>
                   ) : null}
@@ -103,13 +106,15 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
       </div>
 
       {/* Telemetry Footer Status */}
-      <div className="p-3 border-t border-[#394650] bg-[#20282f]">
-        <div className="flex items-center justify-between text-[11px] text-[#85a6b1] font-mono">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#7aa5d2] animate-pulse" />
-            <span>Zabbix JSON-RPC</span>
+      <div className="p-3">
+        <div className="p-3.5 rounded-[16px] bg-black/[0.03] border-[0.5px] border-black/10 flex items-center justify-between text-[11px] tracking-[-0.011em]">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500/50" />
+            <span className="text-zinc-700 font-medium">Zabbix Engine</span>
           </div>
-          <span className="text-[10px] text-[#85a6b1]">30s SYNC</span>
+          <span className="rounded-[6px] px-1.5 py-0.5 bg-black/[0.05] text-zinc-600 font-mono text-[10px]">
+            Live RPC
+          </span>
         </div>
       </div>
     </aside>

@@ -338,48 +338,48 @@ export function ChassisVisualCard({
   }
 
   return (
-    <div className="w-full bg-[#182026] border border-[#394650] rounded-xs p-4 space-y-4 text-slate-100">
+    <div className="w-full bg-white/70 backdrop-blur-xl border-[0.5px] border-black/10 rounded-[16px] p-5 space-y-4 text-[#1d1d1f]">
       {/* Visual Header & View Angle Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#394650]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b-[0.5px] border-black/10">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xs bg-[#20282f] border border-[#394650] text-[#8bd7d1]">
+          <div className="p-2.5 rounded-[12px] bg-[#0071E3]/10 text-[#0071E3] border-[0.5px] border-[#0071E3]/20">
             <Server className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white font-mono tracking-tight">{modelName}</h3>
-              <span className="px-1.5 py-0.2 rounded-xs bg-[#273139] border border-[#50626f] text-[10px] font-mono text-[#8bd7d1]">
+              <h3 className="text-sm font-semibold text-[#1d1d1f] tracking-tight">{modelName}</h3>
+              <span className="px-2 py-0.5 rounded-[6px] bg-black/[0.04] border-[0.5px] border-black/10 text-[10px] font-medium text-zinc-700">
                 {formFactor}
               </span>
             </div>
-            <p className="text-xs text-[#85a6b1] font-mono mt-0.5">
-              Manufacturer: <span className="text-[#caedde] font-semibold">{brand}</span> • Device Class: {deviceType}
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Manufacturer: <span className="text-[#1d1d1f] font-semibold">{brand}</span> • Device Class: {deviceType}
             </p>
           </div>
         </div>
 
         {/* Front / Rear Toggle Controls */}
-        <div className="flex items-center p-0.5 rounded-xs bg-[#20282f] border border-[#394650]">
+        <div className="flex items-center p-1 rounded-[10px] bg-black/[0.04] border-[0.5px] border-black/10">
           <button
             onClick={() => setViewFace('front')}
-            className={`px-3 py-1 text-xs font-mono rounded-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-[8px] transition-all cursor-pointer flex items-center gap-1.5 ${
               viewFace === 'front'
-                ? 'bg-[#34424b] text-[#8bd7d1] font-bold shadow-xs'
-                : 'text-[#85a6b1] hover:text-[#caedde]'
+                ? 'bg-white text-[#1d1d1f] shadow-xs'
+                : 'text-zinc-600 hover:text-[#1d1d1f]'
             }`}
           >
-            <Eye className="w-3 h-3" />
+            <Eye className="w-3.5 h-3.5" />
             Front Bezel &amp; Bays
           </button>
           <button
             onClick={() => setViewFace('rear')}
-            className={`px-3 py-1 text-xs font-mono rounded-xs transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-[8px] transition-all cursor-pointer flex items-center gap-1.5 ${
               viewFace === 'rear'
-                ? 'bg-[#34424b] text-[#8bd7d1] font-bold shadow-xs'
-                : 'text-[#85a6b1] hover:text-[#caedde]'
+                ? 'bg-white text-[#1d1d1f] shadow-xs'
+                : 'text-zinc-600 hover:text-[#1d1d1f]'
             }`}
           >
-            <Box className="w-3 h-3" />
+            <Box className="w-3.5 h-3.5" />
             Rear Ports &amp; PSUs
           </button>
         </div>
@@ -389,39 +389,39 @@ export function ChassisVisualCard({
       {viewFace === 'front' ? renderFrontChassis() : renderRearChassis()}
 
       {/* Physical Hardware Dimension Specs Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#2d3a43] text-xs font-mono">
-        <div className="p-2 rounded-xs bg-[#20282f] border border-[#394650]">
-          <span className="text-[9px] text-[#85a6b1] block uppercase flex items-center gap-1">
-            <HardDrive className="w-3 h-3 text-[#8bd7d1]" /> Drive Config
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t-[0.5px] border-black/10 text-xs">
+        <div className="p-2.5 rounded-[12px] bg-black/[0.02] border-[0.5px] border-black/10">
+          <span className="text-[10px] text-zinc-500 block uppercase font-semibold flex items-center gap-1.5">
+            <HardDrive className="w-3.5 h-3.5 text-[#0071E3]" /> Drive Config
           </span>
-          <span className="text-[#caedde] text-[10px] font-bold mt-0.5 block truncate">
+          <span className="text-[#1d1d1f] text-xs font-bold mt-1 block truncate">
             {chassisSpecs?.drive_bays || '8x 2.5" SAS/NVMe'}
           </span>
         </div>
 
-        <div className="p-2 rounded-xs bg-[#20282f] border border-[#394650]">
-          <span className="text-[9px] text-[#85a6b1] block uppercase flex items-center gap-1">
-            <Zap className="w-3 h-3 text-amber-400" /> Power Rating
+        <div className="p-2.5 rounded-[12px] bg-black/[0.02] border-[0.5px] border-black/10">
+          <span className="text-[10px] text-zinc-500 block uppercase font-semibold flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 text-amber-500" /> Power Rating
           </span>
-          <span className="text-amber-400 text-[10px] font-bold mt-0.5 block truncate">
+          <span className="text-amber-600 text-xs font-bold mt-1 block truncate">
             {chassisSpecs?.max_power_watt || 800}W (Dual Redundant)
           </span>
         </div>
 
-        <div className="p-2 rounded-xs bg-[#20282f] border border-[#394650]">
-          <span className="text-[9px] text-[#85a6b1] block uppercase flex items-center gap-1">
-            <Layers className="w-3 h-3 text-[#85a6b1]" /> Dimensions / Weight
+        <div className="p-2.5 rounded-[12px] bg-black/[0.02] border-[0.5px] border-black/10">
+          <span className="text-[10px] text-zinc-500 block uppercase font-semibold flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5 text-purple-600" /> Dimensions / Weight
           </span>
-          <span className="text-[#caedde] text-[10px] font-bold mt-0.5 block truncate">
+          <span className="text-[#1d1d1f] text-xs font-bold mt-1 block truncate">
             {chassisSpecs?.weight_kg || 28.6} kg ({heightU}U Standard)
           </span>
         </div>
 
-        <div className="p-2 rounded-xs bg-[#20282f] border border-[#394650]">
-          <span className="text-[9px] text-[#85a6b1] block uppercase flex items-center gap-1">
-            <Cpu className="w-3 h-3 text-[#8bd7d1]" /> OOB Management
+        <div className="p-2.5 rounded-[12px] bg-black/[0.02] border-[0.5px] border-black/10">
+          <span className="text-[10px] text-zinc-500 block uppercase font-semibold flex items-center gap-1.5">
+            <Cpu className="w-3.5 h-3.5 text-emerald-600" /> OOB Management
           </span>
-          <span className="text-[#8bd7d1] text-[10px] font-bold mt-0.5 block truncate">
+          <span className="text-emerald-700 text-xs font-bold mt-1 block truncate">
             {chassisSpecs?.management_port || 'Dedicated 1GbE'}
           </span>
         </div>

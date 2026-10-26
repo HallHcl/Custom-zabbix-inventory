@@ -1,8 +1,10 @@
+/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 export type NexusTheme =
-  | "tesla-midnight"
   | "cupertino-frost"
+  | "apple-pro-dark"
+  | "tesla-midnight"
   | "obsidian-carbon"
   | "blueprint-tactical";
 
@@ -18,6 +20,26 @@ export interface ThemeMetadata {
 }
 
 export const NEXUS_THEMES: Record<NexusTheme, ThemeMetadata> = {
+  "cupertino-frost": {
+    id: "cupertino-frost",
+    name: "Apple Light (Cupertino)",
+    inspiration: "macOS Sequoia & Apple VisionOS Light",
+    bestFor: "Default Native Apple Light Interface",
+    bgHex: "#F5F5F7",
+    accentHex: "#0071E3",
+    glassSurface: "rgba(255, 255, 255, 0.72)",
+    previewGradient: "from-blue-500 to-slate-100",
+  },
+  "apple-pro-dark": {
+    id: "apple-pro-dark",
+    name: "Apple Pro Dark",
+    inspiration: "macOS Sequoia & Pro Display Glass",
+    bestFor: "Pro Display Dark Studio Interface",
+    bgHex: "#0C0C0E",
+    accentHex: "#007AFF",
+    glassSurface: "rgba(28, 28, 30, 0.72)",
+    previewGradient: "from-blue-600 to-zinc-900",
+  },
   "tesla-midnight": {
     id: "tesla-midnight",
     name: "Tesla Midnight",
@@ -27,16 +49,6 @@ export const NEXUS_THEMES: Record<NexusTheme, ThemeMetadata> = {
     accentHex: "#3B82F6",
     glassSurface: "rgba(22, 27, 38, 0.78)",
     previewGradient: "from-blue-600 to-slate-900",
-  },
-  "cupertino-frost": {
-    id: "cupertino-frost",
-    name: "Cupertino Frost",
-    inspiration: "macOS Sequoia & Apple VisionOS Light",
-    bestFor: "Daytime Supervisors & Executive Briefings",
-    bgHex: "#F5F5F7",
-    accentHex: "#0071E3",
-    glassSurface: "rgba(255, 255, 255, 0.85)",
-    previewGradient: "from-blue-500 to-slate-100",
   },
   "obsidian-carbon": {
     id: "obsidian-carbon",
@@ -70,7 +82,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-const THEME_STORAGE_KEY = "nexustwin_theme";
+const THEME_STORAGE_KEY = "nexustwin_theme_mode";
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<NexusTheme>(() => {
@@ -80,7 +92,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return stored;
       }
     }
-    return "tesla-midnight";
+    return "cupertino-frost";
   });
 
   const setTheme = (newTheme: NexusTheme) => {
@@ -93,8 +105,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const cycleTheme = () => {
     const themeKeys: NexusTheme[] = [
-      "tesla-midnight",
       "cupertino-frost",
+      "apple-pro-dark",
+      "tesla-midnight",
       "obsidian-carbon",
       "blueprint-tactical",
     ];

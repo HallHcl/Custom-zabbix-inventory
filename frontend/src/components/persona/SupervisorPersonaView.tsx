@@ -95,21 +95,21 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
           1. ZABBIX AUTO-DISCOVERY UNRACKED INBOX BANNER
           ===================================================================== */}
       {unassignedCount > 0 && onOpenUnassigned && (
-        <div className="p-4 rounded-2xl glass-panel-elevated border border-[var(--accent-primary)]/40 bg-gradient-to-r from-[var(--accent-primary)]/10 via-transparent to-[var(--accent-primary)]/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+        <div className="p-4 rounded-[20px] bg-white/80 backdrop-blur-xl saturate-180 border-[0.5px] border-[#007AFF]/30 bg-gradient-to-r from-[#007AFF]/5 via-white/80 to-[#007AFF]/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-[var(--accent-primary)]/20 border border-[var(--accent-primary)]/40 flex items-center justify-center shrink-0">
-              <Inbox className="w-5 h-5 text-[var(--accent-primary)] animate-bounce" />
+            <div className="w-10 h-10 rounded-[12px] bg-[#007AFF]/10 border-[0.5px] border-[#007AFF]/25 flex items-center justify-center shrink-0">
+              <Inbox className="w-5 h-5 text-[#007AFF] animate-bounce" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-[var(--text-bright)]">
+                <h3 className="font-semibold text-sm text-[#1D1D1F]">
                   Zabbix Auto-Discovery Ingestion Queue
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-[var(--accent-primary)] text-white text-[11px] font-mono font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#007AFF] text-white text-[11px] font-bold">
                   {unassignedCount} Discovered
                 </span>
               </div>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs text-[#86868B] mt-0.5">
                 New hardware hosts discovered via Zabbix 7.0 network rules are ready to be mounted into physical rack units.
               </p>
             </div>
@@ -117,7 +117,7 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
           <button
             type="button"
             onClick={onOpenUnassigned}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-white font-mono text-xs font-semibold shadow-lg shadow-[var(--accent-glow)] transition-all cursor-pointer shrink-0"
+            className="flex items-center gap-2 px-4 py-2 rounded-[12px] bg-[#007AFF] hover:bg-[#0071E3] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer shrink-0"
           >
             <span>Open Ingestion Queue</span>
             <ArrowRight className="w-4 h-4" />
@@ -129,85 +129,85 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
           2. CAPACITY OVERVIEW STAT STRIP
           ===================================================================== */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl glass-panel border border-[var(--border-subtle)]">
+        <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase">Total Cabinets</span>
-            <Server className="w-4 h-4 text-[var(--accent-primary)]" />
+            <span className="text-[11px] text-[#86868B] uppercase font-semibold">Total Cabinets</span>
+            <Server className="w-4 h-4 text-[#007AFF]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-[var(--text-bright)] mt-1">
+          <div className="text-2xl font-bold text-[#1D1D1F] mt-1">
             {racks.length}
           </div>
-          <span className="text-[10px] text-[var(--text-secondary)]">Bangkok DC-1 (Halls A & B)</span>
+          <span className="text-[10px] text-[#86868B]">Bangkok DC-1 (Halls A & B)</span>
         </div>
 
-        <div className="p-3.5 rounded-xl glass-panel border border-[var(--border-subtle)]">
+        <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase">Available Space</span>
-            <Layers className="w-4 h-4 text-emerald-400" />
+            <span className="text-[11px] text-[#86868B] uppercase font-semibold">Available Space</span>
+            <Layers className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">
-            {totalFreeSlots} <span className="text-xs text-[var(--text-secondary)]">/ {totalSlots} U</span>
+          <div className="text-2xl font-bold text-emerald-600 mt-1">
+            {totalFreeSlots} <span className="text-xs text-[#86868B] font-normal">/ {totalSlots} U</span>
           </div>
-          <span className="text-[10px] text-[var(--text-secondary)]">({100 - overallUsagePct}% Free RU)</span>
+          <span className="text-[10px] text-[#86868B]">({100 - overallUsagePct}% Free RU)</span>
         </div>
 
-        <div className="p-3.5 rounded-xl glass-panel border border-[var(--border-subtle)]">
+        <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase">Space Utilization</span>
-            <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+            <span className="text-[11px] text-[#86868B] uppercase font-semibold">Space Utilization</span>
+            <SlidersHorizontal className="w-4 h-4 text-[#ff9500]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-[var(--text-bright)] mt-1">
+          <div className="text-2xl font-bold text-[#1D1D1F] mt-1">
             {overallUsagePct}%
           </div>
-          <div className="w-full bg-[var(--bg-base)] h-1.5 rounded-full mt-2 overflow-hidden border border-[var(--border-subtle)]">
+          <div className="w-full bg-black/5 h-2 rounded-full mt-2 overflow-hidden border-[0.5px] border-black/5">
             <div
-              className="bg-[var(--accent-primary)] h-full rounded-full transition-all duration-500"
+              className="bg-[#007AFF] h-full rounded-full transition-all duration-500"
               style={{ width: `${overallUsagePct}%` }}
             />
           </div>
         </div>
 
-        <div className="p-3.5 rounded-xl glass-panel border border-[var(--border-subtle)]">
+        <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase">Matching Racks</span>
-            <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+            <span className="text-[11px] text-[#86868B] uppercase font-semibold">Matching Racks</span>
+            <CheckCircle2 className="w-4 h-4 text-[#007AFF]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-cyan-400 mt-1">
-            {filteredRacks.length} <span className="text-xs text-[var(--text-secondary)]">/ {racks.length}</span>
+          <div className="text-2xl font-bold text-[#007AFF] mt-1">
+            {filteredRacks.length} <span className="text-xs text-[#86868B] font-normal">/ {racks.length}</span>
           </div>
-          <span className="text-[10px] text-[var(--text-secondary)]">Ready for Provisioning</span>
+          <span className="text-[10px] text-[#86868B]">Ready for Provisioning</span>
         </div>
       </div>
 
       {/* =====================================================================
           3. CONTIGUOUS SPACE FINDER FILTER BAR
           ===================================================================== */}
-      <div className="p-4 rounded-2xl glass-panel-elevated border border-[var(--border-base)] space-y-3">
+      <div className="p-4 rounded-[20px] bg-white/70 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Quick Search */}
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#86868B] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search rack name, row..."
-              className="w-full bg-[var(--bg-base)] text-xs text-[var(--text-bright)] placeholder:text-[var(--text-muted)] pl-9 pr-3 py-2 rounded-xl border border-[var(--border-subtle)] focus:outline-none focus:border-[var(--accent-primary)] font-mono transition-colors"
+              className="w-full bg-black/5 text-xs text-[#1D1D1F] placeholder:text-black/30 pl-9 pr-3 py-2 rounded-[10px] border-[0.5px] border-black/10 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 transition-colors"
             />
           </div>
 
           {/* Row Filter */}
-          <div className="flex items-center gap-1.5 text-xs font-mono">
-            <span className="text-[var(--text-muted)] mr-1">Row:</span>
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-[#86868B] mr-1 font-medium">Row:</span>
             {availableRows.map((r) => (
               <button
                 key={r}
                 type="button"
                 onClick={() => setRowFilter(r)}
-                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                className={`px-3 py-1 rounded-[8px] transition-colors cursor-pointer text-xs font-semibold ${
                   rowFilter === r
-                    ? "bg-[var(--accent-primary)] text-white font-bold"
-                    : "bg-[var(--bg-base)] text-[var(--text-secondary)] hover:text-white border border-[var(--border-subtle)]"
+                    ? "bg-[#007AFF] text-white shadow-xs"
+                    : "bg-black/5 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/10 border-[0.5px] border-black/10"
                 }`}
               >
                 {r}
@@ -217,20 +217,20 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
         </div>
 
         {/* Space & Power Sliders/Pill Selectors */}
-        <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-[var(--border-subtle)] text-xs font-mono">
+        <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-black/10 text-xs">
           {/* Required Contiguous U */}
           <div className="flex items-center gap-2">
-            <span className="text-[var(--text-secondary)]">Min Free Space:</span>
+            <span className="text-[#86868B] font-medium">Min Free Space:</span>
             <div className="flex items-center gap-1">
               {[0, 1, 2, 4, 8].map((u) => (
                 <button
                   key={u}
                   type="button"
                   onClick={() => setRequiredU(u)}
-                  className={`px-2 py-0.5 rounded-md text-[11px] transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-[6px] text-[11px] font-semibold transition-colors cursor-pointer ${
                     requiredU === u
-                      ? "bg-[var(--accent-primary)] text-white font-bold"
-                      : "bg-[var(--bg-base)] text-[var(--text-secondary)] hover:text-white border border-[var(--border-subtle)]"
+                      ? "bg-[#007AFF] text-white shadow-xs"
+                      : "bg-black/5 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/10 border-[0.5px] border-black/10"
                   }`}
                 >
                   {u === 0 ? "Any" : `≥ ${u}U`}
@@ -241,17 +241,17 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
 
           {/* Min Power Headroom */}
           <div className="flex items-center gap-2">
-            <span className="text-[var(--text-secondary)]">Power Headroom:</span>
+            <span className="text-[#86868B] font-medium">Power Headroom:</span>
             <div className="flex items-center gap-1">
               {[0, 1.0, 2.0, 3.0].map((kw) => (
                 <button
                   key={kw}
                   type="button"
                   onClick={() => setMinPowerHeadroomKw(kw)}
-                  className={`px-2 py-0.5 rounded-md text-[11px] transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-[6px] text-[11px] font-semibold transition-colors cursor-pointer ${
                     minPowerHeadroomKw === kw
-                      ? "bg-amber-500 text-black font-bold"
-                      : "bg-[var(--bg-base)] text-[var(--text-secondary)] hover:text-white border border-[var(--border-subtle)]"
+                      ? "bg-[#ff9500] text-white shadow-xs"
+                      : "bg-black/5 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/10 border-[0.5px] border-black/10"
                   }`}
                 >
                   {kw === 0 ? "Any" : `≥ ${kw} kW`}
@@ -283,36 +283,36 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
           return (
             <div
               key={rack.id}
-              className="p-4 rounded-2xl glass-panel hover:glass-panel-elevated border border-[var(--border-subtle)] hover:border-[var(--accent-primary)] transition-all group shadow-sm flex flex-col justify-between"
+              className="p-4 rounded-[20px] bg-white/70 hover:bg-white backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 hover:border-[#007AFF]/40 transition-all group shadow-sm hover:shadow-md flex flex-col justify-between"
             >
               <div>
                 {/* Rack Header */}
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+                <div className="flex items-center justify-between pb-2 border-b border-black/10">
                   <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent-primary)] group-hover:scale-125 transition-transform" />
-                    <h4 className="font-bold text-sm font-mono text-[var(--text-bright)]">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#007AFF] group-hover:scale-125 transition-transform" />
+                    <h4 className="font-semibold text-sm text-[#1D1D1F]">
                       {rack.name}
                     </h4>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-[6px] bg-black/5 border-[0.5px] border-black/10 text-[#86868B]">
                     Row {rack.row}
                   </span>
                 </div>
 
                 {/* Metrics */}
-                <div className="space-y-3 my-3 text-xs font-mono">
+                <div className="space-y-3 my-3 text-xs">
                   {/* Space Progress */}
                   <div>
                     <div className="flex justify-between text-[11px] mb-1">
-                      <span className="text-[var(--text-secondary)]">Space:</span>
-                      <span className="font-bold text-[var(--text-bright)]">
+                      <span className="text-[#86868B]">Space:</span>
+                      <span className="font-bold text-[#1D1D1F]">
                         {rack.used_u} / {rack.total_u} U ({freeU}U Free)
                       </span>
                     </div>
-                    <div className="w-full bg-[var(--bg-base)] h-1.5 rounded-full overflow-hidden border border-[var(--border-subtle)]">
+                    <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
                       <div
                         className={`h-full rounded-full ${
-                          usagePct > 90 ? "bg-rose-500" : usagePct > 70 ? "bg-amber-400" : "bg-[var(--accent-primary)]"
+                          usagePct > 90 ? "bg-rose-500" : usagePct > 70 ? "bg-[#ff9500]" : "bg-[#007AFF]"
                         }`}
                         style={{ width: `${usagePct}%` }}
                       />
@@ -322,15 +322,15 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
                   {/* Power Progress */}
                   <div>
                     <div className="flex justify-between text-[11px] mb-1">
-                      <span className="text-[var(--text-secondary)]">Power:</span>
-                      <span className="font-bold text-amber-400">
+                      <span className="text-[#86868B]">Power:</span>
+                      <span className="font-bold text-[#ff9500]">
                         {currentKw.toFixed(2)} / {maxKw.toFixed(1)} kW ({powerPct}%)
                       </span>
                     </div>
-                    <div className="w-full bg-[var(--bg-base)] h-1.5 rounded-full overflow-hidden border border-[var(--border-subtle)]">
+                    <div className="w-full bg-black/5 h-2 rounded-full overflow-hidden border-[0.5px] border-black/5">
                       <div
                         className={`h-full rounded-full ${
-                          powerPct > 85 ? "bg-rose-500" : powerPct > 65 ? "bg-amber-400" : "bg-emerald-400"
+                          powerPct > 85 ? "bg-rose-500" : powerPct > 65 ? "bg-[#ff9500]" : "bg-emerald-500"
                         }`}
                         style={{ width: `${powerPct}%` }}
                       />
@@ -339,17 +339,17 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
 
                   {/* Thermal & Redundancy Pills */}
                   <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-1 text-[11px] text-cyan-400">
+                    <div className="flex items-center gap-1 text-[11px] text-[#007AFF] font-medium">
                       <Flame className="w-3.5 h-3.5" />
                       <span>{inletTemp.toFixed(1)}°C Inlet</span>
                     </div>
 
                     {hasFailoverRisk ? (
-                      <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse">
+                      <span className="px-2 py-0.5 rounded-[6px] text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-200 animate-pulse">
                         Single PDU Risk
                       </span>
                     ) : (
-                      <span className="px-1.5 py-0.2 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="px-2 py-0.5 rounded-[6px] text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
                         2N Redundant
                       </span>
                     )}
@@ -358,11 +358,11 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 border-t border-[var(--border-subtle)] flex items-center gap-2">
+              <div className="pt-2 border-t border-black/10 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => onViewRackElevation(rack)}
-                  className="flex-1 py-1.5 px-2 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--accent-primary)] text-xs font-mono text-[var(--text-bright)] transition-colors cursor-pointer text-center"
+                  className="flex-1 py-1.5 px-2.5 rounded-[10px] bg-black/5 hover:bg-black/10 border-[0.5px] border-black/10 text-xs font-semibold text-[#1D1D1F] transition-colors cursor-pointer text-center"
                 >
                   Elevation
                 </button>
@@ -370,7 +370,7 @@ export const SupervisorPersonaView: React.FC<SupervisorPersonaViewProps> = ({
                   <button
                     type="button"
                     onClick={() => onMountDevice(rack.id)}
-                    className="flex-1 py-1.5 px-2 rounded-lg bg-[var(--accent-primary)]/15 hover:bg-[var(--accent-primary)]/25 border border-[var(--accent-primary)]/30 text-xs font-mono text-[var(--accent-primary)] font-semibold transition-colors cursor-pointer text-center flex items-center justify-center gap-1"
+                    className="flex-1 py-1.5 px-2.5 rounded-[10px] bg-[#007AFF]/10 hover:bg-[#007AFF]/20 border-[0.5px] border-[#007AFF]/30 text-xs text-[#007AFF] font-semibold transition-colors cursor-pointer text-center flex items-center justify-center gap-1"
                   >
                     <PlusCircle className="w-3 h-3" />
                     <span>Mount</span>

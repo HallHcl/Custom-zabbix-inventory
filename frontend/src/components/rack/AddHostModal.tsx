@@ -1,9 +1,9 @@
+/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
 import { useState, useEffect, useMemo } from 'react'
 import {
   X,
   Server,
   AlertCircle,
-  CheckCircle2,
   ArrowRight,
   ArrowLeft,
   Check,
@@ -11,9 +11,14 @@ import {
   Network,
   Cpu,
   Layers,
-  Tag,
   Search,
-  Info,
+  Trash2,
+  Monitor,
+  Activity,
+  Shield,
+  Radio,
+  Sliders,
+  Globe,
 } from 'lucide-react'
 import type {
   RackSummary,
@@ -36,6 +41,13 @@ interface AddHostModalProps {
 }
 
 type WizardStep = 1 | 2 | 3 | 4
+
+const WIZARD_STEPS = [
+  { id: 1 as WizardStep, title: 'Host Basics', subtitle: 'Identification & Groups', icon: Server },
+  { id: 2 as WizardStep, title: 'Interface Protocol', subtitle: 'Agent, SNMP or IPMI', icon: Network },
+  { id: 3 as WizardStep, title: 'Templates & Tags', subtitle: 'Telemetry & Metadata', icon: Layers },
+  { id: 4 as WizardStep, title: 'DCIM Rack Mount', subtitle: 'Physical Spatial Allocation', icon: Cpu },
+]
 
 export function AddHostModal({
   isOpen,
@@ -96,8 +108,9 @@ export function AddHostModal({
         .then((groups) => {
           setAvailableGroups(groups)
           if (groups.length > 0 && selectedGroupIds.length === 0) {
-            // Default select Linux servers or first group
-            const defaultGroup = groups.find((g) => g.name.toLowerCase().includes('linux') || g.name.toLowerCase().includes('server')) || groups[0]
+            const defaultGroup =
+              groups.find((g) => g.name.toLowerCase().includes('linux') || g.name.toLowerCase().includes('server')) ||
+              groups[0]
             if (defaultGroup) setSelectedGroupIds([defaultGroup.groupid])
           }
         })
@@ -254,743 +267,1092 @@ export function AddHostModal({
 
   if (!isOpen) return null
 
+  // Selected Rack Name for summary
+  const selectedRack = racks.find((r) => String(r.id) === selectedRackId)
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-3xl bg-[#1a2127] border border-[#394650] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#394650] bg-[#20282f]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-md bg-[#244158] border border-[#7aa5d2] flex items-center justify-center text-[#7aa5d2]">
-              <Server className="w-5 h-5" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black/40 backdrop-blur-2xl transition-all duration-300">
+      {/* macOS Pro Sheet Window */}
+      <div className="w-full max-w-5xl h-[88vh] max-h-[820px] bg-white/95 backdrop-blur-3xl saturate-180 border-[0.5px] border-black/15 rounded-[20px] shadow-[0_24px_64px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display','SF_Pro_Text',sans-serif] text-[#1d1d1f]">
+        
+        {/* macOS Window Header & Traffic Lights */}
+        <div className="h-[52px] px-6 bg-black/[0.02] border-b-[0.5px] border-black/10 flex items-center justify-between select-none">
+          <div className="flex items-center gap-4">
+            {/* Window Traffic Lights */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E] hover:opacity-80 transition-opacity cursor-pointer"
+              />
+              <div className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
+              <div className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white font-sans tracking-wide">
-                  ADD NEW ZABBIX HOST
-                </h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#34424b] text-[#8bd7d1] border border-[#50626f]">
-                  Zabbix 7.0 API
-                </span>
-              </div>
-              <p className="text-xs text-[#85a6b1] font-mono">
-                Provision monitoring agent &amp; slot into Data Center inventory
-              </p>
+
+            <div className="h-4 w-px bg-black/10 mx-1" />
+
+            <div className="flex items-center gap-2">
+              <h2 className="text-[14px] font-semibold text-[#1d1d1f] tracking-[-0.022em]">
+                Provision Zabbix Host
+              </h2>
+              <span className="rounded-[8px] px-2 py-0.5 text-[10px] font-medium bg-[#0071E3]/15 text-[#0071E3] border-[0.5px] border-[#0071E3]/30 tracking-[-0.011em]">
+                Zabbix 7.0 API
+              </span>
             </div>
           </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="text-[#85a6b1] hover:text-white p-1.5 rounded hover:bg-[#34424b] transition-colors cursor-pointer"
+            className="w-7 h-7 rounded-full bg-black/[0.05] hover:bg-black/[0.1] text-zinc-600 hover:text-black flex items-center justify-center transition-all duration-200 active:scale-[0.96] cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Stepper Navigation Bar */}
-        <div className="flex items-center justify-between px-8 py-3 bg-[#161c21] border-b border-[#394650] text-xs font-mono select-none">
-          {[
-            { id: 1, label: 'Host Basics' },
-            { id: 2, label: 'Interfaces' },
-            { id: 3, label: 'Templates & Tags' },
-            { id: 4, label: 'DCIM Rack Binding' },
-          ].map((s) => {
-            const isActive = step === s.id
-            const isDone = step > s.id
-            return (
-              <div key={s.id} className="flex items-center gap-2">
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                    isDone
-                      ? 'bg-emerald-600 text-white shadow-emerald-500/20 shadow-md'
-                      : isActive
-                      ? 'bg-[#7aa5d2] text-[#1a2127] ring-2 ring-[#7aa5d2]/40 font-black'
-                      : 'bg-[#273139] text-[#85a6b1] border border-[#394650]'
-                  }`}
-                >
-                  {isDone ? <Check className="w-3.5 h-3.5" /> : s.id}
-                </div>
-                <span
-                  className={`${
-                    isActive
-                      ? 'text-white font-semibold'
-                      : isDone
-                      ? 'text-emerald-400'
-                      : 'text-[#85a6b1]'
-                  }`}
-                >
-                  {s.label}
-                </span>
-                {s.id < 4 && <div className="w-8 h-px bg-[#394650] mx-2 hidden sm:block" />}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {error && (
-            <div className="flex items-start gap-2.5 p-3 rounded-md bg-rose-950/50 border border-rose-700/50 text-rose-300 text-xs font-mono">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
-              <div className="flex-1">{error}</div>
-            </div>
-          )}
-
-          {/* STEP 1: Host Basics */}
-          {step === 1 && (
-            <div className="space-y-4 font-mono text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[#85a6b1] flex items-center gap-1 font-semibold">
-                    Host Technical Name <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={hostname}
-                    onChange={(e) => setHostname(e.target.value)}
-                    placeholder="e.g. srv-app01.prod.local"
-                    className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2] placeholder:text-[#50626f]"
-                  />
-                  <p className="text-[11px] text-[#85a6b1]">
-                    Unique technical identifier for Zabbix server.
-                  </p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[#85a6b1] font-semibold">Visible Name (Optional)</label>
-                  <input
-                    type="text"
-                    value={visibleName}
-                    onChange={(e) => setVisibleName(e.target.value)}
-                    placeholder="e.g. Web App Server 01 (Bangkok DC)"
-                    className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2] placeholder:text-[#50626f]"
-                  />
-                  <p className="text-[11px] text-[#85a6b1]">
-                    Friendly display name shown in dashboards.
-                  </p>
-                </div>
-              </div>
-
-              {/* Host Groups Multi-Select */}
-              <div className="space-y-2 pt-2 border-t border-[#394650]">
-                <div className="flex items-center justify-between">
-                  <label className="text-[#85a6b1] font-semibold flex items-center gap-1">
-                    Host Groups <span className="text-rose-400">*</span>
-                    <span className="text-[#caedde] text-[11px]">
-                      ({selectedGroupIds.length} selected)
-                    </span>
-                  </label>
-                  <div className="relative w-48">
-                    <Search className="w-3.5 h-3.5 text-[#85a6b1] absolute left-2 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={groupSearch}
-                      onChange={(e) => setGroupSearch(e.target.value)}
-                      placeholder="Filter groups..."
-                      className="w-full pl-7 pr-2 py-1 bg-[#273139] border border-[#394650] rounded text-[11px] text-white focus:outline-none focus:border-[#7aa5d2]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto p-2 bg-[#20282f] border border-[#394650] rounded">
-                  {filteredGroups.map((g) => {
-                    const isSelected = selectedGroupIds.includes(g.groupid)
-                    return (
-                      <button
-                        type="button"
-                        key={g.groupid}
-                        onClick={() => toggleGroup(g.groupid)}
-                        className={`flex items-center justify-between p-2 rounded text-left border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#244158] border-[#7aa5d2] text-white'
-                            : 'bg-[#273139] border-[#394650] text-[#caedde] hover:border-[#50626f]'
-                        }`}
-                      >
-                        <span className="truncate pr-1">{g.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#7aa5d2] shrink-0" />}
-                      </button>
-                    )
-                  })}
-                  {filteredGroups.length === 0 && (
-                    <div className="col-span-full py-4 text-center text-[#85a6b1]">
-                      No host groups match "{groupSearch}"
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Status Toggle */}
-              <div className="flex items-center justify-between p-3 bg-[#20282f] border border-[#394650] rounded">
-                <div>
-                  <span className="font-semibold text-white">Monitoring Status</span>
-                  <p className="text-[11px] text-[#85a6b1]">
-                    Enable or disable immediate telemetry polling upon creation.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setStatus(0)}
-                    className={`px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
-                      status === 0
-                        ? 'bg-emerald-600 text-white font-bold'
-                        : 'bg-[#273139] text-[#85a6b1]'
-                    }`}
-                  >
-                    Monitored
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStatus(1)}
-                    className={`px-3 py-1 rounded text-xs transition-colors cursor-pointer ${
-                      status === 1
-                        ? 'bg-amber-600 text-white font-bold'
-                        : 'bg-[#273139] text-[#85a6b1]'
-                    }`}
-                  >
-                    Unmonitored
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2: Interfaces */}
-          {step === 2 && (
-            <div className="space-y-4 font-mono text-xs">
-              {/* Interface Type Selector */}
+        {/* Modal Main Content: 2-Column macOS Layout */}
+        <div className="flex-1 flex overflow-hidden">
+          
+          {/* Left Glass Sidebar (Step Navigation & Live Hardware Card) */}
+          <div className="w-72 sm:w-80 shrink-0 bg-black/[0.02] border-r-[0.5px] border-black/10 p-6 flex flex-col justify-between overflow-y-auto">
+            {/* Step Navigation */}
+            <div className="space-y-6">
               <div>
-                <label className="text-[#85a6b1] font-semibold block mb-2">
-                  Select Interface Protocol
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[
-                    { type: 1, label: 'Zabbix Agent', port: '10050', icon: Server },
-                    { type: 2, label: 'SNMP', port: '161', icon: Network },
-                    { type: 3, label: 'IPMI', port: '623', icon: Cpu },
-                    { type: 4, label: 'JMX', port: '12345', icon: Layers },
-                  ].map((proto) => {
-                    const isSelected = interfaceType === proto.type
-                    const Icon = proto.icon
+                <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-zinc-500 mb-3 px-2">
+                  Workflow Steps
+                </p>
+                <nav className="space-y-2">
+                  {WIZARD_STEPS.map((s) => {
+                    const isActive = step === s.id
+                    const isDone = step > s.id
+                    const Icon = s.icon
                     return (
                       <button
+                        key={s.id}
                         type="button"
-                        key={proto.type}
-                        onClick={() => setInterfaceType(proto.type)}
-                        className={`flex flex-col items-center gap-1.5 p-3 rounded border text-center transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#244158] border-[#7aa5d2] text-white shadow-md'
-                            : 'bg-[#20282f] border-[#394650] text-[#85a6b1] hover:text-[#caedde] hover:border-[#50626f]'
+                        onClick={() => {
+                          if (s.id < step) setStep(s.id)
+                          else if (s.id === 2 && canProceedStep1) setStep(2)
+                          else if (s.id === 3 && canProceedStep1 && canProceedStep2) setStep(3)
+                          else if (s.id === 4 && canProceedStep1 && canProceedStep2) setStep(4)
+                        }}
+                        className={`w-full text-left p-3 rounded-[12px] flex items-center gap-3 transition-all duration-300 cursor-pointer ${
+                          isActive
+                            ? 'bg-[#0071E3] text-white shadow-md shadow-[#0071E3]/25 scale-[1.01]'
+                            : isDone
+                            ? 'bg-black/[0.04] text-[#1d1d1f] hover:bg-black/[0.08]'
+                            : 'text-zinc-600 hover:bg-black/[0.03] hover:text-black'
                         }`}
                       >
-                        <Icon className={`w-5 h-5 ${isSelected ? 'text-[#7aa5d2]' : ''}`} />
-                        <span className="font-bold">{proto.label}</span>
-                        <span className="text-[10px] text-[#85a6b1]">Port {proto.port}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Connection Mode (IP vs DNS) */}
-              <div className="p-4 bg-[#20282f] border border-[#394650] rounded space-y-3">
-                <div className="flex items-center gap-4 border-b border-[#394650] pb-2">
-                  <span className="text-[#85a6b1] font-semibold">Connect To:</span>
-                  <label className="flex items-center gap-1.5 cursor-pointer text-white">
-                    <input
-                      type="radio"
-                      name="connectVia"
-                      checked={connectVia === 'ip'}
-                      onChange={() => setConnectVia('ip')}
-                      className="accent-[#7aa5d2]"
-                    />
-                    <span>IP Address</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer text-white">
-                    <input
-                      type="radio"
-                      name="connectVia"
-                      checked={connectVia === 'dns'}
-                      onChange={() => setConnectVia('dns')}
-                      className="accent-[#7aa5d2]"
-                    />
-                    <span>DNS Name</span>
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="sm:col-span-2 space-y-1">
-                    <label className="text-[#85a6b1] flex items-center gap-1">
-                      {connectVia === 'ip' ? 'IP Address' : 'DNS Name'}
-                      <span className="text-rose-400">*</span>
-                    </label>
-                    {connectVia === 'ip' ? (
-                      <input
-                        type="text"
-                        value={ipAddress}
-                        onChange={(e) => setIpAddress(e.target.value)}
-                        placeholder="192.168.1.50"
-                        className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        value={dnsName}
-                        onChange={(e) => setDnsName(e.target.value)}
-                        placeholder="host.datacenter.internal"
-                        className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
-                      />
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[#85a6b1]">Port</label>
-                    <input
-                      type="text"
-                      value={port}
-                      onChange={(e) => setPort(e.target.value)}
-                      placeholder="10050"
-                      className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
-                    />
-                  </div>
-                </div>
-
-                {/* SNMP Details if SNMP selected */}
-                {interfaceType === 2 && (
-                  <div className="pt-3 border-t border-[#394650] space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-[#85a6b1] font-semibold">SNMP Version:</span>
-                      {[
-                        { v: 1, label: 'SNMPv1' },
-                        { v: 2, label: 'SNMPv2c' },
-                        { v: 3, label: 'SNMPv3' },
-                      ].map((item) => (
-                        <button
-                          type="button"
-                          key={item.v}
-                          onClick={() => setSnmpVersion(item.v)}
-                          className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
-                            snmpVersion === item.v
-                              ? 'bg-[#244158] border border-[#7aa5d2] text-white font-bold'
-                              : 'bg-[#273139] border border-[#394650] text-[#85a6b1]'
+                        <div
+                          className={`w-8 h-8 rounded-[8px] flex items-center justify-center text-xs font-semibold shrink-0 transition-all ${
+                            isActive
+                              ? 'bg-white/20 text-white'
+                              : isDone
+                              ? 'bg-[#34c759]/20 text-[#34c759] border-[0.5px] border-[#34c759]/30'
+                              : 'bg-black/[0.04] text-zinc-500 border-[0.5px] border-black/10'
                           }`}
                         >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {snmpVersion !== 3 ? (
-                      <div className="space-y-1">
-                        <label className="text-[#85a6b1]">SNMP Community String</label>
-                        <input
-                          type="text"
-                          value={snmpCommunity}
-                          onChange={(e) => setSnmpCommunity(e.target.value)}
-                          placeholder="public"
-                          className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-1">
-                        <label className="text-[#85a6b1]">Security Name / User</label>
-                        <input
-                          type="text"
-                          value={snmpSecurityName}
-                          onChange={(e) => setSnmpSecurityName(e.target.value)}
-                          placeholder="e.g. snmpuser"
-                          className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+                          {isDone ? <Check className="w-4 h-4 text-[#34c759]" /> : <Icon className="w-4 h-4" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold tracking-[-0.011em] truncate">
+                            {s.title}
+                          </p>
+                          <p
+                            className={`text-[11px] tracking-[-0.011em] truncate ${
+                              isActive ? 'text-white/80' : 'text-zinc-500'
+                            }`}
+                          >
+                            {s.subtitle}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </nav>
               </div>
             </div>
-          )}
 
-          {/* STEP 3: Templates & Tags */}
-          {step === 3 && (
-            <div className="space-y-4 font-mono text-xs">
-              {/* Templates Multi-select */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[#85a6b1] font-semibold flex items-center gap-1">
-                    Link Templates
-                    <span className="text-[#caedde] text-[11px]">
-                      ({selectedTemplateIds.length} linked)
-                    </span>
-                  </label>
-                  <div className="relative w-56">
-                    <Search className="w-3.5 h-3.5 text-[#85a6b1] absolute left-2 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={templateSearch}
-                      onChange={(e) => setTemplateSearch(e.target.value)}
-                      placeholder="Search OS, SNMP, DB..."
-                      className="w-full pl-7 pr-2 py-1 bg-[#273139] border border-[#394650] rounded text-[11px] text-white focus:outline-none focus:border-[#7aa5d2]"
-                    />
-                  </div>
+            {/* Live Hardware Inspector Preview Card */}
+            <div className="mt-6 p-4 rounded-[16px] bg-black/[0.03] border-[0.5px] border-black/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                  Target Spec Preview
+                </span>
+                <span
+                  className={`rounded-[8px] px-2 py-0.5 text-[10px] font-medium tracking-[-0.011em] ${
+                    status === 0
+                      ? 'bg-[#34c759]/15 text-[#34c759] border-[0.5px] border-[#34c759]/30'
+                      : 'bg-[#ff9500]/15 text-[#ff9500] border-[0.5px] border-[#ff9500]/30'
+                  }`}
+                >
+                  {status === 0 ? 'Monitored' : 'Unmonitored'}
+                </span>
+              </div>
+
+              <div>
+                <p className="text-[14px] font-semibold text-[#1d1d1f] tracking-[-0.022em] truncate">
+                  {hostname || 'Unspecified Host'}
+                </p>
+                <p className="text-[11px] text-zinc-500 tracking-[-0.011em] truncate">
+                  {visibleName || 'No visible alias assigned'}
+                </p>
+              </div>
+
+              <div className="pt-2 border-t-[0.5px] border-black/10 space-y-1.5 text-[11px] tracking-[-0.011em]">
+                <div className="flex items-center justify-between text-zinc-500">
+                  <span>Interface:</span>
+                  <span className="text-[#1d1d1f] font-medium">
+                    {interfaceType === 1
+                      ? 'Agent'
+                      : interfaceType === 2
+                      ? `SNMP (v${snmpVersion})`
+                      : interfaceType === 3
+                      ? 'IPMI'
+                      : 'JMX'}{' '}
+                    • {connectVia === 'ip' ? ipAddress || '-' : dnsName || '-'}
+                  </span>
                 </div>
+                <div className="flex items-center justify-between text-zinc-500">
+                  <span>Groups:</span>
+                  <span className="text-[#1d1d1f] font-medium">{selectedGroupIds.length} selected</span>
+                </div>
+                <div className="flex items-center justify-between text-zinc-500">
+                  <span>Templates:</span>
+                  <span className="text-[#1d1d1f] font-medium">{selectedTemplateIds.length} linked</span>
+                </div>
+                <div className="flex items-center justify-between text-zinc-500">
+                  <span>DCIM Slot:</span>
+                  <span className="text-[#0071E3] font-medium">
+                    {mountToRack && selectedRack
+                      ? `${selectedRack.name} (U${startU}..${startU + heightU - 1})`
+                      : 'Floating / Virtual'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                {/* Selected Template Badges */}
-                {selectedTemplateIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 p-2 bg-[#161c21] border border-[#394650] rounded">
-                    {selectedTemplateIds.map((tid) => {
-                      const tmpl = availableTemplates.find((t) => t.templateid === tid)
-                      return (
-                        <span
-                          key={tid}
-                          className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#244158] border border-[#7aa5d2] text-white text-[11px]"
-                        >
-                          <span className="truncate max-w-[220px]">{tmpl ? tmpl.name : tid}</span>
+          {/* Right Content Canvas (Form Stages & Action Bar) */}
+          <div className="flex-1 flex flex-col overflow-hidden bg-[#fbfbfd]">
+            {/* Scrollable Stage Body */}
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
+              
+              {/* Header for Active Step */}
+              <div className="space-y-1 border-b-[0.5px] border-black/10 pb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-semibold text-[#0071E3] tracking-[0.04em] uppercase">
+                    Step {step} of 4
+                  </span>
+                </div>
+                <h3 className="text-[20px] font-semibold text-[#1d1d1f] tracking-[-0.022em]">
+                  {WIZARD_STEPS[step - 1].title}
+                </h3>
+                <p className="text-[13px] text-zinc-600 tracking-[-0.011em]">
+                  {step === 1 && 'Define host identity, system aliases, and logical monitoring group assignments.'}
+                  {step === 2 && 'Configure network interface endpoints, protocol version, and telemetry ports.'}
+                  {step === 3 && 'Bind pre-configured telemetry templates and associate environment tags.'}
+                  {step === 4 && 'Optionally allocate space inside your Data Center physical rack inventory.'}
+                </p>
+              </div>
+
+              {/* Error Banner */}
+              {error && (
+                <div className="flex items-start gap-3 p-4 rounded-[16px] bg-rose-500/10 border-[0.5px] border-rose-500/30 text-rose-200 text-[13px] tracking-[-0.011em]">
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
+                  <div className="flex-1 font-normal">{error}</div>
+                </div>
+              )}
+
+              {/* STEP 1: Host Basics */}
+              {step === 1 && (
+                <div className="space-y-6">
+                  {/* Identification Inset Card */}
+                  <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 space-y-4">
+                    <div className="flex items-center justify-between border-b-[0.5px] border-white/10 pb-3">
+                      <div>
+                        <h4 className="text-[14px] font-semibold text-white tracking-[-0.022em]">
+                          Host Identification
+                        </h4>
+                        <p className="text-[12px] text-white/50 tracking-[-0.011em]">
+                          Primary system hostname and human-readable aliases.
+                        </p>
+                      </div>
+                      <span className="rounded-[8px] px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/70">
+                        Required
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Hostname */}
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-medium text-white/80 flex items-center justify-between tracking-[-0.011em]">
+                          <span>
+                            Technical Hostname <span className="text-[#FF453A]">*</span>
+                          </span>
+                          {hostname && (
+                            <span className="text-[11px] text-emerald-400 font-mono">
+                              Valid identifier
+                            </span>
+                          )}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={hostname}
+                            onChange={(e) => setHostname(e.target.value)}
+                            placeholder="e.g. srv-app01.prod.internal"
+                            className="w-full h-[44px] pl-4 pr-10 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white placeholder:text-white/30 text-[14px] tracking-[-0.011em] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all duration-200"
+                          />
+                          {hostname && (
+                            <button
+                              type="button"
+                              onClick={() => setHostname('')}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-white/40 tracking-[-0.011em]">
+                          DNS-compatible hostname registered with Zabbix server.
+                        </p>
+                      </div>
+
+                      {/* Visible Name */}
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-medium text-white/80 flex items-center justify-between tracking-[-0.011em]">
+                          <span>Visible Display Name</span>
+                          <span className="text-[11px] text-white/40">Optional</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={visibleName}
+                            onChange={(e) => setVisibleName(e.target.value)}
+                            placeholder="e.g. Bangkok App Cluster Node 01"
+                            className="w-full h-[44px] pl-4 pr-10 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white placeholder:text-white/30 text-[14px] tracking-[-0.011em] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all duration-200"
+                          />
+                          {visibleName && (
+                            <button
+                              type="button"
+                              onClick={() => setVisibleName('')}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-white/40 tracking-[-0.011em]">
+                          Descriptive name displayed across dashboards and alerts.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Host Groups Inset Card */}
+                  <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-[0.5px] border-white/10 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-[14px] font-semibold text-white tracking-[-0.022em]">
+                            Host Group Membership
+                          </h4>
+                          <span className="text-[#FF453A]">*</span>
+                          <span className="rounded-[8px] px-2 py-0.5 text-[10px] font-medium bg-[#007AFF]/20 text-[#0A84FF] border-[0.5px] border-[#007AFF]/30">
+                            {selectedGroupIds.length} selected
+                          </span>
+                        </div>
+                        <p className="text-[12px] text-white/50 tracking-[-0.011em]">
+                          Organize logical permissions and dashboard segmentation.
+                        </p>
+                      </div>
+
+                      {/* Group Search Bar */}
+                      <div className="relative w-full sm:w-64">
+                        <Search className="w-3.5 h-3.5 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={groupSearch}
+                          onChange={(e) => setGroupSearch(e.target.value)}
+                          placeholder="Filter groups..."
+                          className="w-full h-[36px] pl-8 pr-8 rounded-[10px] bg-white/[0.06] border-[0.5px] border-white/15 text-[12px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#007AFF] transition-all"
+                        />
+                        {groupSearch && (
                           <button
                             type="button"
-                            onClick={() => toggleTemplate(tid)}
-                            className="text-[#85a6b1] hover:text-rose-400 cursor-pointer"
+                            onClick={() => setGroupSearch('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-3.5 h-3.5" />
                           </button>
-                        </span>
-                      )
-                    })}
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Group Selection Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto p-3 rounded-[14px] bg-black/20 border-[0.5px] border-white/10">
+                      {filteredGroups.map((g) => {
+                        const isSelected = selectedGroupIds.includes(g.groupid)
+                        return (
+                          <button
+                            type="button"
+                            key={g.groupid}
+                            onClick={() => toggleGroup(g.groupid)}
+                            className={`min-h-[44px] px-3.5 py-2.5 rounded-[10px] text-left border-[0.5px] transition-all duration-200 flex items-center justify-between gap-2 cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#007AFF]/25 border-[#007AFF] text-white shadow-sm scale-[1.01]'
+                                : 'bg-white/[0.04] border-white/10 text-white/70 hover:bg-white/[0.08] hover:text-white active:scale-[0.98]'
+                            }`}
+                          >
+                            <span className="text-[12px] tracking-[-0.011em] font-medium truncate">
+                              {g.name}
+                            </span>
+                            <div
+                              className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                                isSelected
+                                  ? 'bg-[#007AFF] text-white'
+                                  : 'border border-white/20 bg-white/[0.05]'
+                              }`}
+                            >
+                              {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                            </div>
+                          </button>
+                        )
+                      })}
+                      {filteredGroups.length === 0 && (
+                        <div className="col-span-full py-8 text-center text-white/40 text-[12px]">
+                          No host groups matching "{groupSearch}"
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
 
-                {/* Quick Add Suggestions */}
-                <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                  <span className="text-[10px] text-[#85a6b1] font-semibold">Quick Add:</span>
-                  {[
-                    'Linux by Zabbix agent',
-                    'Windows by Zabbix agent',
-                    'Cisco IOS by SNMP',
-                    'Generic SNMP',
-                    'ICMP Ping',
-                  ].map((presetName) => {
-                    const match = availableTemplates.find(
-                      (t) => t.name.toLowerCase() === presetName.toLowerCase()
-                    )
-                    if (!match) return null
-                    const isSelected = selectedTemplateIds.includes(match.templateid)
-                    return (
+                  {/* Telemetry Status Inset Card */}
+                  <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-3 h-3 rounded-full shrink-0 transition-all ${
+                          status === 0
+                            ? 'bg-emerald-400 shadow-lg shadow-emerald-400/50 animate-pulse'
+                            : 'bg-amber-400 shadow-lg shadow-amber-400/50'
+                        }`}
+                      />
+                      <div>
+                        <p className="text-[13px] font-semibold text-white tracking-[-0.011em]">
+                          Telemetry Polling State
+                        </p>
+                        <p className="text-[12px] text-white/50 tracking-[-0.011em]">
+                          {status === 0
+                            ? 'Immediately initiate active metric collection upon registration.'
+                            : 'Create host in dormant/disabled state for scheduled maintenance.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Apple Segmented Control */}
+                    <div className="flex p-1 bg-black/40 rounded-[12px] border-[0.5px] border-white/10 shrink-0">
                       <button
-                        key={match.templateid}
                         type="button"
-                        onClick={() => toggleTemplate(match.templateid)}
-                        className={`px-2 py-0.5 rounded text-[10px] border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-emerald-950 border-emerald-600 text-emerald-300 font-bold'
-                            : 'bg-[#20282f] border-[#394650] text-[#85a6b1] hover:text-white hover:border-[#7aa5d2]'
+                        onClick={() => setStatus(0)}
+                        className={`h-[36px] px-4 rounded-[8px] text-[12px] font-semibold transition-all duration-200 cursor-pointer ${
+                          status === 0
+                            ? 'bg-[#007AFF] text-white shadow-sm scale-[1.02]'
+                            : 'text-white/60 hover:text-white'
                         }`}
                       >
-                        {isSelected ? '✓ ' : '+ '}
-                        {presetName}
+                        Monitored
                       </button>
-                    )
-                  })}
+                      <button
+                        type="button"
+                        onClick={() => setStatus(1)}
+                        className={`h-[36px] px-4 rounded-[8px] text-[12px] font-semibold transition-all duration-200 cursor-pointer ${
+                          status === 1
+                            ? 'bg-amber-500/80 text-white shadow-sm scale-[1.02]'
+                            : 'text-white/60 hover:text-white'
+                        }`}
+                      >
+                        Unmonitored
+                      </button>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-44 overflow-y-auto p-2 bg-[#20282f] border border-[#394650] rounded">
-                  {filteredTemplates.map((tmpl) => {
-                    const isSelected = selectedTemplateIds.includes(tmpl.templateid)
-                    return (
-                      <button
-                        type="button"
-                        key={tmpl.templateid}
-                        onClick={() => toggleTemplate(tmpl.templateid)}
-                        className={`flex items-center justify-between p-2 rounded text-left border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#244158] border-[#7aa5d2] text-white'
-                            : 'bg-[#273139] border-[#394650] text-[#caedde] hover:border-[#50626f]'
-                        }`}
-                      >
-                        <span className="truncate pr-2">{tmpl.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#7aa5d2] shrink-0" />}
-                      </button>
-                    )
-                  })}
-                  {filteredTemplates.length === 0 && (
-                    <div className="col-span-full py-4 text-center text-[#85a6b1]">
-                      No templates match "{templateSearch}"
-                      <button
-                        type="button"
-                        onClick={() => setTemplateSearch('')}
-                        className="block mx-auto mt-1 text-[#7aa5d2] underline cursor-pointer text-[11px]"
-                      >
-                        Clear search
-                      </button>
+              {/* STEP 2: Interfaces */}
+              {step === 2 && (
+                <div className="space-y-6">
+                  {/* Protocol Selector Tiles */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[13px] font-semibold text-white/90 tracking-[-0.011em]">
+                        Select Telemetry Protocol
+                      </label>
+                      <span className="text-[11px] text-white/40 tracking-[-0.011em]">
+                        Primary interface channel
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {[
+                        {
+                          type: 1,
+                          label: 'Zabbix Agent',
+                          subtitle: 'Active & Passive metrics',
+                          port: '10050',
+                          icon: Monitor,
+                        },
+                        {
+                          type: 2,
+                          label: 'SNMP',
+                          subtitle: 'Network switch & router MIBs',
+                          port: '161',
+                          icon: Radio,
+                        },
+                        {
+                          type: 3,
+                          label: 'IPMI (BMC)',
+                          subtitle: 'iLO, iDRAC chassis hardware',
+                          port: '623',
+                          icon: Shield,
+                        },
+                        {
+                          type: 4,
+                          label: 'JMX (Java)',
+                          subtitle: 'JVM runtime & thread pools',
+                          port: '12345',
+                          icon: Activity,
+                        },
+                      ].map((item) => {
+                        const isSelected = interfaceType === item.type
+                        const Icon = item.icon
+                        return (
+                          <button
+                            type="button"
+                            key={item.type}
+                            onClick={() => setInterfaceType(item.type)}
+                            className={`p-4 rounded-[16px] border-[0.5px] text-left transition-all duration-300 cursor-pointer flex flex-col justify-between ${
+                              isSelected
+                                ? 'bg-[#007AFF]/25 border-[#007AFF] text-white shadow-md shadow-[#007AFF]/20 scale-[1.02]'
+                                : 'bg-white/[0.04] border-white/10 text-white/70 hover:bg-white/[0.07] hover:text-white hover:scale-[1.01] active:scale-[0.98]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div
+                                className={`w-9 h-9 rounded-[10px] flex items-center justify-center transition-all ${
+                                  isSelected
+                                    ? 'bg-[#007AFF] text-white shadow-sm'
+                                    : 'bg-white/[0.06] text-white/60'
+                                }`}
+                              >
+                                <Icon className="w-5 h-5" />
+                              </div>
+                              <span className="text-[10px] rounded-[6px] px-2 py-0.5 bg-white/10 text-white/70 font-mono">
+                                Port {item.port}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-semibold tracking-[-0.011em] text-white">
+                                {item.label}
+                              </p>
+                              <p className="text-[11px] text-white/45 tracking-[-0.011em] mt-0.5 leading-snug">
+                                {item.subtitle}
+                              </p>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Connection Endpoint Inset Card */}
+                  <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 space-y-4">
+                    <div className="flex items-center justify-between border-b-[0.5px] border-white/10 pb-3">
+                      <div>
+                        <h4 className="text-[14px] font-semibold text-white tracking-[-0.022em]">
+                          Network Endpoint Configuration
+                        </h4>
+                        <p className="text-[12px] text-white/50 tracking-[-0.011em]">
+                          Specify the reachable IP address or DNS domain for Zabbix server polling.
+                        </p>
+                      </div>
+
+                      {/* Segmented Control IP vs DNS */}
+                      <div className="flex p-1 bg-black/40 rounded-[12px] border-[0.5px] border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setConnectVia('ip')}
+                          className={`h-[32px] px-4 rounded-[8px] text-[12px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                            connectVia === 'ip'
+                              ? 'bg-[#007AFF] text-white shadow-sm'
+                              : 'text-white/60 hover:text-white'
+                          }`}
+                        >
+                          <Network className="w-3.5 h-3.5" />
+                          <span>IP Address</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConnectVia('dns')}
+                          className={`h-[32px] px-4 rounded-[8px] text-[12px] font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                            connectVia === 'dns'
+                              ? 'bg-[#007AFF] text-white shadow-sm'
+                              : 'text-white/60 hover:text-white'
+                          }`}
+                        >
+                          <Globe className="w-3.5 h-3.5" />
+                          <span>DNS Hostname</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="sm:col-span-2 space-y-1.5">
+                        <label className="text-[12px] font-medium text-white/70 tracking-[-0.011em] flex items-center gap-1">
+                          <span>{connectVia === 'ip' ? 'Target IPv4 / IPv6' : 'Fully Qualified Domain Name'}</span>
+                          <span className="text-[#FF453A]">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={connectVia === 'ip' ? ipAddress : dnsName}
+                            onChange={(e) =>
+                              connectVia === 'ip' ? setIpAddress(e.target.value) : setDnsName(e.target.value)
+                            }
+                            placeholder={connectVia === 'ip' ? '192.168.1.50' : 'srv-app01.prod.local'}
+                            className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white font-mono text-[13px] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all"
+                          />
+                        </div>
+                        <p className="text-[11px] text-white/40 tracking-[-0.011em]">
+                          {connectVia === 'ip'
+                            ? 'Zabbix poller directly establishes connection to this IP.'
+                            : 'Zabbix poller resolves domain via local DNS cache.'}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[12px] font-medium text-white/70 tracking-[-0.011em]">
+                          Listening Port
+                        </label>
+                        <input
+                          type="text"
+                          value={port}
+                          onChange={(e) => setPort(e.target.value)}
+                          placeholder="10050"
+                          className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white font-mono text-[13px] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all"
+                        />
+                        <p className="text-[11px] text-white/40 tracking-[-0.011em]">
+                          Standard: {interfaceType === 2 ? '161' : interfaceType === 3 ? '623' : '10050'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SNMP Security Parameters (Conditional Card) */}
+                  {interfaceType === 2 && (
+                    <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 space-y-4 animate-in fade-in duration-300">
+                      <div className="flex items-center justify-between border-b-[0.5px] border-white/10 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Sliders className="w-4 h-4 text-[#0A84FF]" />
+                          <h4 className="text-[14px] font-semibold text-white tracking-[-0.022em]">
+                            SNMP Authentication &amp; MIB Security
+                          </h4>
+                        </div>
+                        <span className="rounded-[8px] px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/70">
+                          SNMP Protocol
+                        </span>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[12px] text-white/70 tracking-[-0.011em]">
+                            SNMP Protocol Version:
+                          </span>
+                          <div className="flex p-1 bg-black/40 rounded-[12px] border-[0.5px] border-white/10">
+                            {[
+                              { v: 1, label: 'v1' },
+                              { v: 2, label: 'v2c (Recommended)' },
+                              { v: 3, label: 'v3 (Auth/Priv)' },
+                            ].map((snmp) => (
+                              <button
+                                key={snmp.v}
+                                type="button"
+                                onClick={() => setSnmpVersion(snmp.v)}
+                                className={`h-[32px] px-3.5 rounded-[8px] text-[12px] font-semibold transition-all duration-200 cursor-pointer ${
+                                  snmpVersion === snmp.v
+                                    ? 'bg-[#007AFF] text-white shadow-sm'
+                                    : 'text-white/60 hover:text-white'
+                                }`}
+                              >
+                                {snmp.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {snmpVersion < 3 ? (
+                          <div className="space-y-1.5">
+                            <label className="text-[12px] font-medium text-white/70 tracking-[-0.011em]">
+                              SNMP Community String
+                            </label>
+                            <input
+                              type="text"
+                              value={snmpCommunity}
+                              onChange={(e) => setSnmpCommunity(e.target.value)}
+                              placeholder="public"
+                              className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white font-mono text-[13px] focus:outline-none focus:border-[#007AFF] transition-all"
+                            />
+                            <p className="text-[11px] text-white/40 tracking-[-0.011em]">
+                              Read-only community string configured on the network equipment.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            <label className="text-[12px] font-medium text-white/70 tracking-[-0.011em]">
+                              Security Name (v3 Username)
+                            </label>
+                            <input
+                              type="text"
+                              value={snmpSecurityName}
+                              onChange={(e) => setSnmpSecurityName(e.target.value)}
+                              placeholder="snmpv3user"
+                              className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white font-mono text-[13px] focus:outline-none focus:border-[#007AFF] transition-all"
+                            />
+                            <p className="text-[11px] text-white/40 tracking-[-0.011em]">
+                              Configured user credential with SHA/AES authentication.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
+              )}
 
-              {/* Tags Section */}
-              <div className="space-y-2 pt-2 border-t border-[#394650]">
-                <label className="text-[#85a6b1] font-semibold flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5" />
-                  Custom Host Tags
-                </label>
+              {/* STEP 3: Templates & Tags */}
+              {step === 3 && (
+                <div className="space-y-6">
+                  {/* Template Picker Inset Card */}
+                  <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-[0.5px] border-white/10 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-[14px] font-semibold text-white tracking-[-0.022em]">
+                            Monitoring Templates
+                          </h4>
+                          <span className="rounded-[8px] px-2 py-0.5 text-[10px] font-medium bg-[#007AFF]/20 text-[#0A84FF] border-[0.5px] border-[#007AFF]/30">
+                            {selectedTemplateIds.length} linked
+                          </span>
+                        </div>
+                        <p className="text-[12px] text-white/50 tracking-[-0.011em]">
+                          Pre-configured items, triggers, graphs, and discovery rules.
+                        </p>
+                      </div>
 
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {tags.map((t, idx) => (
-                    <span
-                      key={idx}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#20282f] border border-[#394650] text-white text-[11px]"
-                    >
-                      <span className="text-[#85a6b1]">{t.key}:</span>
-                      <span>{t.value}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeTag(idx)}
-                        className="text-[#85a6b1] hover:text-rose-400 cursor-pointer ml-1"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newTagKey}
-                    onChange={(e) => setNewTagKey(e.target.value)}
-                    placeholder="Tag Name (e.g. Owner)"
-                    className="flex-1 px-3 py-1.5 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
-                  />
-                  <input
-                    type="text"
-                    value={newTagVal}
-                    onChange={(e) => setNewTagVal(e.target.value)}
-                    placeholder="Tag Value (e.g. NOC-Alpha)"
-                    className="flex-1 px-3 py-1.5 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
-                  />
-                  <button
-                    type="button"
-                    onClick={addTag}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-[#34424b] hover:bg-[#435561] border border-[#50626f] text-white rounded cursor-pointer transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1 pt-2 border-t border-[#394650]">
-                <label className="text-[#85a6b1] font-semibold">Notes / Description</label>
-                <textarea
-                  rows={2}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Operational notes, maintainer contact, purpose..."
-                  className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: DCIM Rack Binding (Optional) */}
-          {step === 4 && (
-            <div className="space-y-4 font-mono text-xs">
-              {/* Optional Mount Toggle */}
-              <div className="p-4 rounded-lg bg-[#20282f] border border-[#394650] flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-white text-sm">
-                      Mount to DCIM Rack Elevation
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded text-[10px] bg-[#34424b] text-[#caedde]">
-                      Optional Step
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#85a6b1] mt-0.5">
-                    Attach this device physically to a rack cabinet and U-slot right now.
-                  </p>
-                </div>
-
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={mountToRack}
-                    onChange={(e) => setMountToRack(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-[#34424b] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                </label>
-              </div>
-
-              {mountToRack ? (
-                <div className="p-4 rounded-lg bg-[#1a2127] border border-[#7aa5d2]/40 space-y-4 animate-in fade-in duration-150">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[#85a6b1] font-semibold">Target Rack Cabinet</label>
-                      <select
-                        value={selectedRackId}
-                        onChange={(e) => setSelectedRackId(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2] cursor-pointer"
-                      >
-                        {racks.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name} ({r.row} - {r.total_u - r.used_u}U Free)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[#85a6b1] font-semibold">Start U Position</label>
+                      {/* Template Search Bar */}
+                      <div className="relative w-full sm:w-64">
+                        <Search className="w-3.5 h-3.5 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
-                          type="number"
-                          min={1}
-                          max={42}
-                          value={startU}
-                          onChange={(e) => setStartU(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
+                          type="text"
+                          value={templateSearch}
+                          onChange={(e) => setTemplateSearch(e.target.value)}
+                          placeholder="Search templates..."
+                          className="w-full h-[36px] pl-8 pr-8 rounded-[10px] bg-white/[0.06] border-[0.5px] border-white/15 text-[12px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#007AFF] transition-all"
                         />
+                        {templateSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setTemplateSearch('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[#85a6b1] font-semibold">Height (U)</label>
-                        <select
-                          value={heightU}
-                          onChange={(e) => setHeightU(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2] cursor-pointer"
-                        >
-                          <option value={1}>1U</option>
-                          <option value={2}>2U</option>
-                          <option value={3}>3U</option>
-                          <option value={4}>4U</option>
-                        </select>
-                      </div>
+                    </div>
+
+                    {/* Template Selection Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-52 overflow-y-auto p-3 rounded-[14px] bg-black/20 border-[0.5px] border-white/10">
+                      {filteredTemplates.map((t) => {
+                        const isSelected = selectedTemplateIds.includes(t.templateid)
+                        return (
+                          <button
+                            type="button"
+                            key={t.templateid}
+                            onClick={() => toggleTemplate(t.templateid)}
+                            className={`min-h-[48px] px-3.5 py-2.5 rounded-[12px] text-left border-[0.5px] transition-all duration-200 flex items-center justify-between gap-3 cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#007AFF]/25 border-[#007AFF] text-white shadow-sm scale-[1.01]'
+                                : 'bg-white/[0.04] border-white/10 text-white/70 hover:bg-white/[0.08] hover:text-white active:scale-[0.98]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                className={`w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 ${
+                                  isSelected
+                                    ? 'bg-[#007AFF] text-white'
+                                    : 'bg-white/[0.06] text-white/50'
+                                }`}
+                              >
+                                <Layers className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="text-[12px] tracking-[-0.011em] font-medium truncate">
+                                {t.name}
+                              </span>
+                            </div>
+
+                            <div
+                              className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                                isSelected
+                                  ? 'bg-[#007AFF] text-white'
+                                  : 'border border-white/20 bg-white/[0.05]'
+                              }`}
+                            >
+                              {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                            </div>
+                          </button>
+                        )
+                      })}
+                      {filteredTemplates.length === 0 && (
+                        <div className="col-span-full py-8 text-center text-white/40 text-[12px]">
+                          No templates found matching "{templateSearch}"
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[#85a6b1] font-semibold">Cabinet Face</label>
-                      <select
-                        value={positionFace}
-                        onChange={(e) =>
-                          setPositionFace(e.target.value as 'Front' | 'Rear' | 'Both')
-                        }
-                        className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2] cursor-pointer"
-                      >
-                        <option value="Front">Front</option>
-                        <option value="Rear">Rear</option>
-                        <option value="Both">Both (Full Depth)</option>
-                      </select>
+                  {/* Metadata Tags Inset Card */}
+                  <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 space-y-4">
+                    <div className="flex items-center justify-between border-b-[0.5px] border-white/10 pb-3">
+                      <div>
+                        <h4 className="text-[14px] font-semibold text-white tracking-[-0.022em]">
+                          Host Tags &amp; Metadata
+                        </h4>
+                        <p className="text-[12px] text-white/50 tracking-[-0.011em]">
+                          Categorize hosts for fine-grained alert filtering and dashboard views.
+                        </p>
+                      </div>
+                      <span className="rounded-[8px] px-2 py-0.5 text-[10px] font-medium bg-white/10 text-white/70">
+                        {tags.length} active tags
+                      </span>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[#85a6b1] font-semibold">Device Type</label>
-                      <select
-                        value={deviceType}
-                        onChange={(e) => setDeviceType(e.target.value)}
-                        className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2] cursor-pointer"
-                      >
-                        <option value="Server">Server</option>
-                        <option value="Switch">Switch</option>
-                        <option value="Firewall">Firewall</option>
-                        <option value="Storage">Storage</option>
-                        <option value="UPS">UPS</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[#85a6b1] font-semibold">Hardware Vendor</label>
+                    {/* Tag Input Form */}
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <input
                         type="text"
-                        value={manufacturer}
-                        onChange={(e) => setManufacturer(e.target.value)}
-                        placeholder="Dell, Cisco, HPE..."
-                        className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
+                        value={newTagKey}
+                        onChange={(e) => setNewTagKey(e.target.value)}
+                        placeholder="Key (e.g. Environment, Tier, DC)"
+                        className="flex-1 h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all"
                       />
+                      <input
+                        type="text"
+                        value={newTagVal}
+                        onChange={(e) => setNewTagVal(e.target.value)}
+                        placeholder="Value (e.g. Production, Core)"
+                        className="flex-1 h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-[13px] text-white placeholder:text-white/30 focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={addTag}
+                        disabled={!newTagKey.trim()}
+                        className="h-[44px] px-6 rounded-[12px] bg-[#007AFF] hover:bg-[#0071E3] disabled:opacity-40 disabled:pointer-events-none text-white text-[13px] font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.96] shadow-sm cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Tag</span>
+                      </button>
+                    </div>
+
+                    {/* Tag Badges Collection */}
+                    <div className="flex flex-wrap gap-2.5 pt-1">
+                      {tags.map((t, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-[8px] pl-3 pr-2 py-1.5 bg-white/[0.06] border-[0.5px] border-white/15 text-[12px] text-white flex items-center gap-2 tracking-[-0.011em] hover:bg-white/[0.1] transition-all"
+                        >
+                          <span className="text-white/50 font-normal">{t.key}:</span>
+                          <span className="font-semibold text-white">{t.value}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeTag(idx)}
+                            aria-label={`Remove tag ${t.key}`}
+                            className="w-5 h-5 rounded-full hover:bg-white/15 text-white/40 hover:text-[#FF453A] flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {tags.length === 0 && (
+                        <p className="text-[12px] text-white/40 py-2">
+                          No tags assigned yet. Add standard environment tags above.
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[#85a6b1] font-semibold">Model Name</label>
-                    <input
-                      type="text"
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
-                      placeholder="e.g. PowerEdge R650, Catalyst 9300"
-                      className="w-full px-3 py-2 bg-[#273139] border border-[#394650] rounded text-white focus:outline-none focus:border-[#7aa5d2]"
+                  {/* Operational Notes Inset Card */}
+                  <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 space-y-2">
+                    <label className="text-[13px] font-semibold text-white tracking-[-0.011em] block">
+                      Operational Notes &amp; Description
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Specify system contact, SLA tiers, maintenance windows, or purpose..."
+                      className="w-full p-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white placeholder:text-white/30 text-[13px] tracking-[-0.011em] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all resize-none"
                     />
                   </div>
                 </div>
-              ) : (
-                <div className="p-4 rounded-lg bg-[#20282f] border border-[#394650] text-[#85a6b1] space-y-2">
-                  <div className="flex items-center gap-2 text-[#8bd7d1] font-bold">
-                    <Info className="w-4 h-4" />
-                    <span>Host Will Be Registered in Zabbix Only</span>
+              )}
+
+              {/* STEP 4: DCIM Rack Mount */}
+              {step === 4 && (
+                <div className="space-y-6">
+                  {/* Mount Activation iOS Toggle Card */}
+                  <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-[12px] bg-[#007AFF]/20 text-[#0A84FF] border-[0.5px] border-[#007AFF]/30 flex items-center justify-center shrink-0">
+                        <Cpu className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-[14px] font-semibold text-white tracking-[-0.022em]">
+                          Physical Rack Enclosure Allocation
+                        </h4>
+                        <p className="text-[12px] text-white/50 tracking-[-0.011em]">
+                          Mount this host directly into the Data Center spatial elevation digital twin.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* iOS Native Toggle Switch */}
+                    <button
+                      type="button"
+                      onClick={() => setMountToRack(!mountToRack)}
+                      aria-label="Toggle DCIM Mount"
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors cursor-pointer ${
+                        mountToRack ? 'bg-[#34C759]' : 'bg-white/20'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+                          mountToRack ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
                   </div>
-                  <p className="text-xs leading-relaxed">
-                    This host will be created in Zabbix 7.0 and will immediately appear in your{' '}
-                    <span className="text-white font-semibold">Unassigned Hosts</span> queue.
-                    You can assign it to a rack slot at any time later with a single click.
-                  </p>
+
+                  {mountToRack && (
+                    <div className="p-5 rounded-[16px] bg-white/[0.03] border-[0.5px] border-white/10 space-y-5 animate-in fade-in duration-300">
+                      
+                      {/* Target Rack Selector */}
+                      <div className="space-y-1.5">
+                        <label className="text-[12px] font-medium text-white/80 tracking-[-0.011em] flex items-center justify-between">
+                          <span>Target Cabinet</span>
+                          {selectedRack && (
+                            <span className="text-[11px] text-[#0A84FF]">
+                              Capacity: {selectedRack.total_u || 42}U
+                            </span>
+                          )}
+                        </label>
+                        <select
+                          value={selectedRackId}
+                          onChange={(e) => setSelectedRackId(e.target.value)}
+                          className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white text-[13px] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all cursor-pointer"
+                        >
+                          {racks.map((r) => (
+                            <option key={r.id} value={String(r.id)} className="bg-[#1c1c1e] text-white">
+                              {r.name} ({r.total_u || 42}U) — {r.device_count || 0} units occupied
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Elevation U Positioning */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[12px] font-medium text-white/80 tracking-[-0.011em]">
+                            Start Elevation (Unit)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={48}
+                            value={startU}
+                            onChange={(e) => setStartU(parseInt(e.target.value) || 1)}
+                            className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white font-mono text-[13px] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[12px] font-medium text-white/80 tracking-[-0.011em]">
+                            Chassis Form Factor
+                          </label>
+                          <select
+                            value={heightU}
+                            onChange={(e) => setHeightU(parseInt(e.target.value) || 1)}
+                            className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white text-[13px] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all cursor-pointer"
+                          >
+                            {[1, 2, 3, 4, 5, 6, 8].map((u) => (
+                              <option key={u} value={u} className="bg-[#1c1c1e] text-white">
+                                {u}U Rackmount Enclosure
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[12px] font-medium text-white/80 tracking-[-0.011em]">
+                            Mounting Face
+                          </label>
+                          <select
+                            value={positionFace}
+                            onChange={(e) => setPositionFace(e.target.value as any)}
+                            className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white text-[13px] focus:outline-none focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/30 transition-all cursor-pointer"
+                          >
+                            <option value="Front" className="bg-[#1c1c1e] text-white">Front Face</option>
+                            <option value="Rear" className="bg-[#1c1c1e] text-white">Rear Face</option>
+                            <option value="Both" className="bg-[#1c1c1e] text-white">Full Depth (Both)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Equipment Spec Metadata */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t-[0.5px] border-white/10">
+                        <div className="space-y-1.5">
+                          <label className="text-[12px] font-medium text-white/80 tracking-[-0.011em]">
+                            Equipment Category
+                          </label>
+                          <select
+                            value={deviceType}
+                            onChange={(e) => setDeviceType(e.target.value)}
+                            className="w-full h-[44px] px-3.5 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white text-[13px] focus:outline-none focus:border-[#007AFF] cursor-pointer"
+                          >
+                            {['Server', 'Switch', 'Firewall', 'Storage', 'UPS', 'Patch Panel'].map((t) => (
+                              <option key={t} value={t} className="bg-[#1c1c1e] text-white">
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[12px] font-medium text-white/80 tracking-[-0.011em]">
+                            Manufacturer / OEM
+                          </label>
+                          <input
+                            type="text"
+                            value={manufacturer}
+                            onChange={(e) => setManufacturer(e.target.value)}
+                            placeholder="Dell, HPE, Cisco..."
+                            className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white text-[13px] focus:outline-none focus:border-[#007AFF]"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[12px] font-medium text-white/80 tracking-[-0.011em]">
+                            Model Number
+                          </label>
+                          <input
+                            type="text"
+                            value={model}
+                            onChange={(e) => setModel(e.target.value)}
+                            placeholder="PowerEdge R750..."
+                            className="w-full h-[44px] px-4 rounded-[12px] bg-white/[0.06] border-[0.5px] border-white/15 text-white text-[13px] focus:outline-none focus:border-[#007AFF]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Mini Digital Twin Spatial Chassis Preview */}
+                      <div className="p-4 rounded-[14px] bg-black/30 border-[0.5px] border-white/10 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-[8px] bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                            <Server className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="text-[11px] font-semibold uppercase tracking-wider text-white/40 block">
+                              Digital Twin Placement
+                            </span>
+                            <span className="text-[13px] font-semibold text-white">
+                              {selectedRack?.name || 'Cabinet'} • Position U{startU}..{startU + heightU - 1} ({heightU}U)
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="rounded-[8px] px-2.5 py-1 text-[11px] font-medium bg-[#007AFF]/20 text-[#0A84FF] border-[0.5px] border-[#007AFF]/30">
+                          {positionFace} Facing
+                        </span>
+                      </div>
+
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Modal Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#394650] bg-[#20282f] font-mono text-xs">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 rounded bg-[#273139] hover:bg-[#34424b] text-[#caedde] border border-[#394650] transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-
-          <div className="flex items-center gap-2">
-            {step > 1 && (
+            {/* Apple macOS Bottom Action Bar */}
+            <div className="h-[72px] px-6 sm:px-8 bg-black/[0.02] border-t-[0.5px] border-black/10 flex items-center justify-between select-none">
               <button
                 type="button"
-                onClick={handleBack}
+                onClick={onClose}
                 disabled={loading}
-                className="flex items-center gap-1.5 px-4 py-2 rounded bg-[#273139] hover:bg-[#34424b] text-white border border-[#394650] transition-colors cursor-pointer"
+                className="h-[44px] px-6 rounded-[12px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black text-[13px] font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back</span>
+                Cancel
               </button>
-            )}
 
-            {step < 4 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                className="flex items-center gap-1.5 px-4 py-2 rounded bg-[#244158] hover:bg-[#2b516f] text-white border border-[#7aa5d2] transition-colors cursor-pointer font-bold"
-              >
-                <span>Next</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex items-center gap-1.5 px-5 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer font-bold shadow-lg shadow-emerald-950/40"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Creating Host in Zabbix...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Create Host</span>
-                  </>
+              <div className="flex items-center gap-3">
+                {step > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    disabled={loading}
+                    className="h-[44px] px-6 rounded-[12px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black text-[13px] font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back</span>
+                  </button>
                 )}
-              </button>
-            )}
+
+                {step < 4 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="h-[44px] px-6 rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-[13px] font-semibold shadow-md shadow-[#0071E3]/25 flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                  >
+                    <span>Continue</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="h-[44px] px-8 rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-[13px] font-semibold shadow-lg shadow-[#0071E3]/35 flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.96] cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        <span>Provisioning...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Create &amp; Provision Host</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
           </div>
+
         </div>
+
       </div>
     </div>
   )

@@ -87,6 +87,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
   // Zustand Store Telemetry & Theme
   const racksTelemetry = useTwinStore((s) => s.racksTelemetry)
   const { theme } = useTheme()
+  const isLight = theme === 'cupertino-frost'
 
   // Track rack meshes for dynamic updates without full scene tear-down
   const rackEntriesRef = useRef<Map<number, RackMeshEntry>>(new Map())
@@ -305,7 +306,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
       if (!ctx) return null
 
       // Glass surface rounded pill
-      ctx.fillStyle = 'rgba(18, 24, 38, 0.90)'
+      ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(18, 24, 38, 0.90)'
       ctx.strokeStyle = borderColor
       ctx.lineWidth = 3
       ctx.beginPath()
@@ -315,7 +316,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
 
       // Title
       ctx.font = 'bold 26px "JetBrains Mono", monospace'
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = isLight ? '#1d1d1f' : '#ffffff'
       ctx.textAlign = 'center'
       ctx.fillText(name, 128, 42)
 
@@ -331,7 +332,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
       sprite.scale.set(1.4, 0.52, 1)
       return sprite
     },
-    []
+    [isLight]
   )
 
   // Empty Slot Badge Sprite for 3D Edit Mode
@@ -367,19 +368,9 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
   }, [])
 
   // Theme-aware palette configuration
+  // Theme-aware palette configuration (Default to Apple Light Mode)
   const themeSceneColors = useMemo(() => {
     switch (theme) {
-      case 'cupertino-frost':
-        return {
-          bg: 0xf5f5f7,
-          fogDensity: 0.008,
-          floor: 0xe5e7eb,
-          gridMajor: 0x94a3b8,
-          gridMinor: 0xcfd8dc,
-          runner: 0xdbeafe,
-          ambient: 0xffffff,
-          accentLight: 0x0071e3,
-        }
       case 'obsidian-carbon':
         return {
           bg: 0x000000,
@@ -403,7 +394,6 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
           accentLight: 0x06b6d4,
         }
       case 'tesla-midnight':
-      default:
         return {
           bg: 0x0b0e14,
           fogDensity: 0.012,
@@ -413,6 +403,18 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
           runner: 0x1d4ed8,
           ambient: 0xdbeafe,
           accentLight: 0x3b82f6,
+        }
+      case 'cupertino-frost':
+      default:
+        return {
+          bg: 0xf5f5f7,
+          fogDensity: 0.008,
+          floor: 0xe5e7eb,
+          gridMajor: 0x94a3b8,
+          gridMinor: 0xcfd8dc,
+          runner: 0xdbeafe,
+          ambient: 0xffffff,
+          accentLight: 0x0071e3,
         }
     }
   }, [theme])
@@ -890,13 +892,13 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
 
       const visData = getRackVisualData(rack, activeMode)
 
-      // 1. Cabinet Body Material (Glassmorphic dark chassis with metric-accent edge)
+      // 1. Cabinet Body Material (Glassmorphic chassis with metric-accent edge)
       const cabinetMat = new THREE.MeshStandardMaterial({
-        color: 0x161c24,
-        roughness: 0.35,
-        metalness: 0.7,
+        color: isLight ? 0xe2e8f0 : 0x161c24,
+        roughness: isLight ? 0.3 : 0.35,
+        metalness: isLight ? 0.2 : 0.7,
         emissive: visData.threeColor,
-        emissiveIntensity: activeMode === 'temp' || activeMode === 'power' ? 0.22 : 0.08,
+        emissiveIntensity: activeMode === 'temp' || activeMode === 'power' ? 0.22 : (isLight ? 0.04 : 0.08),
       })
       const cabinet = new THREE.Mesh(rackBoxGeo, cabinetMat)
       cabinet.position.y = 1.3
@@ -909,11 +911,11 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
 
       // 2. Front Face Mesh with Volumetric RU Heat Glow
       const frontMat = new THREE.MeshStandardMaterial({
-        color: 0x1f2833,
-        roughness: 0.4,
-        metalness: 0.8,
+        color: isLight ? 0xcfd8dc : 0x1f2833,
+        roughness: isLight ? 0.35 : 0.4,
+        metalness: isLight ? 0.3 : 0.8,
         emissive: visData.threeColor,
-        emissiveIntensity: 0.4,
+        emissiveIntensity: isLight ? 0.2 : 0.4,
       })
       const frontMesh = new THREE.Mesh(frontVentGeo, frontMat)
       frontMesh.position.set(0, 1.3, 0.705)
@@ -1051,7 +1053,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
         }
       }
     }
-  }, [racks, activeMode, selectedRackId, effectiveGridRows, effectiveGridCols, getRackVisualData, createTextSprite, isEditMode, createEmptySlotSprite])
+  }, [racks, activeMode, selectedRackId, effectiveGridRows, effectiveGridCols, getRackVisualData, createTextSprite, isEditMode, createEmptySlotSprite, isLight])
 
   // Spatial Camera Zoom Presets
   const zoomToSite = useCallback(() => {
@@ -1113,7 +1115,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
   }, [autoRotate])
 
   return (
-    <div className="relative w-full h-[680px] bg-[var(--bg-base)] rounded-2xl border border-[var(--border-subtle)] overflow-hidden select-none shadow-2xl">
+    <div className="relative w-full h-[680px] bg-[#f5f5f7] rounded-[20px] border-[0.5px] border-black/10 overflow-hidden select-none shadow-sm">
       {/* Three.js Canvas Container */}
       <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
@@ -1122,14 +1124,14 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
         {/* Left: Viewport Mode Switcher (optional slot) & Heatmap Overlays */}
         <div className="flex items-center gap-2 pointer-events-auto">
           {viewportControl}
-          <div className="flex items-center gap-1 p-1 rounded-xl glass-panel-elevated shadow-xl">
+          <div className="flex items-center gap-1 p-1 rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-xs">
             <button
               type="button"
               onClick={() => handleModeChange('status')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-[8px] transition-all cursor-pointer ${
                 activeMode === 'status'
-                  ? 'bg-[var(--accent-primary)] text-white shadow-sm'
-                  : 'text-[var(--text-secondary)] hover:text-white'
+                  ? 'bg-[#007AFF] text-white shadow-xs'
+                  : 'text-[#86868B] hover:text-[#1D1D1F]'
               }`}
             >
               <ShieldAlert className="w-3.5 h-3.5" />
@@ -1138,10 +1140,10 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
             <button
               type="button"
               onClick={() => handleModeChange('temp')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-[8px] transition-all cursor-pointer ${
                 activeMode === 'temp'
-                  ? 'bg-rose-500 text-white shadow-sm'
-                  : 'text-[var(--text-secondary)] hover:text-white'
+                  ? 'bg-[#ff3b30] text-white shadow-xs'
+                  : 'text-[#86868B] hover:text-[#1D1D1F]'
               }`}
             >
               <Thermometer className="w-3.5 h-3.5" />
@@ -1150,10 +1152,10 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
             <button
               type="button"
               onClick={() => handleModeChange('power')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-[8px] transition-all cursor-pointer ${
                 activeMode === 'power'
-                  ? 'bg-amber-500 text-black shadow-sm font-bold'
-                  : 'text-[var(--text-secondary)] hover:text-white'
+                  ? 'bg-[#ff9500] text-white shadow-xs'
+                  : 'text-[#86868B] hover:text-[#1D1D1F]'
               }`}
             >
               <Zap className="w-3.5 h-3.5" />
@@ -1162,10 +1164,10 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
             <button
               type="button"
               onClick={() => handleModeChange('3d')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-[8px] transition-all cursor-pointer ${
                 activeMode === '3d'
-                  ? 'bg-cyan-500 text-black shadow-sm font-bold'
-                  : 'text-[var(--text-secondary)] hover:text-white'
+                  ? 'bg-[#5856d6] text-white shadow-xs'
+                  : 'text-[#86868B] hover:text-[#1D1D1F]'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -1174,12 +1176,12 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
           </div>
         </div>
 
-        {/* Center: Spatial Level Quick-Fly Capsule (Apple VisionOS / Tesla Style) */}
-        <div className="hidden lg:flex items-center gap-1 p-1 rounded-xl glass-panel-elevated shadow-xl pointer-events-auto text-xs font-mono">
+        {/* Center: Spatial Level Quick-Fly Capsule (Apple Style) */}
+        <div className="hidden lg:flex items-center gap-1 p-1 rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-xs pointer-events-auto text-xs">
           <button
             type="button"
             onClick={zoomToSite}
-            className="px-2.5 py-1 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)] transition-colors cursor-pointer"
+            className="px-2.5 py-1 rounded-[8px] text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 transition-colors cursor-pointer"
             title="Fly camera to Site Panoramic View"
           >
             Site
@@ -1187,7 +1189,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
           <button
             type="button"
             onClick={zoomToRoom}
-            className="px-2.5 py-1 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)] transition-colors cursor-pointer font-bold text-[var(--accent-primary)]"
+            className="px-2.5 py-1 rounded-[8px] text-[#007AFF] font-bold transition-colors cursor-pointer"
             title="Fly camera to Data Hall View"
           >
             Hall-A
@@ -1195,7 +1197,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
           <button
             type="button"
             onClick={() => zoomToRow('A')}
-            className="px-2.5 py-1 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)] transition-colors cursor-pointer"
+            className="px-2.5 py-1 rounded-[8px] text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 transition-colors cursor-pointer"
             title="Fly camera down Row A Cold Aisle Corridor"
           >
             Row A
@@ -1203,7 +1205,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
           <button
             type="button"
             onClick={() => zoomToRow('B')}
-            className="px-2.5 py-1 rounded-lg text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)] transition-colors cursor-pointer"
+            className="px-2.5 py-1 rounded-[8px] text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 transition-colors cursor-pointer"
             title="Fly camera down Row B Cold Aisle Corridor"
           >
             Row B
@@ -1212,12 +1214,12 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
 
         {/* Right: Camera Action Buttons + Telemetry Slot */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="flex items-center gap-1 p-1 rounded-xl glass-panel-elevated shadow-xl">
+          <div className="flex items-center gap-1 p-1 rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 shadow-xs">
             <button
               type="button"
               onClick={handleResetCamera}
               title="Reset Perspective Orbit"
-              className="p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)] rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 rounded-[8px] transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
@@ -1225,7 +1227,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
               type="button"
               onClick={handleTopDownCamera}
               title="Top-Down CAD Floor Plan View"
-              className="p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)] rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 rounded-[8px] transition-colors cursor-pointer"
             >
               <Compass className="w-3.5 h-3.5" />
             </button>
@@ -1233,7 +1235,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
               type="button"
               onClick={() => handleZoom(0.82)}
               title="Zoom In"
-              className="p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)] rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 rounded-[8px] transition-colors cursor-pointer"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
@@ -1241,7 +1243,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
               type="button"
               onClick={() => handleZoom(1.18)}
               title="Zoom Out"
-              className="p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)] rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 rounded-[8px] transition-colors cursor-pointer"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
@@ -1249,10 +1251,10 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
               type="button"
               onClick={() => setAutoRotate(!autoRotate)}
               title={autoRotate ? 'Pause Orbit' : 'Auto Orbit 360°'}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              className={`p-1.5 rounded-[8px] transition-colors cursor-pointer ${
                 autoRotate
-                  ? 'bg-[var(--accent-primary)] text-white'
-                  : 'text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-surface)]'
+                  ? 'bg-[#007AFF] text-white shadow-xs'
+                  : 'text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5'
               }`}
             >
               {autoRotate ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -1264,83 +1266,83 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
       </div>
 
       {/* Bottom Floating Legend Bar */}
-      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs font-mono pointer-events-none">
-        <div className="px-4 py-2 rounded-xl glass-panel-elevated flex items-center gap-4 shadow-xl pointer-events-auto">
+      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs pointer-events-none">
+        <div className="px-4 py-2 rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 flex items-center gap-4 shadow-xs pointer-events-auto">
           {activeMode === 'temp' ? (
             <>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-                <span className="text-[11px] text-[var(--text-secondary)]">&lt; 20°C Overcooled</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#007AFF]" />
+                <span className="text-[11px] text-[#86868B]">&lt; 20°C Overcooled</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                <span className="text-[11px] text-emerald-400 font-bold">20-25°C ASHRAE Recommended</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="text-[11px] text-emerald-600 font-semibold">20-25°C ASHRAE Recommended</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
-                <span className="text-[11px] text-amber-300">25-27°C Allowable</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff9500]" />
+                <span className="text-[11px] text-[#ff9500] font-medium">25-27°C Allowable</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_#f43f5e]" />
-                <span className="text-[11px] font-bold text-rose-400">&gt; 27°C Hot Spot Critical</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                <span className="text-[11px] font-bold text-rose-600">&gt; 27°C Hot Spot Critical</span>
               </div>
             </>
           ) : activeMode === 'power' ? (
             <>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                <span className="text-[11px] text-[var(--text-secondary)]">&lt; 65% Normal</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="text-[11px] text-[#86868B]">&lt; 65% Normal</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
-                <span className="text-[11px] text-amber-300">65-85% High Load</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff9500]" />
+                <span className="text-[11px] text-[#ff9500] font-medium">65-85% High Load</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_#f43f5e]" />
-                <span className="text-[11px] font-bold text-rose-400">&gt; 85% Overloaded</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                <span className="text-[11px] font-bold text-rose-600">&gt; 85% Overloaded</span>
               </div>
-              <div className="flex items-center gap-1.5 border-l border-[var(--border-subtle)] pl-3">
-                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-                <span className="text-[10px] text-rose-400 font-semibold">Red Ring = Single PDU Risk</span>
+              <div className="flex items-center gap-1.5 border-l border-black/10 pl-3">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+                <span className="text-[10px] text-rose-600 font-semibold">Red Ring = Single PDU Risk</span>
               </div>
             </>
           ) : (
             <>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                <span className="text-[11px] text-emerald-400 font-semibold">Healthy</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="text-[11px] text-emerald-600 font-semibold">Healthy</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
-                <span className="text-[11px] text-amber-300 font-semibold">Warning</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff9500]" />
+                <span className="text-[11px] text-[#ff9500] font-semibold">Warning</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_10px_#f43f5e]" />
-                <span className="text-[11px] font-bold text-rose-400">Critical Alarm</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                <span className="text-[11px] font-bold text-rose-600">Critical Alarm</span>
               </div>
-              <div className="flex items-center gap-1.5 border-l border-[var(--border-subtle)] pl-3 text-[var(--text-muted)] text-[10px]">
-                <Move className="w-3 h-3 text-[var(--accent-primary)] animate-pulse" />
+              <div className="flex items-center gap-1.5 border-l border-black/10 pl-3 text-[#86868B] text-[10px]">
+                <Move className="w-3 h-3 text-[#007AFF] animate-pulse" />
                 <span>Drag Cabinet to relocate • Dbl-click for 42U Elevation</span>
               </div>
             </>
           )}
         </div>
 
-        <div className="px-3 py-1.5 rounded-xl glass-panel-elevated text-[var(--text-secondary)] text-[11px] font-mono shadow-xl pointer-events-auto flex items-center gap-2">
-          <Layers className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
+        <div className="px-3.5 py-1.5 rounded-[12px] bg-white/80 backdrop-blur-xl saturate-180 border-[0.5px] border-black/10 text-[#86868B] text-[11px] shadow-xs pointer-events-auto flex items-center gap-2">
+          <Layers className="w-3.5 h-3.5 text-[#007AFF]" />
           <span>{racks.length} Cabinets • WebGL 3D Twin</span>
         </div>
       </div>
 
       {/* Floating Drag & Drop Target Helper HUD */}
       {isDraggingRack && dragCandidateCell && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl glass-panel-elevated border border-[var(--accent-primary)]/60 shadow-2xl flex items-center gap-3 text-xs font-mono animate-in fade-in zoom-in-95 pointer-events-none">
-          <Move className="w-4 h-4 text-[var(--accent-primary)] animate-pulse" />
-          <span className="text-[var(--text-bright)]">
-            Dropping to: <strong className="text-emerald-400 font-bold">Row {dragCandidateCell.row} / Col {dragCandidateCell.col}</strong>
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-[12px] bg-white/90 backdrop-blur-xl border-[0.5px] border-black/10 shadow-2xl flex items-center gap-3 text-xs pointer-events-none">
+          <Move className="w-4 h-4 text-[#007AFF] animate-pulse" />
+          <span className="text-[#1D1D1F]">
+            Dropping to: <strong className="text-emerald-600 font-bold">Row {dragCandidateCell.row} / Col {dragCandidateCell.col}</strong>
           </span>
           {dragCandidateCell.occupantName && (
-            <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px]">
+            <span className="px-2 py-0.5 rounded-[6px] bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-medium">
               Swapping with {dragCandidateCell.occupantName}
             </span>
           )}
@@ -1350,36 +1352,36 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
       {/* Auto-Save Toast Feedback */}
       {toastMessage && (
         <div
-          className={`absolute top-16 right-4 z-40 px-4 py-2.5 rounded-xl glass-panel-elevated shadow-2xl border text-xs font-mono flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-200 ${
+          className={`absolute top-16 right-4 z-40 px-4 py-2.5 rounded-[12px] backdrop-blur-xl shadow-2xl border text-xs flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-200 ${
             toastMessage.type === 'success'
-              ? 'border-emerald-500/50 bg-emerald-950/90 text-emerald-300'
-              : 'border-rose-500/50 bg-rose-950/90 text-rose-300'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
           }`}
         >
           {toastMessage.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           ) : (
-            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
           )}
-          <span>{toastMessage.text}</span>
+          <span className="font-medium">{toastMessage.text}</span>
         </div>
       )}
 
       {/* Interactive Hover HUD Tooltip */}
       {hoveredRack && tooltipPos && !isDraggingRack && (
         <div
-          className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-[120%] p-3.5 rounded-xl glass-panel-elevated border border-[var(--accent-primary)]/50 shadow-2xl text-xs font-mono backdrop-blur-xl min-w-[240px] animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-[120%] p-3.5 rounded-[16px] bg-white/95 border-[0.5px] border-black/10 shadow-2xl text-xs backdrop-blur-2xl min-w-[240px] animate-in fade-in zoom-in-95 duration-100"
           style={{ left: tooltipPos.x, top: tooltipPos.y }}
         >
-          <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border-subtle)] mb-2">
-            <span className="font-bold text-[var(--text-bright)] text-sm">{hoveredRack.name}</span>
+          <div className="flex items-center justify-between pb-1.5 border-b border-black/10 mb-2">
+            <span className="font-bold text-[#1D1D1F] text-sm">{hoveredRack.name}</span>
             <span
-              className={`px-1.5 py-0.2 rounded text-[10px] uppercase font-bold ${
+              className={`px-2 py-0.5 rounded-[6px] text-[10px] uppercase font-bold border ${
                 hoveredRack.status === 'critical'
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                  ? 'bg-rose-50 text-rose-600 border-rose-200'
                   : hoveredRack.status === 'warning'
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-emerald-50 text-emerald-600 border-emerald-200'
               }`}
             >
               {hoveredRack.status}
@@ -1388,28 +1390,28 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
 
           <div className="grid grid-cols-2 gap-2 text-[11px]">
             <div>
-              <span className="text-[var(--text-muted)] block text-[9px]">Location</span>
-              <span className="text-[var(--text-bright)]">
+              <span className="text-[#86868B] block text-[9px] uppercase font-medium">Location</span>
+              <span className="text-[#1D1D1F] font-semibold">
                 Row {hoveredRack.row} / Col {hoveredRack.col}
               </span>
             </div>
             <div>
-              <span className="text-[var(--text-muted)] block text-[9px]">Capacity</span>
-              <span className="text-[var(--text-bright)]">
+              <span className="text-[#86868B] block text-[9px] uppercase font-medium">Capacity</span>
+              <span className="text-[#1D1D1F] font-semibold">
                 {hoveredRack.used_u} / {hoveredRack.total_u} U
               </span>
             </div>
             <div>
-              <span className="text-[var(--text-muted)] block text-[9px]">Inlet Temp</span>
-              <span className="text-cyan-400 font-bold">{hoveredRack.inlet_temp_c} °C</span>
+              <span className="text-[#86868B] block text-[9px] uppercase font-medium">Inlet Temp</span>
+              <span className="text-[#007AFF] font-bold">{hoveredRack.inlet_temp_c} °C</span>
             </div>
             <div>
-              <span className="text-[var(--text-muted)] block text-[9px]">Power Load</span>
-              <span className="text-amber-400 font-bold">{hoveredRack.power_kw} kW</span>
+              <span className="text-[#86868B] block text-[9px] uppercase font-medium">Power Load</span>
+              <span className="text-[#ff9500] font-bold">{hoveredRack.power_kw} kW</span>
             </div>
           </div>
 
-          <div className="mt-2.5 pt-1.5 border-t border-[var(--border-subtle)] text-[10px] text-[var(--accent-primary)] flex items-center justify-between">
+          <div className="mt-2.5 pt-1.5 border-t border-black/10 text-[10px] text-[#007AFF] font-semibold flex items-center justify-between">
             <span>Drag to relocate • Dbl-click 42U</span>
             <ChevronRight className="w-3 h-3" />
           </div>
@@ -1419,32 +1421,32 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
       {/* Interactive Empty Slot Hover Tooltip in 3D Edit Mode */}
       {hoveredEmptySlot && tooltipPos && !isDraggingRack && (
         <div
-          className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-[130%] px-3 py-2 rounded-xl glass-panel-elevated border border-cyan-500/60 shadow-2xl text-xs font-mono text-cyan-300 bg-cyan-950/90 flex items-center gap-2 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-50 pointer-events-none -translate-x-1/2 -translate-y-[130%] px-3.5 py-2 rounded-[12px] bg-white/95 border-[0.5px] border-black/10 shadow-2xl text-xs text-[#007AFF] flex items-center gap-2 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-100"
           style={{ left: tooltipPos.x, top: tooltipPos.y }}
         >
-          <Plus className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-          <span>Click to place Rack at {hoveredEmptySlot.row} / Col {hoveredEmptySlot.col}</span>
+          <Plus className="w-3.5 h-3.5 text-[#007AFF] animate-pulse" />
+          <span className="font-semibold">Click to place Rack at {hoveredEmptySlot.row} / Col {hoveredEmptySlot.col}</span>
         </div>
       )}
 
       {/* 3D Edit Mode: Floating Selected Rack Action Bar */}
       {isEditMode && selectedRack && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 px-5 py-3 rounded-2xl glass-panel-elevated border border-cyan-500/50 shadow-2xl flex items-center gap-4 text-xs font-mono animate-in fade-in slide-in-from-bottom-3 backdrop-blur-xl pointer-events-auto">
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 px-5 py-3 rounded-[16px] bg-white/90 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-2xl flex items-center gap-4 text-xs animate-in fade-in slide-in-from-bottom-3 pointer-events-auto">
           <div className="flex flex-col">
-            <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Selected Cabinet</span>
-            <span className="text-sm font-bold text-white flex items-center gap-2">
+            <span className="text-[10px] text-[#86868B] uppercase tracking-wider font-semibold">Selected Cabinet</span>
+            <span className="text-sm font-bold text-[#1D1D1F] flex items-center gap-2">
               <span>{selectedRack.name}</span>
-              <span className="text-xs text-cyan-400 font-mono">({selectedRack.row} / Col {selectedRack.col})</span>
+              <span className="text-xs text-[#007AFF]">({selectedRack.row} / Col {selectedRack.col})</span>
             </span>
           </div>
 
-          <div className="h-7 w-[1px] bg-zinc-700/60" />
+          <div className="h-7 w-[1px] bg-black/10" />
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => onViewRackElevation?.(selectedRack)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition-colors cursor-pointer text-xs font-semibold"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-[#007AFF]/10 text-[#007AFF] hover:bg-[#007AFF]/20 transition-colors cursor-pointer text-xs font-semibold"
             >
               <Layers className="w-3.5 h-3.5" />
               <span>42U Elevation</span>
@@ -1452,7 +1454,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
             <button
               type="button"
               onClick={() => onDeleteRackClickRef.current?.(selectedRack)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition-colors cursor-pointer text-xs font-semibold"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer text-xs font-semibold"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Delete Rack</span>
@@ -1460,7 +1462,7 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
             <button
               type="button"
               onClick={() => onSelectRackRef.current(null)}
-              className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 rounded-[8px] transition-colors cursor-pointer"
               title="Deselect"
             >
               <X className="w-4 h-4" />
@@ -1471,10 +1473,10 @@ export const DataCenter3DView: React.FC<DataCenter3DViewProps> = ({
 
       {/* 3D Edit Mode Banner */}
       {isEditMode && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl glass-panel-elevated border border-cyan-500/60 shadow-2xl flex items-center gap-3 text-xs font-mono pointer-events-auto backdrop-blur-xl">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-          <span className="text-white font-bold tracking-wide">3D LAYOUT EDITOR ACTIVE</span>
-          <span className="text-zinc-400 text-[11px] hidden sm:inline">• Drag cabinets to relocate • Click empty slot [+] to add</span>
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-[12px] bg-white/90 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-xl flex items-center gap-3 text-xs pointer-events-auto">
+          <span className="w-2 h-2 rounded-full bg-[#007AFF] animate-ping" />
+          <span className="text-[#1D1D1F] font-bold tracking-wide">3D LAYOUT EDITOR ACTIVE</span>
+          <span className="text-[#86868B] text-[11px] hidden sm:inline">• Drag cabinets to relocate • Click empty slot [+] to add</span>
         </div>
       )}
     </div>

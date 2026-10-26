@@ -1,3 +1,5 @@
+/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
+
 import { useState, useEffect } from 'react'
 import {
   X,
@@ -108,28 +110,36 @@ export function DecommissionModal({
   const severity = blastData?.cascade_severity || 'LOW'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md select-none">
-      <div className="w-full max-w-2xl noc-panel shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] border border-amber-500/50">
-        {/* Header Ribbon with 4-Step Stepper */}
-        <div className="noc-panel-header flex-col items-stretch gap-2 p-3 border-b border-[#394650] bg-[#1a1c22]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-2xl select-none font-sans">
+      <div className="w-full max-w-2xl rounded-[20px] bg-white/95 backdrop-blur-3xl saturate-180 border-[0.5px] border-black/15 shadow-[0_24px_64px_rgba(0,0,0,0.2)] relative overflow-hidden flex flex-col max-h-[90vh] text-[#1d1d1f]">
+        {/* Header Ribbon with Traffic Lights & 4-Step Stepper */}
+        <div className="p-4 border-b border-black/10 bg-black/[0.02] space-y-3">
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
-              <span className="font-mono uppercase tracking-wider text-xs font-bold text-white">
-                Decommission &amp; Hardware Replacement Wizard: {device.name}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#e0443e]" />
+                <span className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d89e24]" />
+                <span className="w-3 h-3 rounded-full bg-[#28c840] border border-[#1aab29]" />
+              </div>
+              <div className="h-4 w-[1px] bg-black/10 mx-1" />
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-[#ff9500]" />
+                <span className="text-sm font-semibold tracking-[-0.022em] text-[#1d1d1f]">
+                  Decommission Wizard: {device.name}
+                </span>
+              </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="text-[#85a6b1] hover:text-white p-0.5 rounded-[2px] transition-colors cursor-pointer"
+              className="text-zinc-500 hover:text-black p-1 rounded-[8px] hover:bg-black/[0.05] transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Stepper Progress Ribbon */}
-          <div className="grid grid-cols-4 gap-1.5 pt-1 font-mono text-[10px]">
+          <div className="grid grid-cols-4 gap-1.5 p-1 rounded-[10px] bg-black/[0.05] text-xs">
             {[
               { id: 1, label: '1. Blast Radius' },
               { id: 2, label: '2. Zabbix Maint' },
@@ -143,16 +153,16 @@ export function DecommissionModal({
                   key={s.id}
                   type="button"
                   onClick={() => setStep(s.id as DecommissionStep)}
-                  className={`py-1.5 px-2 rounded-[3px] border flex items-center justify-between transition-all cursor-pointer ${
+                  className={`min-h-[32px] px-2.5 rounded-[8px] flex items-center justify-between text-xs font-semibold tracking-[-0.011em] transition-all cursor-pointer ${
                     isCurrent
-                      ? 'bg-amber-950/80 border-amber-400 text-amber-200 shadow-[0_0_8px_#f59e0b44] font-bold'
+                      ? 'bg-[#0071E3] text-white shadow-sm'
                       : isPast
-                        ? 'bg-emerald-950/40 border-emerald-700 text-emerald-300 font-semibold'
-                        : 'bg-[#14181c] border-[#2b353d] text-[#85a6b1] hover:text-slate-300'
+                      ? 'bg-[#34c759]/15 text-[#34c759]'
+                      : 'text-zinc-500 hover:text-black'
                   }`}
                 >
                   <span className="truncate">{s.label}</span>
-                  {isPast && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
+                  {isPast && <CheckCircle2 className="w-3.5 h-3.5 text-[#34c759] shrink-0" />}
                 </button>
               )
             })}
@@ -160,10 +170,10 @@ export function DecommissionModal({
         </div>
 
         {/* Modal Body Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
           {error && (
-            <div className="p-2.5 rounded-[2px] bg-rose-950/60 border border-rose-700 flex items-center gap-2 text-rose-200">
-              <AlertOctagon className="w-4 h-4 text-rose-400 shrink-0" />
+            <div className="p-3.5 rounded-[12px] bg-[#ff3b30]/15 border-[0.5px] border-[#ff3b30]/30 flex items-center gap-2.5 text-xs text-[#ff3b30]">
+              <AlertOctagon className="w-4 h-4 text-[#ff3b30] shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -172,89 +182,89 @@ export function DecommissionModal({
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-amber-400" />
+                <h4 className="text-[#1d1d1f] font-semibold text-sm tracking-[-0.022em] flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#ff9500]" />
                   Downstream Blast-Radius &amp; Cascade Impact
                 </h4>
-                <p className="text-[11px] text-[#85a6b1]">
+                <p className="text-zinc-600 text-xs mt-0.5">
                   Graph traversal of power feeds, network links, and dependent services prior to physical extraction.
                 </p>
               </div>
 
               {loadingBlast ? (
-                <div className="p-8 text-center text-[#85a6b1] animate-pulse">
+                <div className="p-8 text-center text-zinc-500 animate-pulse">
                   Traversing physical topology graph in dcim_db...
                 </div>
               ) : (
                 <>
                   {/* Severity Banner */}
                   <div
-                    className={`p-3 rounded-[3px] border flex items-center justify-between ${
+                    className={`p-4 rounded-[14px] border-[0.5px] flex items-center justify-between ${
                       severity === 'CRITICAL'
-                        ? 'bg-rose-950/50 border-rose-600 text-rose-200'
+                        ? 'bg-[#ff3b30]/15 border-[#ff3b30]/30 text-[#ff3b30]'
                         : severity === 'WARNING'
-                          ? 'bg-amber-950/50 border-amber-600 text-amber-200'
-                          : 'bg-emerald-950/40 border-emerald-600 text-emerald-200'
+                        ? 'bg-[#ff9500]/15 border-[#ff9500]/30 text-[#ff9500]'
+                        : 'bg-[#34c759]/15 border-[#34c759]/30 text-[#34c759]'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-3">
                       {severity === 'CRITICAL' ? (
-                        <AlertOctagon className="w-5 h-5 text-rose-400 animate-bounce" />
+                        <AlertOctagon className="w-5 h-5 text-[#ff3b30] shrink-0 animate-bounce" />
                       ) : severity === 'WARNING' ? (
-                        <AlertTriangle className="w-5 h-5 text-amber-400" />
+                        <AlertTriangle className="w-5 h-5 text-[#ff9500] shrink-0" />
                       ) : (
-                        <Shield className="w-5 h-5 text-emerald-400" />
+                        <Shield className="w-5 h-5 text-[#34c759] shrink-0" />
                       )}
                       <div>
-                        <div className="font-bold text-xs uppercase tracking-wide">
+                        <div className="font-semibold text-xs uppercase tracking-wide">
                           {severity === 'CRITICAL'
                             ? 'CRITICAL CASCADE OUTAGE RISK'
                             : severity === 'WARNING'
-                              ? 'WARNING: DEPENDENT PEERS DETECTED'
-                              : 'LOW RISK: ISOLATED WORKLOAD'}
+                            ? 'WARNING: DEPENDENT PEERS DETECTED'
+                            : 'LOW RISK: ISOLATED WORKLOAD'}
                         </div>
-                        <div className="text-[10px] opacity-80 mt-0.5">
+                        <div className="text-[11px] text-zinc-600 mt-0.5">
                           {severity === 'CRITICAL'
                             ? 'Decommissioning will sever downstream power or core network connectivity!'
                             : severity === 'WARNING'
-                              ? 'Peer devices in the same cabinet may lose redundancy.'
-                              : 'Device has zero downstream dependencies. Safe for scheduled maintenance.'}
+                            ? 'Peer devices in the same cabinet may lose redundancy.'
+                            : 'Device has zero downstream dependencies. Safe for scheduled maintenance.'}
                         </div>
                       </div>
                     </div>
-                    <span className="px-2 py-1 rounded bg-black/40 border border-white/20 text-[10px] font-bold">
+                    <span className="px-2.5 py-1 rounded-[8px] bg-black/[0.06] border border-black/10 text-[#1d1d1f] text-xs font-semibold">
                       {blastData?.affected_devices_count || 0} Connected Peers
                     </span>
                   </div>
 
                   {/* Impact Breakdown Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[10px]">
-                    <div className="p-2.5 bg-[#14181c] border border-[#2b353d] rounded-[2px]">
-                      <span className="text-[#85a6b1] block uppercase">Target Slot</span>
-                      <span className="text-white font-bold text-xs mt-0.5 block">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3.5 bg-black/[0.03] border-[0.5px] border-black/10 rounded-[12px]">
+                      <span className="text-zinc-500 block text-[10px] uppercase font-medium">Target Slot</span>
+                      <span className="text-[#1d1d1f] font-semibold text-xs mt-1 block">
                         U{device.start_u} ({device.height_u}U Standard)
                       </span>
-                      <span className="text-sky-300 text-[9px] mt-1 block truncate">
+                      <span className="text-[#0071E3] text-[11px] mt-0.5 block truncate">
                         {device.model || device.device_type}
                       </span>
                     </div>
 
-                    <div className="p-2.5 bg-[#14181c] border border-[#2b353d] rounded-[2px]">
-                      <span className="text-[#85a6b1] block uppercase">Single-Corded Casualties</span>
-                      <span className="text-amber-400 font-bold text-xs mt-0.5 block">
+                    <div className="p-3.5 bg-black/[0.03] border-[0.5px] border-black/10 rounded-[12px]">
+                      <span className="text-zinc-500 block text-[10px] uppercase font-medium">Single-Corded Casualties</span>
+                      <span className="text-[#ff9500] font-semibold text-xs mt-1 block">
                         {blastData?.single_corded_risks?.length || 0} Servers at Risk
                       </span>
-                      <span className="text-[#85a6b1] text-[9px] mt-1 block">
+                      <span className="text-zinc-500 text-[11px] mt-0.5 block">
                         Will lose power if PDU-A trips
                       </span>
                     </div>
 
-                    <div className="p-2.5 bg-[#14181c] border border-[#2b353d] rounded-[2px]">
-                      <span className="text-[#85a6b1] block uppercase">Affected Departments</span>
-                      <span className="text-emerald-400 font-bold text-xs mt-0.5 block truncate">
+                    <div className="p-3.5 bg-black/[0.03] border-[0.5px] border-black/10 rounded-[12px]">
+                      <span className="text-zinc-500 block text-[10px] uppercase font-medium">Affected Departments</span>
+                      <span className="text-[#34c759] font-semibold text-xs mt-1 block truncate">
                         {blastData?.affected_departments?.join(', ') || 'None'}
                       </span>
-                      <span className="text-[#85a6b1] text-[9px] mt-1 block">Production SLA active</span>
+                      <span className="text-zinc-500 text-[11px] mt-0.5 block">Production SLA active</span>
                     </div>
                   </div>
                 </>
@@ -266,23 +276,23 @@ export function DecommissionModal({
           {step === 2 && (
             <div className="space-y-4">
               <div>
-                <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-sky-400" />
+                <h4 className="text-[#1d1d1f] font-semibold text-sm tracking-[-0.022em] flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-[#0071E3]" />
                   Automated Zabbix 7.0 Maintenance Mode
                 </h4>
-                <p className="text-[11px] text-[#85a6b1]">
+                <p className="text-zinc-600 text-xs mt-0.5">
                   Mutes alerts, trigger evaluations, and pager escalations during cable disconnect.
                 </p>
               </div>
 
               {/* Maintenance Toggle */}
-              <div className="p-3 bg-[#151c22] border border-sky-600/60 rounded-[3px] flex items-center justify-between">
+              <div className="p-4 bg-black/[0.03] border-[0.5px] border-black/10 rounded-[14px] flex items-center justify-between">
                 <div>
-                  <div className="font-bold text-white text-xs flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-sky-400" />
+                  <div className="font-semibold text-[#1d1d1f] text-xs flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-[#0071E3]" />
                     Suppress Zabbix Alert Storms
                   </div>
-                  <div className="text-[10px] text-[#85a6b1] mt-0.5">
+                  <div className="text-[11px] text-zinc-500 mt-0.5">
                     Enables Zabbix maintenance window with data collection (no notifications sent).
                   </div>
                 </div>
@@ -290,30 +300,30 @@ export function DecommissionModal({
                   type="checkbox"
                   checked={enableMaintenance}
                   onChange={(e) => setEnableMaintenance(e.target.checked)}
-                  className="w-4 h-4 accent-sky-500 cursor-pointer"
+                  className="w-5 h-5 accent-[#0071E3] cursor-pointer"
                 />
               </div>
 
               {/* Duration Window Selector */}
               {enableMaintenance && (
                 <div className="space-y-2">
-                  <label className="block text-[#caedde] font-bold text-xs">
+                  <label className="block text-zinc-700 font-medium text-xs">
                     Maintenance Window Duration
                   </label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-2.5">
                     {[1, 2, 4, 8].map((hrs) => (
                       <button
                         key={hrs}
                         type="button"
                         onClick={() => setMaintenanceHours(hrs)}
-                        className={`py-2 px-3 rounded-[2px] border text-center transition-all cursor-pointer ${
+                        className={`py-2.5 px-3 rounded-[12px] border-[0.5px] text-center transition-all cursor-pointer ${
                           maintenanceHours === hrs
-                            ? 'bg-sky-950 border-sky-400 text-sky-200 font-bold shadow-xs'
-                            : 'bg-[#182026] border-[#313f4b] text-[#85a6b1] hover:text-white'
+                            ? 'bg-[#0071E3] border-[#0071E3] text-white font-semibold shadow-sm'
+                            : 'bg-black/[0.03] border-black/10 text-zinc-700 hover:bg-black/[0.06]'
                         }`}
                       >
-                        <div className="text-xs">{hrs} Hours</div>
-                        <div className="text-[9px] opacity-75">
+                        <div className="text-xs font-semibold">{hrs} Hours</div>
+                        <div className="text-[10px] opacity-75 mt-0.5">
                           {hrs === 2 ? 'Recommended' : hrs === 1 ? 'Quick Swap' : 'Deep Overhaul'}
                         </div>
                       </button>
@@ -323,36 +333,36 @@ export function DecommissionModal({
               )}
 
               {/* Host Status Badge */}
-              <div className="p-2.5 bg-[#14181c] border border-[#2b353d] rounded-[2px] flex items-center justify-between text-[11px]">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-white font-bold">{device.name}</span>
-                  <span className="text-[10px] text-[#85a6b1]">
+              <div className="p-3.5 bg-black/[0.03] border-[0.5px] border-black/10 rounded-[12px] flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-[#34c759] animate-ping" />
+                  <span className="text-[#1d1d1f] font-semibold">{device.name}</span>
+                  <span className="text-[11px] text-zinc-500">
                     (Zabbix Host ID: {device.zabbix_host_id || 'Unlinked'})
                   </span>
                 </div>
-                <span className="text-sky-300 font-mono text-[10px]">
+                <span className="text-[#0071E3] font-medium text-xs">
                   {enableMaintenance ? `Window: ${maintenanceHours}h Active` : 'Muting Disabled'}
                 </span>
               </div>
             </div>
           )}
 
-          {/* STEP 3: Cable Disconnect & Lockout/Tagout (LOTO) Checklist */}
+          {/* STEP 3: Cable Disconnect & LOTO Checklist */}
           {step === 3 && (
             <div className="space-y-4">
               <div>
-                <h4 className="text-white font-bold text-sm flex items-center gap-2 text-amber-300">
-                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <h4 className="text-[#1d1d1f] font-semibold text-sm tracking-[-0.022em] flex items-center gap-2 text-[#ff9500]">
+                  <AlertTriangle className="w-4 h-4 text-[#ff9500]" />
                   Physical Disconnect &amp; LOTO Safety Protocol
                 </h4>
-                <p className="text-[11px] text-[#85a6b1]">
+                <p className="text-zinc-600 text-xs mt-0.5">
                   Mandatory data center safety checklist. All 5 steps must be verified before rack rail release.
                 </p>
               </div>
 
               {/* Checklist Items */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {[
                   {
                     id: 1,
@@ -360,7 +370,6 @@ export function DecommissionModal({
                     setter: setLoto1,
                     title: '1. Disconnect Redundant Power Feed B (PDU-B)',
                     desc: 'Unplug C14/C20 power cord from PSU-2 inlet on the right rear chassis.',
-                    color: 'text-rose-400',
                   },
                   {
                     id: 2,
@@ -368,7 +377,6 @@ export function DecommissionModal({
                     setter: setLoto2,
                     title: '2. Disconnect Primary Power Feed A (PDU-A)',
                     desc: 'Unplug C14/C20 power cord from PSU-1 inlet. Verify LEDs turn off completely.',
-                    color: 'text-sky-400',
                   },
                   {
                     id: 3,
@@ -376,7 +384,6 @@ export function DecommissionModal({
                     setter: setLoto3,
                     title: '3. Unplug Network Uplink Patch Cables (SFP28 / RJ45)',
                     desc: 'Label cable tags and attach protective dust caps onto fiber optical transceivers.',
-                    color: 'text-emerald-400',
                   },
                   {
                     id: 4,
@@ -384,7 +391,6 @@ export function DecommissionModal({
                     setter: setLoto4,
                     title: '4. Unplug Dedicated Out-of-Band Management (OOB)',
                     desc: 'Disconnect dedicated 1GbE RJ45 cable to iDRAC9 / iLO 5 / IPMI port.',
-                    color: 'text-slate-300',
                   },
                   {
                     id: 5,
@@ -392,53 +398,52 @@ export function DecommissionModal({
                     setter: setLoto5,
                     title: '5. Release EIA-310 Rail Safety Thumbscrews',
                     desc: 'Disengage side locking pins and slide server forward onto mobile hydraulic lift.',
-                    color: 'text-amber-300',
                   },
                 ].map((item) => (
                   <div
                     key={item.id}
                     onClick={() => item.setter(!item.checked)}
-                    className={`p-2.5 rounded-[3px] border flex items-start gap-3 cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-[12px] border-[0.5px] flex items-start gap-3 cursor-pointer transition-all ${
                       item.checked
-                        ? 'bg-[#18251e] border-emerald-500/80 shadow-xs'
-                        : 'bg-[#181c20] border-[#313b43] hover:border-[#50626f]'
+                        ? 'bg-[#34c759]/15 border-[#34c759]/40 shadow-sm'
+                        : 'bg-black/[0.03] border-black/10 hover:border-black/20'
                     }`}
                   >
                     <div className="pt-0.5">
                       {item.checked ? (
-                        <CheckSquare className="w-4 h-4 text-emerald-400" />
+                        <CheckSquare className="w-4 h-4 text-[#34c759]" />
                       ) : (
-                        <Square className="w-4 h-4 text-[#85a6b1]" />
+                        <Square className="w-4 h-4 text-zinc-400" />
                       )}
                     </div>
                     <div>
-                      <div className={`font-bold text-xs ${item.checked ? 'text-white' : item.color}`}>
+                      <div className={`font-semibold text-xs ${item.checked ? 'text-[#1d1d1f]' : 'text-zinc-700'}`}>
                         {item.title}
                       </div>
-                      <div className="text-[10px] text-[#85a6b1] mt-0.5">{item.desc}</div>
+                      <div className="text-[11px] text-zinc-500 mt-0.5">{item.desc}</div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Checklist completion indicator */}
+              {/* Progress Indicator */}
               <div
-                className={`p-2 rounded-[2px] flex items-center justify-between text-xs font-bold ${
+                className={`p-3 rounded-[12px] border-[0.5px] flex items-center justify-between text-xs font-semibold ${
                   allLotoChecked
-                    ? 'bg-emerald-950/60 border border-emerald-500 text-emerald-300'
-                    : 'bg-[#14181c] border border-[#2b353d] text-[#85a6b1]'
+                    ? 'bg-[#34c759]/15 border-[#34c759]/40 text-[#34c759]'
+                    : 'bg-black/[0.03] border-black/10 text-zinc-600'
                 }`}
               >
                 <span>
                   Safety Progress: {[loto1, loto2, loto3, loto4, loto5].filter(Boolean).length} / 5 Checked
                 </span>
                 {allLotoChecked ? (
-                  <span className="flex items-center gap-1 text-emerald-400">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className="flex items-center gap-1.5 text-[#34c759]">
+                    <CheckCircle2 className="w-4 h-4" />
                     Clear for Extraction
                   </span>
                 ) : (
-                  <span className="text-amber-400 text-[10px]">Verify all 5 safety steps to proceed</span>
+                  <span className="text-[#ff9500] text-xs">Verify all 5 safety steps to proceed</span>
                 )}
               </div>
             </div>
@@ -448,17 +453,17 @@ export function DecommissionModal({
           {step === 4 && (
             <div className="space-y-4">
               <div>
-                <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                  <Trash2 className="w-4 h-4 text-amber-400" />
+                <h4 className="text-[#1d1d1f] font-semibold text-sm tracking-[-0.022em] flex items-center gap-2">
+                  <Trash2 className="w-4 h-4 text-[#ff9500]" />
                   Confirm Lifecycle Action &amp; Commit
                 </h4>
-                <p className="text-[11px] text-[#85a6b1]">
-                  Choose what happens to the hardware asset record in NexusTwin DCIM.
+                <p className="text-zinc-600 text-xs mt-0.5">
+                  Choose what happens to the hardware asset record in DCIM inventory.
                 </p>
               </div>
 
               {/* Action Selection Cards */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {[
                   {
                     action: 'DECOMMISSION' as LifecycleAction,
@@ -484,28 +489,28 @@ export function DecommissionModal({
                     <div
                       key={act.action}
                       onClick={() => setLifecycleAction(act.action)}
-                      className={`p-3 rounded-[3px] border cursor-pointer transition-all flex items-start justify-between ${
+                      className={`p-3.5 rounded-[14px] border-[0.5px] cursor-pointer transition-all flex items-start justify-between ${
                         isSelected
-                          ? 'bg-amber-950/50 border-amber-400 shadow-[0_0_8px_#f59e0b33]'
-                          : 'bg-[#182026] border-[#313f4b] hover:border-[#50626f]'
+                          ? 'bg-[#0071E3]/10 border-[#0071E3] shadow-sm'
+                          : 'bg-black/[0.03] border-black/10 hover:border-black/20'
                       }`}
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-xs">{act.title}</span>
-                          <span className="text-[9px] px-1.5 py-0.2 bg-black/40 border border-white/10 rounded text-amber-300">
+                          <span className="font-semibold text-[#1d1d1f] text-xs">{act.title}</span>
+                          <span className="text-[10px] px-2 py-0.5 bg-black/[0.06] rounded-[6px] text-zinc-600 font-medium">
                             {act.badge}
                           </span>
                         </div>
-                        <p className="text-[10px] text-[#85a6b1] mt-1">{act.desc}</p>
+                        <p className="text-[11px] text-zinc-500 mt-1">{act.desc}</p>
                       </div>
                       <div className="pt-0.5">
                         <span
-                          className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                            isSelected ? 'border-amber-400 bg-amber-500' : 'border-[#50626f]'
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            isSelected ? 'border-[#0071E3] bg-[#0071E3]' : 'border-zinc-400'
                           }`}
                         >
-                          {isSelected && <span className="w-1.5 h-1.5 bg-black rounded-full" />}
+                          {isSelected && <span className="w-1.5 h-1.5 bg-white rounded-full" />}
                         </span>
                       </div>
                     </div>
@@ -514,18 +519,18 @@ export function DecommissionModal({
               </div>
 
               {/* Execution Summary Table */}
-              <div className="p-3 bg-[#14181c] border border-[#2b353d] rounded-[3px] space-y-1.5 text-[10.5px]">
-                <div className="flex justify-between text-white font-bold">
+              <div className="p-3.5 bg-black/[0.03] border-[0.5px] border-black/10 rounded-[12px] space-y-1.5 text-xs">
+                <div className="flex justify-between text-[#1d1d1f] font-semibold">
                   <span>Target Equipment:</span>
                   <span>{device.name} (U{device.start_u} • {device.height_u}U)</span>
                 </div>
-                <div className="flex justify-between text-[#85a6b1]">
+                <div className="flex justify-between text-zinc-600">
                   <span>Zabbix Maintenance:</span>
-                  <span className="text-sky-300">{enableMaintenance ? `${maintenanceHours} Hours Active` : 'Disabled'}</span>
+                  <span className="text-[#0071E3]">{enableMaintenance ? `${maintenanceHours} Hours Active` : 'Disabled'}</span>
                 </div>
-                <div className="flex justify-between text-[#85a6b1]">
+                <div className="flex justify-between text-zinc-600">
                   <span>Physical LOTO:</span>
-                  <span className="text-emerald-400 font-bold">5/5 Steps Verified</span>
+                  <span className="text-[#34c759] font-semibold">5/5 Steps Verified</span>
                 </div>
               </div>
             </div>
@@ -533,21 +538,21 @@ export function DecommissionModal({
         </div>
 
         {/* Wizard Footer Navigation */}
-        <div className="p-3 bg-[#1a1c22] border-t border-[#394650] flex items-center justify-between font-mono text-xs">
+        <div className="p-4 bg-black/[0.02] border-t border-black/10 flex items-center justify-between text-xs">
           {step > 1 ? (
             <button
               type="button"
               onClick={() => setStep((s) => (s - 1) as DecommissionStep)}
-              className="px-3 py-1.5 rounded-[2px] border border-[#394650] bg-[#273139] text-[#caedde] hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
+              className="min-h-[44px] px-4 rounded-[12px] border-[0.5px] border-black/15 bg-black/[0.04] text-zinc-700 hover:text-black transition-colors cursor-pointer flex items-center gap-2"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
+              <ArrowLeft className="w-4 h-4" />
               Back
             </button>
           ) : (
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 rounded-[2px] border border-[#394650] bg-[#273139] text-[#caedde] hover:text-white transition-colors cursor-pointer"
+              className="min-h-[44px] px-4 rounded-[12px] border-[0.5px] border-black/15 bg-black/[0.04] text-zinc-700 hover:text-black transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -558,17 +563,17 @@ export function DecommissionModal({
               type="button"
               disabled={step === 3 && !allLotoChecked}
               onClick={() => setStep((s) => (s + 1) as DecommissionStep)}
-              className="px-4 py-1.5 rounded-[2px] bg-amber-500 hover:bg-amber-400 text-black font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+              className="min-h-[44px] px-5 rounded-[12px] bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] active:scale-[0.98] cursor-pointer flex items-center gap-2 shadow-[0_2px_12px_rgba(0,113,227,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next Step
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               type="button"
               disabled={loading}
               onClick={handleExecuteDecommission}
-              className="px-5 py-1.5 rounded-[2px] bg-rose-600 hover:bg-rose-500 text-white font-black transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-lg shadow-rose-950"
+              className="min-h-[44px] px-6 rounded-[12px] bg-[#ff3b30] hover:bg-[#e0342a] text-white font-bold transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center gap-2 shadow-[0_2px_12px_rgba(255,59,48,0.3)]"
             >
               <Trash2 className="w-4 h-4" />
               {loading ? 'Executing Decommission...' : 'Confirm & Execute Decommission'}

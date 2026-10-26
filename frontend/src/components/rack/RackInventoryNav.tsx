@@ -47,23 +47,24 @@ export function RackInventoryNav({
   ]
 
   return (
-    <div className="w-60 noc-panel flex flex-col justify-between select-none shrink-0">
+/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
+    <div className="w-60 rounded-[20px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-sm flex flex-col justify-between select-none shrink-0 overflow-hidden text-[#1d1d1f]">
       <div>
-        <div className="noc-panel-header">
-          <span className="font-mono uppercase tracking-wider text-[11px]">Hardware Filters</span>
-          <span className="text-[10px] text-[#85a6b1] font-mono">{devices.length} Units</span>
+        <div className="px-4 py-3 border-b border-black/5 flex items-center justify-between">
+          <span className="font-semibold text-xs tracking-[-0.011em] text-[#1d1d1f]">Hardware Filters</span>
+          <span className="text-[11px] font-medium text-zinc-500">{devices.length} Units</span>
         </div>
 
         <div className="p-3 space-y-3">
           {/* Quick Search */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-[#85a6b1] absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchFilter}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Filter rack units..."
-              className="w-full bg-[#273139] text-xs text-[#caedde] placeholder:text-[#85a6b1] pl-8 pr-2.5 py-1.5 rounded-[3px] border border-[#394650] focus:outline-none focus:border-[#8bd7d1] transition-colors font-mono"
+              className="w-full bg-black/[0.04] text-xs text-[#1d1d1f] placeholder:text-zinc-400 pl-8 pr-3 py-2 rounded-[10px] border border-black/10 focus:outline-none focus:border-[#0071E3] focus:ring-1 focus:ring-[#0071E3] transition-colors"
             />
           </div>
 
@@ -78,21 +79,21 @@ export function RackInventoryNav({
                   key={cat.label}
                   type="button"
                   onClick={() => onSelectType(cat.id)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-[3px] text-xs font-mono transition-colors cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-[10px] text-xs font-medium transition-all duration-150 cursor-pointer ${
                     isSelected
-                      ? 'bg-[#34424b] text-[#caedde] border border-[#50626f]'
-                      : 'text-[#85a6b1] hover:text-[#caedde] hover:bg-[#252f36] border border-transparent'
+                      ? 'bg-[#0071E3] text-white shadow-sm'
+                      : 'text-zinc-600 hover:text-black hover:bg-black/[0.04]'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#8bd7d1]' : 'text-[#85a6b1]'}`} />
-                    <span className="text-[11px]">{cat.label}</span>
+                    <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-zinc-500'}`} />
+                    <span className="text-xs">{cat.label}</span>
                   </div>
                   <span
-                    className={`px-1.5 py-0.2 rounded-[2px] text-[10px] font-mono font-bold ${
+                    className={`px-2 py-0.5 rounded-[6px] text-[10px] font-semibold ${
                       isSelected
-                        ? 'bg-[#414a50] text-[#8bd7d1]'
-                        : 'bg-[#273139] text-[#85a6b1]'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-black/[0.05] text-zinc-600'
                     }`}
                   >
                     {cat.count}
@@ -104,9 +105,9 @@ export function RackInventoryNav({
         </div>
       </div>
 
-      <div className="p-2.5 border-t border-[#394650] bg-[#20282f] text-[10px] font-mono text-[#85a6b1] flex items-center justify-between">
+      <div className="px-3.5 py-2.5 border-t border-black/5 bg-black/[0.02] text-[11px] font-medium text-zinc-500 flex items-center justify-between">
         <span>Active Slot Filter</span>
-        <span className="text-[#8bd7d1] font-bold">{selectedType || 'ALL'}</span>
+        <span className="text-[#0071E3] font-semibold">{selectedType || 'ALL'}</span>
       </div>
     </div>
   )

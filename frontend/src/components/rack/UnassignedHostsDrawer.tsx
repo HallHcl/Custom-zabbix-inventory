@@ -157,58 +157,58 @@ export function UnassignedHostsDrawer({
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'Switch':
-        return <Network className="w-3.5 h-3.5 text-cyan-400" />
+        return <Network className="w-3.5 h-3.5 text-[#5856d6]" />
       case 'Firewall':
-        return <Shield className="w-3.5 h-3.5 text-amber-400" />
+        return <Shield className="w-3.5 h-3.5 text-[#ff3b30]" />
       case 'Storage':
-        return <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+        return <HardDrive className="w-3.5 h-3.5 text-[#ff9500]" />
       case 'UPS':
-        return <Zap className="w-3.5 h-3.5 text-orange-400" />
+        return <Zap className="w-3.5 h-3.5 text-[#34c759]" />
       case 'Server':
       default:
-        return <Server className="w-3.5 h-3.5 text-emerald-400" />
+        return <Server className="w-3.5 h-3.5 text-[#0071E3]" />
     }
   }
 
   const getTypeBadgeClass = (type: string) => {
     switch (type) {
       case 'Switch':
-        return 'bg-cyan-950/70 border-cyan-700/80 text-cyan-300'
+        return 'bg-[#5856d6]/15 border-[#5856d6]/30 text-[#5856d6]'
       case 'Firewall':
-        return 'bg-amber-950/70 border-amber-700/80 text-amber-300'
+        return 'bg-[#ff3b30]/15 border-[#ff3b30]/30 text-[#ff3b30]'
       case 'Storage':
-        return 'bg-purple-950/70 border-purple-700/80 text-purple-300'
+        return 'bg-[#ff9500]/15 border-[#ff9500]/30 text-[#ff9500]'
       case 'UPS':
-        return 'bg-orange-950/70 border-orange-700/80 text-orange-300'
+        return 'bg-[#34c759]/15 border-[#34c759]/30 text-[#34c759]'
       case 'Server':
       default:
-        return 'bg-emerald-950/70 border-emerald-700/80 text-emerald-300'
+        return 'bg-[#0071E3]/15 border-[#0071E3]/30 text-[#0071E3]'
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs select-none">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs select-none font-sans">
       {/* Click outside backdrop to close */}
       <div className="flex-1" onClick={onClose} />
 
       {/* Drawer Container */}
-      <div className="w-full max-w-2xl bg-[#1a2127] border-l border-[#394650] h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
+      <div className="w-full max-w-2xl bg-white/95 backdrop-blur-3xl border-l border-black/10 h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 text-[#1d1d1f]">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#394650] bg-[#20282f] flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 border-b border-black/10 bg-black/[0.02] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[3px] bg-[#34424b] border border-[#50626f] flex items-center justify-center text-[#7aa5d2]">
+            <div className="w-8 h-8 rounded-[10px] bg-[#0071E3]/15 border border-[#0071E3]/30 flex items-center justify-center text-[#0071E3]">
               <Layers className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold tracking-wider text-[#eeeeee] font-sans uppercase">
+                <h3 className="text-sm font-semibold tracking-[-0.015em] text-[#1d1d1f]">
                   Zabbix Ingestion Queue
                 </h3>
-                <span className="px-1.5 py-0.2 rounded-[2px] bg-[#303841] border border-[#7aa5d2] text-[10px] font-mono text-[#7aa5d2] font-bold">
+                <span className="px-2 py-0.5 rounded-[6px] bg-[#0071E3]/15 border border-[#0071E3]/30 text-[10px] font-semibold text-[#0071E3]">
                   {hosts.length} UNASSIGNED
                 </span>
               </div>
-              <p className="text-[11px] text-[#85a6b1] font-mono">
+              <p className="text-xs text-zinc-500">
                 Discovered in Zabbix 7.0 • Ready for 1-Click Rack Elevation Slotting
               </p>
             </div>
@@ -220,14 +220,14 @@ export function UnassignedHostsDrawer({
               onClick={loadUnassigned}
               disabled={loading}
               title="Refresh unassigned hosts"
-              className="p-1.5 rounded-[3px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#85a6b1] hover:text-[#caedde] transition-colors cursor-pointer disabled:opacity-50"
+              className="p-2 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 text-zinc-600 hover:text-black transition-colors cursor-pointer disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#7aa5d2]' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#0071E3]' : ''}`} />
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-[3px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] text-[#85a6b1] hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 text-zinc-600 hover:text-black transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -236,27 +236,27 @@ export function UnassignedHostsDrawer({
 
         {/* Global Success / Info Toast */}
         {successMsg && (
-          <div className="px-5 py-2.5 bg-emerald-950/60 border-b border-emerald-700/80 flex items-center gap-2 text-xs font-mono text-emerald-300 animate-in fade-in duration-150">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="px-5 py-2.5 bg-[#34c759]/15 border-b border-[#34c759]/30 flex items-center gap-2 text-xs text-[#34c759] font-medium animate-in fade-in duration-150">
+            <CheckCircle2 className="w-4 h-4 text-[#34c759] shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {/* Search & Filter Toolbar */}
-        <div className="p-4 border-b border-[#394650] bg-[#1d252c] space-y-3 shrink-0">
+        <div className="p-4 border-b border-black/10 bg-black/[0.01] space-y-3 shrink-0">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-[#85a6b1] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search unassigned hosts by name or IP..."
-              className="w-full bg-[#273139] border border-[#394650] rounded-[3px] pl-9 pr-3 py-1.5 text-xs text-[#caedde] placeholder:text-[#85a6b1] focus:outline-none focus:border-[#7aa5d2] font-mono"
+              className="w-full bg-black/[0.04] border border-black/10 rounded-[10px] pl-9 pr-3 py-2 text-xs text-[#1d1d1f] placeholder:text-zinc-400 focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all"
             />
           </div>
 
           {/* Type Filter Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
             {['all', 'Server', 'Switch', 'Firewall', 'Storage', 'UPS'].map((t) => {
               const count = typeCounts[t] || 0
               const active = selectedType === t
@@ -265,14 +265,14 @@ export function UnassignedHostsDrawer({
                   key={t}
                   type="button"
                   onClick={() => setSelectedType(t)}
-                  className={`px-2.5 py-1 rounded-[3px] border transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 text-[11px] ${
+                  className={`px-3 py-1.5 rounded-[8px] border transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 text-xs ${
                     active
-                      ? 'bg-[#34424b] border-[#7aa5d2] text-[#7aa5d2] font-semibold'
-                      : 'bg-[#273139] border-[#394650] text-[#85a6b1] hover:text-[#caedde]'
+                      ? 'bg-[#0071E3] border-[#0071E3] text-white shadow-xs font-semibold'
+                      : 'bg-black/[0.04] border-black/10 text-zinc-600 hover:text-[#1d1d1f]'
                   }`}
                 >
                   <span>{t === 'all' ? 'All Types' : t}</span>
-                  <span className="text-[10px] opacity-75">({count})</span>
+                  <span className="text-[10px] opacity-80">({count})</span>
                 </button>
               )
             })}
@@ -281,65 +281,65 @@ export function UnassignedHostsDrawer({
 
         {/* Slotting Panel (Appears when user clicks "Slot into Rack") */}
         {slottingHost && (
-          <div className="p-4 border-b border-[#50626f] bg-[#222d36] shadow-inner shrink-0">
-            <div className="flex items-center justify-between pb-2 border-b border-[#394650] mb-3">
+          <div className="p-4 border-b border-black/10 bg-black/[0.03] shadow-inner shrink-0">
+            <div className="flex items-center justify-between pb-2 border-b border-black/10 mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#7aa5d2] font-mono uppercase">
+                <span className="text-xs font-semibold text-[#0071E3] uppercase">
                   Slotting Host: {slottingHost.name}
                 </span>
-                <span className={`px-1.5 py-0.2 rounded-[2px] border text-[9px] font-mono ${getTypeBadgeClass(slottingHost.inferred_type)}`}>
+                <span className={`px-2 py-0.5 rounded-[6px] border text-[10px] font-semibold ${getTypeBadgeClass(slottingHost.inferred_type)}`}>
                   {slottingHost.inferred_type}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setSlottingHost(null)}
-                className="text-[#85a6b1] hover:text-white text-xs font-mono cursor-pointer"
+                className="text-zinc-500 hover:text-black text-xs font-medium cursor-pointer"
               >
                 Cancel
               </button>
             </div>
 
             {slotError && (
-              <div className="mb-3 p-2 rounded-[2px] bg-rose-950/60 border border-rose-800 flex items-center gap-2 text-xs font-mono text-rose-300">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <div className="mb-3 p-2.5 rounded-[8px] bg-[#ff3b30]/15 border border-[#ff3b30]/30 flex items-center gap-2 text-xs text-[#ff3b30]">
+                <AlertTriangle className="w-4 h-4 text-[#ff3b30] shrink-0" />
                 <span>{slotError}</span>
               </div>
             )}
 
-            <form onSubmit={handleConfirmSlot} className="space-y-3 text-xs font-mono">
+            <form onSubmit={handleConfirmSlot} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[#caedde] mb-1">Target Rack *</label>
+                  <label className="block text-zinc-700 font-medium mb-1">Target Rack *</label>
                   <select
                     value={selectedRackId}
                     onChange={(e) => setSelectedRackId(Number(e.target.value))}
-                    className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white focus:outline-none focus:border-[#8bd7d1] cursor-pointer"
+                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3] cursor-pointer"
                   >
                     {racks.map((r) => (
-                      <option key={r.id} value={r.id}>
+                      <option key={r.id} value={r.id} className="bg-white text-[#1d1d1f]">
                         {r.name} ({r.used_u}/{r.total_u}U • {r.usage_percent}%)
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[#caedde] mb-1">Status</label>
+                  <label className="block text-zinc-700 font-medium mb-1">Status</label>
                   <select
                     value={deviceStatus}
                     onChange={(e) => setDeviceStatus(e.target.value as any)}
-                    className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white focus:outline-none focus:border-[#8bd7d1] cursor-pointer"
+                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3] cursor-pointer"
                   >
-                    <option value="Active">Active</option>
-                    <option value="Planned">Planned</option>
-                    <option value="Maintenance">Maintenance</option>
+                    <option value="Active" className="bg-white text-[#1d1d1f]">Active</option>
+                    <option value="Planned" className="bg-white text-[#1d1d1f]">Planned</option>
+                    <option value="Maintenance" className="bg-white text-[#1d1d1f]">Maintenance</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-[#caedde] mb-1">Start U (1-42) *</label>
+                  <label className="block text-zinc-700 font-medium mb-1">Start U (1-42) *</label>
                   <input
                     type="number"
                     min="1"
@@ -347,11 +347,11 @@ export function UnassignedHostsDrawer({
                     required
                     value={startU}
                     onChange={(e) => setStartU(Number(e.target.value))}
-                    className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white focus:outline-none focus:border-[#8bd7d1]"
+                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#caedde] mb-1">Height (U) *</label>
+                  <label className="block text-zinc-700 font-medium mb-1">Height (U) *</label>
                   <input
                     type="number"
                     min="1"
@@ -359,18 +359,18 @@ export function UnassignedHostsDrawer({
                     required
                     value={heightU}
                     onChange={(e) => setHeightU(Number(e.target.value))}
-                    className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white focus:outline-none focus:border-[#8bd7d1]"
+                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#caedde] mb-1">Mount Face</label>
+                  <label className="block text-zinc-700 font-medium mb-1">Mount Face</label>
                   <select
                     value={face}
                     onChange={(e) => setFace(e.target.value as any)}
-                    className="w-full bg-[#273139] border border-[#394650] rounded-[2px] px-2.5 py-1.5 text-white focus:outline-none focus:border-[#8bd7d1] cursor-pointer"
+                    className="w-full bg-white border border-black/10 rounded-[8px] px-3 py-1.5 text-[#1d1d1f] focus:outline-none focus:border-[#0071E3] cursor-pointer"
                   >
-                    <option value="Front">Front</option>
-                    <option value="Rear">Rear</option>
+                    <option value="Front" className="bg-white text-[#1d1d1f]">Front</option>
+                    <option value="Rear" className="bg-white text-[#1d1d1f]">Rear</option>
                   </select>
                 </div>
               </div>
@@ -379,14 +379,14 @@ export function UnassignedHostsDrawer({
                 <button
                   type="button"
                   onClick={() => setSlottingHost(null)}
-                  className="px-3 py-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] text-[#85a6b1] hover:text-white transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-[8px] bg-black/[0.05] hover:bg-black/[0.09] text-zinc-600 hover:text-black transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={assigning}
-                  className="px-3 py-1.5 rounded-[2px] bg-[#34424b] hover:bg-[#435561] border border-[#7aa5d2] text-[#7aa5d2] hover:text-white font-semibold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-3.5 py-1.5 rounded-[8px] bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
                 >
                   {assigning ? (
                     <>
@@ -408,20 +408,20 @@ export function UnassignedHostsDrawer({
         {/* Hosts List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
           {loading && hosts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-[#85a6b1] font-mono text-xs space-y-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-[#7aa5d2]" />
+            <div className="flex flex-col items-center justify-center py-16 text-zinc-500 text-xs space-y-2">
+              <RefreshCw className="w-6 h-6 animate-spin text-[#0071E3]" />
               <span>Querying live Zabbix API &amp; CMDB state...</span>
             </div>
           ) : error ? (
-            <div className="p-4 rounded-[3px] bg-rose-950/40 border border-rose-800 text-rose-300 font-mono text-xs flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <div className="p-4 rounded-[12px] bg-[#ff3b30]/15 border border-[#ff3b30]/30 text-[#ff3b30] text-xs flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-[#ff3b30] shrink-0" />
               <span>{error}</span>
             </div>
           ) : filteredHosts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-[#85a6b1] font-mono text-xs space-y-2 text-center">
-              <CheckCircle2 className="w-8 h-8 text-[#7aa5d2] opacity-75" />
-              <span className="text-[#eeeeee] font-medium">All Zabbix hosts are allocated!</span>
-              <span className="text-[11px] text-[#85a6b1]">No unassigned hosts match your current filter.</span>
+            <div className="flex flex-col items-center justify-center py-16 text-zinc-500 text-xs space-y-2 text-center">
+              <CheckCircle2 className="w-8 h-8 text-[#0071E3] opacity-75" />
+              <span className="text-[#1d1d1f] font-semibold text-sm">All Zabbix hosts are allocated!</span>
+              <span className="text-xs text-zinc-500">No unassigned hosts match your current filter.</span>
             </div>
           ) : (
             filteredHosts.map((host) => {
@@ -429,37 +429,37 @@ export function UnassignedHostsDrawer({
               return (
                 <div
                   key={host.hostid}
-                  className={`p-3 rounded-[3px] border transition-all ${
+                  className={`p-3.5 rounded-[12px] border transition-all ${
                     isSelected
-                      ? 'bg-[#27333d] border-[#7aa5d2] shadow-md'
-                      : 'bg-[#20282f] border-[#394650] hover:border-[#50626f]'
+                      ? 'bg-[#0071E3]/10 border-[#0071E3]/40 shadow-sm'
+                      : 'bg-white/80 border-black/10 hover:border-black/20 hover:shadow-xs'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-[#eeeeee] text-xs tracking-tight truncate">
+                        <span className="font-semibold text-[#1d1d1f] text-xs tracking-tight truncate">
                           {host.name}
                         </span>
-                        <span className={`px-1.5 py-0.2 rounded-[2px] border text-[9px] font-mono flex items-center gap-1 ${getTypeBadgeClass(host.inferred_type)}`}>
+                        <span className={`px-2 py-0.5 rounded-[6px] border text-[10px] font-medium flex items-center gap-1 ${getTypeBadgeClass(host.inferred_type)}`}>
                           {getTypeIcon(host.inferred_type)}
                           <span>{host.inferred_type}</span>
                         </span>
                         {host.device_model && (
-                          <span className="px-1.5 py-0.2 rounded-[2px] bg-[#273139] border border-[#394650] text-[9px] font-mono text-[#85a6b1]">
+                          <span className="px-2 py-0.5 rounded-[6px] bg-black/[0.04] border border-black/10 text-[10px] text-zinc-600">
                             {host.device_model}
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-3 text-[11px] font-mono text-[#85a6b1]">
-                        <span>IP: <strong className="text-[#caedde] font-medium">{host.ip || '0.0.0.0'}</strong></span>
+                      <div className="flex items-center gap-3 text-xs text-zinc-500">
+                        <span>IP: <strong className="text-[#1d1d1f] font-medium">{host.ip || '0.0.0.0'}</strong></span>
                         {host.port && <span>Port: {host.port}</span>}
                         <span>Zabbix ID: {host.hostid}</span>
                       </div>
 
                       {host.technical_name && host.technical_name !== host.name && (
-                        <div className="text-[10px] font-mono text-[#85a6b1] truncate">
+                        <div className="text-[11px] text-zinc-500 truncate">
                           SysName: {host.technical_name}
                         </div>
                       )}
@@ -470,7 +470,7 @@ export function UnassignedHostsDrawer({
                         href={host.zabbix_web_links?.latest_data_url || `http://192.168.1.85:8080/zabbix.php?action=latest.view&filter_hostids%5B%5D=${host.hostid}&filter_set=1`}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#7aa5d2] text-[#85a6b1] hover:text-[#caedde] transition-colors cursor-pointer"
+                        className="p-2 rounded-[8px] bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 text-zinc-600 hover:text-black transition-colors cursor-pointer"
                         title="View Host in Zabbix 7.0 Web Console"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -478,9 +478,9 @@ export function UnassignedHostsDrawer({
                       <button
                         type="button"
                         onClick={() => handleOpenSlotForm(host)}
-                        className="px-2.5 py-1.5 rounded-[2px] bg-[#273139] hover:bg-[#34424b] border border-[#394650] hover:border-[#7aa5d2] text-xs font-mono text-[#caedde] hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
+                        className="px-3 py-1.5 rounded-[8px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all"
                       >
-                        <ArrowRight className="w-3.5 h-3.5 text-[#7aa5d2]" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                         <span>Slot</span>
                       </button>
                     </div>
@@ -492,11 +492,11 @@ export function UnassignedHostsDrawer({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-[#394650] bg-[#20282f] flex items-center justify-between text-[11px] font-mono text-[#85a6b1] shrink-0">
+        <div className="px-6 py-3 border-t border-black/10 bg-black/[0.02] flex items-center justify-between text-xs text-zinc-500 shrink-0">
           <span>
-            Showing <strong className="text-white">{filteredHosts.length}</strong> of {hosts.length} unassigned hosts
+            Showing <strong className="text-[#1d1d1f]">{filteredHosts.length}</strong> of {hosts.length} unassigned hosts
           </span>
-          <span className="text-[10px] text-[#85a6b1]">
+          <span className="text-[11px] text-zinc-400">
             FastAPI Ingestion Engine • Redis Cached
           </span>
         </div>

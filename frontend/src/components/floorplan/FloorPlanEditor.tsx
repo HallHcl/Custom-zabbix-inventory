@@ -100,14 +100,14 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
     )
   }
 
-  // Status color mapper
+  // Status color mapper (Apple Light Mode)
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'critical': return 'border-rose-500/60 bg-rose-950/30'
-      case 'warning': return 'border-amber-500/60 bg-amber-950/30'
-      case 'offline': return 'border-zinc-600/60 bg-zinc-900/30'
+      case 'critical': return 'border-rose-300/80 bg-rose-50/90'
+      case 'warning': return 'border-amber-300/80 bg-amber-50/90'
+      case 'offline': return 'border-zinc-300/80 bg-zinc-100/90'
       case 'healthy':
-      default: return 'border-emerald-500/40 bg-emerald-950/20'
+      default: return 'border-emerald-300/80 bg-emerald-50/90'
     }
   }
 
@@ -115,7 +115,7 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
     switch (status) {
       case 'critical': return 'bg-rose-500'
       case 'warning': return 'bg-amber-500'
-      case 'offline': return 'bg-zinc-500'
+      case 'offline': return 'bg-zinc-400'
       default: return 'bg-emerald-500'
     }
   }
@@ -290,8 +290,8 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-zinc-700 border-t-white rounded-full animate-spin" />
-          <span className="text-sm text-zinc-400">Loading floor plan editor...</span>
+          <div className="w-10 h-10 border-2 border-black/10 border-t-[#007AFF] rounded-full animate-spin" />
+          <span className="text-sm font-medium text-[#86868B]">Loading floor plan editor...</span>
         </div>
       </div>
     )
@@ -299,34 +299,34 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
 
   if (!layout) {
     return (
-      <div className="flex items-center justify-center h-96 text-zinc-500">
+      <div className="flex items-center justify-center h-96 text-[#86868B]">
         Failed to load room layout.
       </div>
     )
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-5">
+    <div className="max-w-[1600px] mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#222222]">
+      <div className="flex items-center justify-between pb-4 border-b border-black/10">
         <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white px-3 py-1.5 rounded-xl bg-[#141414] border border-[#262626] hover:border-zinc-500 transition-colors cursor-pointer"
+            className="flex items-center gap-2 text-xs font-semibold text-[#1D1D1F] hover:bg-black/10 px-3.5 py-2 rounded-[12px] bg-black/5 border-[0.5px] border-black/10 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Floor Plan</span>
           </button>
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold text-white tracking-tight">
+            <h2 className="text-xl font-semibold text-[#1D1D1F] tracking-tight">
               Floor Plan Editor
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-black/5 text-[#86868B] border-[0.5px] border-black/10">
               {layout.room_name} • {gridRows}×{gridCols} Grid
             </span>
             {hasChanges && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/50 text-amber-400 border border-amber-800 animate-pulse">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 border border-amber-500/30 animate-pulse">
                 UNSAVED CHANGES
               </span>
             )}
@@ -337,10 +337,10 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
           {/* Save Message */}
           {saveMessage && (
             <span
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-[10px] ${
                 saveMessage.type === 'success'
-                  ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-800'
-                  : 'bg-rose-950/50 text-rose-400 border border-rose-800'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-rose-50 text-rose-700 border border-rose-200'
               }`}
             >
               {saveMessage.type === 'success' ? <Check className="w-3 h-3 inline mr-1" /> : <AlertTriangle className="w-3 h-3 inline mr-1" />}
@@ -353,10 +353,10 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
             type="button"
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+            className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-[12px] transition-all cursor-pointer ${
               hasChanges && !saving
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
-                : 'bg-[#1a1a1a] text-zinc-500 border border-[#262626] cursor-not-allowed'
+                ? 'bg-[#007AFF] hover:bg-[#0071E3] text-white shadow-sm'
+                : 'bg-black/5 text-black/30 border-[0.5px] border-black/10 cursor-not-allowed'
             }`}
           >
             <Save className="w-3.5 h-3.5" />
@@ -367,7 +367,7 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
 
       {/* Grid Scale Selector */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-xs text-zinc-400">
+        <div className="flex items-center gap-2 text-xs text-[#86868B]">
           <Grid3X3 className="w-4 h-4" />
           <span className="font-semibold">Grid Scale:</span>
         </div>
@@ -377,17 +377,17 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
               key={preset.label}
               type="button"
               onClick={() => handleGridChange(preset.rows, preset.cols)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-[8px] text-xs font-semibold transition-all cursor-pointer ${
                 gridRows === preset.rows && gridCols === preset.cols
-                  ? 'bg-white text-black shadow-lg'
-                  : 'bg-[#1a1a1a] text-zinc-400 border border-[#262626] hover:text-white hover:border-zinc-500'
+                  ? 'bg-[#007AFF] text-white shadow-xs'
+                  : 'bg-black/5 text-[#86868B] border-[0.5px] border-black/10 hover:text-[#1D1D1F] hover:bg-black/10'
               }`}
             >
               {preset.label}
             </button>
           ))}
         </div>
-        <span className="text-[11px] text-zinc-500 ml-2">
+        <span className="text-[11px] text-[#86868B] ml-2">
           {localRacks.length} / {gridRows * gridCols} positions filled
         </span>
       </div>
@@ -399,7 +399,7 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
           {Array.from({ length: gridCols }, (_, i) => (
             <div
               key={`col-header-${i}`}
-              className="flex-1 text-center text-xs font-bold text-zinc-500 pb-2"
+              className="flex-1 text-center text-xs font-semibold text-[#86868B] pb-2"
             >
               Col {String(i + 1).padStart(2, '0')}
             </div>
@@ -410,7 +410,7 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
         {rowLabels.map((rowLabel) => (
           <div key={rowLabel} className="flex items-stretch">
             {/* Row Label */}
-            <div className="w-12 flex items-center justify-center text-xs font-bold text-zinc-500">
+            <div className="w-12 flex items-center justify-center text-xs font-semibold text-[#86868B]">
               Row {rowLabel}
             </div>
 
@@ -426,12 +426,12 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
               return (
                 <div
                   key={`${rowLabel}-${col}`}
-                  className={`flex-1 min-h-[120px] m-1 rounded-xl border-2 border-dashed transition-all duration-200 relative ${
+                  className={`flex-1 min-h-[120px] m-1 rounded-[16px] border-2 border-dashed transition-all duration-200 relative ${
                     isDragTarget
-                      ? 'border-cyan-500 bg-cyan-950/30 scale-[1.02]'
+                      ? 'border-[#007AFF] bg-[#007AFF]/10 scale-[1.02]'
                       : rack
-                        ? `border-solid ${getStatusColor(rack.status)} ${isDragSource ? 'opacity-40' : ''}`
-                        : 'border-[#262626] bg-[#0a0a0a] hover:border-[#3a3a3a]'
+                        ? `border-solid shadow-xs ${getStatusColor(rack.status)} ${isDragSource ? 'opacity-40' : ''}`
+                        : 'border-black/15 bg-white/40 hover:bg-white/80 hover:border-black/30'
                   }`}
                   onDragOver={(e) => handleDragOver(e, rowLabel, col)}
                   onDragLeave={handleDragLeave}
@@ -447,7 +447,7 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
                     >
                       {/* Drag handle */}
                       <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-60 transition-opacity">
-                        <GripVertical className="w-4 h-4 text-zinc-500" />
+                        <GripVertical className="w-4 h-4 text-black/40" />
                       </div>
 
                       {/* Delete button */}
@@ -457,7 +457,7 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
                           e.stopPropagation()
                           setDeleteTarget(rack)
                         }}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg bg-rose-950/60 text-rose-400 hover:bg-rose-900/80 hover:text-rose-300 cursor-pointer"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-[8px] bg-rose-50 text-rose-600 hover:bg-rose-100 border-[0.5px] border-rose-200 cursor-pointer shadow-xs"
                         title="Delete Rack"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -465,20 +465,20 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
 
                       {/* Rack Info */}
                       <div className="flex flex-col items-center justify-center h-full gap-2 pt-2">
-                        <div className="p-2.5 rounded-xl bg-[#1a1a1a] border border-[#303030]">
-                          <Server className="w-5 h-5 text-zinc-300" />
+                        <div className="p-2.5 rounded-[12px] bg-white border-[0.5px] border-black/10 shadow-xs">
+                          <Server className="w-5 h-5 text-[#1D1D1F]" />
                         </div>
                         <div className="text-center">
-                          <div className="text-xs font-bold text-white">
+                          <div className="text-xs font-bold text-[#1D1D1F]">
                             {rack.name.replace('Rack ', '')}
                           </div>
-                          <div className="text-[10px] text-zinc-500 mt-0.5">
+                          <div className="text-[10px] text-[#86868B] mt-0.5">
                             {rack.used_u}/{rack.total_u}U
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                           <span className={`w-2 h-2 rounded-full ${getStatusDot(rack.status)}`} />
-                          <span className="text-[10px] text-zinc-400 capitalize">{rack.status}</span>
+                          <span className="text-[10px] font-medium text-[#86868B] capitalize">{rack.status}</span>
                         </div>
 
                         {/* Click to view rack elevation */}
@@ -489,7 +489,7 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
                               e.stopPropagation()
                               onViewRackElevation(rack)
                             }}
-                            className="text-[10px] text-cyan-500 hover:text-cyan-400 font-semibold mt-1 cursor-pointer"
+                            className="text-[10px] text-[#007AFF] hover:underline font-semibold mt-1 cursor-pointer"
                           >
                             View Elevation →
                           </button>
@@ -506,10 +506,10 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
                       }}
                       className="w-full h-full flex flex-col items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity cursor-pointer group"
                     >
-                      <div className="p-2 rounded-xl bg-[#1a1a1a] border border-[#262626] group-hover:border-zinc-500 transition-colors">
-                        <Plus className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
+                      <div className="p-2 rounded-[10px] bg-white border-[0.5px] border-black/10 shadow-xs group-hover:border-black/30 transition-colors">
+                        <Plus className="w-4 h-4 text-[#86868B] group-hover:text-[#1D1D1F]" />
                       </div>
-                      <span className="text-[10px] text-zinc-600 group-hover:text-zinc-400 font-semibold">
+                      <span className="text-[10px] text-[#86868B] group-hover:text-[#1D1D1F] font-semibold">
                         Add Rack
                       </span>
                       {/* ──────── Hidden Add Rack handler ──────── */}
@@ -525,14 +525,14 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
 
       {/* ─── Add Rack Modal ──────────────────────────────── */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#121212] border border-[#2a2a2a] rounded-2xl p-6 w-[400px] shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md">
+          <div className="bg-white/90 backdrop-blur-2xl border-[0.5px] border-black/10 rounded-[20px] p-6 w-[400px] shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Add New Rack</h3>
+              <h3 className="text-base font-semibold text-[#1D1D1F]">Add New Rack</h3>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="p-1 text-zinc-500 hover:text-white cursor-pointer"
+                className="p-1 text-[#86868B] hover:text-[#1D1D1F] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -540,34 +540,34 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Rack Name</label>
+                <label className="block text-xs font-semibold text-[#86868B] mb-1">Rack Name</label>
                 <input
                   type="text"
                   value={addRackName}
                   onChange={(e) => setAddRackName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0a0a0a] border border-[#262626] text-sm text-white focus:outline-none focus:border-cyan-600"
+                  className="w-full px-3 py-2 rounded-[10px] bg-black/5 border-[0.5px] border-black/10 text-sm text-[#1D1D1F] placeholder:text-black/30 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50"
                   placeholder="e.g. Rack A01"
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Total U</label>
+                <label className="block text-xs font-semibold text-[#86868B] mb-1">Total U</label>
                 <input
                   type="number"
                   value={addRackTotalU}
                   onChange={(e) => setAddRackTotalU(Number(e.target.value))}
                   min={1}
                   max={60}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0a0a0a] border border-[#262626] text-sm text-white focus:outline-none focus:border-cyan-600"
+                  className="w-full px-3 py-2 rounded-[10px] bg-black/5 border-[0.5px] border-black/10 text-sm text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50"
                 />
               </div>
             </div>
 
-            <div className="text-xs text-zinc-500">
+            <div className="text-xs text-[#86868B]">
               Select an empty grid cell to place this rack.
             </div>
 
             {/* Grid mini-map for placement */}
-            <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
               {rowLabels.map((rowLabel) =>
                 Array.from({ length: gridCols }, (_, colIdx) => {
                   const col = colIdx + 1
@@ -578,10 +578,10 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
                       type="button"
                       disabled={!!occupied}
                       onClick={() => handleAddRack(rowLabel, col)}
-                      className={`h-10 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                      className={`h-10 rounded-[8px] text-[10px] font-bold transition-all cursor-pointer ${
                         occupied
-                          ? 'bg-[#1a1a1a] text-zinc-600 border border-[#222] cursor-not-allowed'
-                          : 'bg-[#0d0d0d] text-zinc-400 border border-[#262626] hover:bg-cyan-950/40 hover:border-cyan-600 hover:text-cyan-400'
+                          ? 'bg-black/5 text-black/30 border-[0.5px] border-black/10 cursor-not-allowed'
+                          : 'bg-white text-[#1D1D1F] border-[0.5px] border-black/15 shadow-xs hover:bg-[#007AFF]/10 hover:border-[#007AFF] hover:text-[#007AFF]'
                       }`}
                     >
                       {occupied ? occupied.name.replace('Rack ', '') : `${rowLabel}${String(col).padStart(2, '0')}`}
@@ -596,38 +596,38 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
 
       {/* ─── Delete Confirmation ─────────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#121212] border border-[#2a2a2a] rounded-2xl p-6 w-[380px] shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md">
+          <div className="bg-white/90 backdrop-blur-2xl border-[0.5px] border-black/10 rounded-[20px] p-6 w-[380px] shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-rose-950/50 border border-rose-800">
-                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              <div className="p-2.5 rounded-[12px] bg-rose-50 border border-rose-200">
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Delete Rack?</h3>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  This will permanently delete <strong className="text-white">{deleteTarget.name}</strong> and all its devices.
+                <h3 className="text-base font-semibold text-[#1D1D1F]">Delete Rack?</h3>
+                <p className="text-xs text-[#86868B] mt-0.5">
+                  This will permanently delete <strong className="text-[#1D1D1F]">{deleteTarget.name}</strong> and all its devices.
                 </p>
               </div>
             </div>
 
             {deleteTarget.device_count > 0 && (
-              <div className="px-3 py-2 rounded-lg bg-amber-950/30 border border-amber-800/50 text-xs text-amber-400">
+              <div className="px-3 py-2 rounded-[10px] bg-amber-50 border border-amber-200 text-xs text-amber-800">
                 ⚠️ This rack has {deleteTarget.device_count} device(s) mounted. They will be deleted.
               </div>
             )}
 
-            <div className="flex items-center gap-2 justify-end">
+            <div className="flex items-center gap-2 justify-end pt-2">
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white bg-[#1a1a1a] border border-[#262626] cursor-pointer"
+                className="px-3.5 py-2 rounded-[10px] text-xs font-semibold text-[#1D1D1F] hover:bg-black/10 bg-black/5 border-[0.5px] border-black/10 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleDeleteRack(deleteTarget)}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 cursor-pointer"
+                className="px-4 py-2 rounded-[10px] text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 cursor-pointer shadow-xs"
               >
                 Delete Rack
               </button>
@@ -637,7 +637,7 @@ export function FloorPlanEditor({ roomId, onBack, onViewRackElevation }: FloorPl
       )}
 
       {/* Footer hint */}
-      <div className="text-center text-xs text-zinc-600 py-2">
+      <div className="text-center text-xs text-[#86868B] py-2">
         Drag racks to rearrange • Click empty cells to add new racks • Save to persist changes
       </div>
     </div>

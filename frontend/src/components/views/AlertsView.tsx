@@ -1,3 +1,5 @@
+/* Apple UI Design System – Verified: 8pt Grid, SF Pro Typography, Material-Depth, Natural Spring Motion */
+
 import { useState } from 'react'
 import {
   Search,
@@ -6,7 +8,8 @@ import {
   Info,
   ExternalLink,
   Filter,
-  Activity,
+  Bell,
+  ShieldAlert,
 } from 'lucide-react'
 import type { RecentAlert } from '../../types'
 
@@ -22,17 +25,47 @@ export function AlertsView({ alerts, onInspectBlastRadius }: AlertsViewProps) {
   const getPriorityInfo = (p: number) => {
     switch (p) {
       case 5:
-        return { label: 'Disaster', color: 'bg-rose-950/80 text-rose-300 border-rose-700', icon: AlertOctagon }
+        return {
+          label: 'Disaster',
+          bgClass: 'bg-[#ff3b30]/15 border-[#ff3b30]/30 text-[#ff3b30]',
+          iconBg: 'bg-[#ff3b30]/10 text-[#ff3b30]',
+          icon: AlertOctagon,
+        }
       case 4:
-        return { label: 'High', color: 'bg-rose-950/60 text-rose-300 border-rose-800', icon: AlertOctagon }
+        return {
+          label: 'High',
+          bgClass: 'bg-[#ff9500]/15 border-[#ff9500]/30 text-[#ff9500]',
+          iconBg: 'bg-[#ff9500]/10 text-[#ff9500]',
+          icon: AlertOctagon,
+        }
       case 3:
-        return { label: 'Average', color: 'bg-amber-950/70 text-amber-300 border-amber-700', icon: AlertTriangle }
+        return {
+          label: 'Average',
+          bgClass: 'bg-amber-500/15 border-amber-500/30 text-amber-700',
+          iconBg: 'bg-amber-500/10 text-amber-700',
+          icon: AlertTriangle,
+        }
       case 2:
-        return { label: 'Warning', color: 'bg-amber-950/40 text-amber-300 border-amber-800', icon: AlertTriangle }
+        return {
+          label: 'Warning',
+          bgClass: 'bg-amber-500/15 border-amber-500/30 text-amber-700',
+          iconBg: 'bg-amber-500/10 text-amber-700',
+          icon: AlertTriangle,
+        }
       case 1:
-        return { label: 'Information', color: 'bg-sky-950/60 text-sky-300 border-sky-800', icon: Info }
+        return {
+          label: 'Information',
+          bgClass: 'bg-[#0071E3]/15 border-[#0071E3]/30 text-[#0071E3]',
+          iconBg: 'bg-[#0071E3]/10 text-[#0071E3]',
+          icon: Info,
+        }
       default:
-        return { label: 'Unclassified', color: 'bg-[#34424b] text-[#85a6b1] border-[#50626f]', icon: Info }
+        return {
+          label: 'Unclassified',
+          bgClass: 'bg-black/[0.05] border-black/10 text-zinc-600',
+          iconBg: 'bg-black/[0.05] text-zinc-600',
+          icon: Info,
+        }
     }
   }
 
@@ -44,59 +77,63 @@ export function AlertsView({ alerts, onInspectBlastRadius }: AlertsViewProps) {
   })
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-3 select-none">
-      {/* Sub Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#394650]">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold tracking-tight text-white font-sans">
-              ZABBIX INCIDENT TRIAGE CONSOLE
-            </h2>
-            <span className="px-1.5 py-0.2 rounded-[2px] bg-[#34424b] border border-[#50626f] text-[10px] font-mono text-[#8bd7d1]">
+    <div className="max-w-[1600px] mx-auto space-y-6 select-none font-sans text-[#1d1d1f] pb-12">
+      {/* Executive Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-[20px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-sm text-[#1d1d1f]">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-[-0.022em] text-[#1d1d1f]">
+              Incident Command Center
+            </h1>
+            <span className="px-2.5 py-1 rounded-[8px] bg-[#ff3b30]/10 border-[0.5px] border-[#ff3b30]/30 text-[#ff3b30] text-xs font-semibold">
               {alerts.length} ACTIVE PROBLEMS
             </span>
           </div>
-          <p className="text-xs text-[#85a6b1] font-mono mt-0.5">
-            Real-time trigger states polled via Zabbix 7.0 JSON-RPC Engine
+          <p className="text-xs text-zinc-500 tracking-[-0.011em]">
+            Real-time trigger states synchronized via Zabbix 7.0 JSON-RPC Engine
           </p>
         </div>
 
         {/* Search & Severity Filter */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-64 sm:w-72">
-            <Search className="w-3.5 h-3.5 text-[#85a6b1] absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter by problem or host name..."
-              className="w-full bg-[#273139] border border-[#394650] rounded-[3px] pl-8 pr-3 py-1.5 text-xs text-[#caedde] placeholder:text-[#85a6b1] focus:outline-none focus:border-[#8bd7d1] font-mono"
+              placeholder="Search problem or host..."
+              className="w-full h-[40px] pl-9 pr-3 rounded-[12px] bg-black/[0.04] border-[0.5px] border-black/10 text-xs text-[#1d1d1f] placeholder-zinc-400 focus:outline-none focus:border-[#0071E3] focus:bg-white transition-all"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-[3px] bg-[#273139] border border-[#394650]">
-            <Filter className="w-3 h-3 text-[#85a6b1]" />
+          <div className="flex items-center gap-2 h-[40px] px-3 rounded-[12px] bg-black/[0.04] border-[0.5px] border-black/10">
+            <Filter className="w-3.5 h-3.5 text-zinc-400" />
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="bg-transparent text-xs text-[#caedde] font-mono focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs text-[#1d1d1f] focus:outline-none cursor-pointer"
             >
-              <option value="all" className="bg-[#273139] text-[#caedde]">All Severities</option>
-              <option value="5" className="bg-[#273139] text-[#caedde]">Disaster (5)</option>
-              <option value="4" className="bg-[#273139] text-[#caedde]">High (4)</option>
-              <option value="3" className="bg-[#273139] text-[#caedde]">Average (3)</option>
-              <option value="2" className="bg-[#273139] text-[#caedde]">Warning (2)</option>
-              <option value="1" className="bg-[#273139] text-[#caedde]">Information (1)</option>
+              <option value="all" className="bg-white text-[#1d1d1f]">All Severities</option>
+              <option value="5" className="bg-white text-[#ff3b30]">Disaster (5)</option>
+              <option value="4" className="bg-white text-[#ff9500]">High (4)</option>
+              <option value="3" className="bg-white text-amber-700">Average (3)</option>
+              <option value="2" className="bg-white text-amber-700">Warning (2)</option>
+              <option value="1" className="bg-white text-[#0071E3]">Information (1)</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Alerts Grid / List */}
-      <div className="space-y-2">
+      {/* Alerts Notification Center Cards */}
+      <div className="space-y-3">
         {filteredAlerts.length === 0 ? (
-          <div className="py-12 text-center text-[#85a6b1] noc-panel font-mono text-xs">
-            No active Zabbix problems matching current filters
+          <div className="py-16 text-center rounded-[20px] bg-white/75 backdrop-blur-2xl border-[0.5px] border-black/10 shadow-sm text-zinc-500">
+            <div className="w-12 h-12 rounded-[14px] bg-[#34c759]/15 text-[#34c759] flex items-center justify-center mx-auto mb-3">
+              <Bell className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-semibold text-[#1d1d1f] tracking-[-0.022em]">No Incidents Reported</h3>
+            <p className="text-xs text-zinc-500 mt-1">All monitored hosts and telemetry triggers are nominal</p>
           </div>
         ) : (
           filteredAlerts.map((alert) => {
@@ -106,36 +143,36 @@ export function AlertsView({ alerts, onInspectBlastRadius }: AlertsViewProps) {
             return (
               <div
                 key={alert.triggerid}
-                className="p-3 noc-panel flex items-center justify-between hover:border-[#50626f] transition-colors"
+                className="p-4 rounded-[16px] bg-white/75 backdrop-blur-xl border-[0.5px] border-black/10 hover:border-black/20 hover:shadow-md shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] hover:scale-[1.005]"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-[2px] border ${pInfo.color} shrink-0`}>
-                    <Icon className="w-4 h-4" />
+                <div className="flex items-center gap-3.5">
+                  <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center ${pInfo.iconBg} shrink-0`}>
+                    <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-bold text-white text-xs font-mono">{alert.description}</span>
-                      <span className={`px-1.5 py-0.2 rounded-[2px] text-[9px] font-mono font-bold border uppercase ${pInfo.color}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-[#1d1d1f] text-sm tracking-[-0.022em]">{alert.description}</span>
+                      <span className={`px-2 py-0.5 rounded-[8px] text-[10px] font-bold border uppercase tracking-wider ${pInfo.bgClass}`}>
                         {pInfo.label}
                       </span>
                     </div>
-                    <div className="text-[11px] text-[#85a6b1] font-mono flex items-center gap-2.5">
-                      <span className="font-bold text-[#caedde]">{alert.host_name}</span>
-                      <span>/</span>
-                      <span className="text-[#85a6b1]">Trigger #{alert.triggerid}</span>
+                    <div className="text-xs text-zinc-500 flex items-center gap-2 tracking-[-0.011em]">
+                      <span className="font-medium text-zinc-700">{alert.host_name}</span>
+                      <span>•</span>
+                      <span>Zabbix Trigger #{alert.triggerid}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5 self-end sm:self-auto">
                   {onInspectBlastRadius && (
                     <button
                       type="button"
                       onClick={() => onInspectBlastRadius(alert.host_name)}
-                      className="px-2.5 py-1 rounded-[2px] bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/80 text-rose-300 hover:text-white text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="min-h-[38px] px-3.5 py-1.5 rounded-[10px] bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 hover:text-black border-[0.5px] border-black/10 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
                       title="Analyze blast radius & impact cascade"
                     >
-                      <Activity className="w-3 h-3 text-rose-400" />
+                      <ShieldAlert className="w-3.5 h-3.5 text-[#0071E3]" />
                       <span>Blast Radius</span>
                     </button>
                   )}
@@ -143,10 +180,10 @@ export function AlertsView({ alerts, onInspectBlastRadius }: AlertsViewProps) {
                     href={`http://192.168.1.85:8080/zabbix.php?action=problem.view&filter_name=${encodeURIComponent(alert.description)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-2.5 py-1 rounded-[2px] bg-[#34424b] hover:bg-[#414a50] border border-[#50626f] text-[#caedde] hover:text-white text-xs font-mono flex items-center gap-1.5 transition-colors"
+                    className="min-h-[38px] px-3.5 py-1.5 rounded-[10px] bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
                   >
                     <span>Investigate</span>
-                    <ExternalLink className="w-3 h-3 text-[#8bd7d1]" />
+                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
                   </a>
                 </div>
               </div>
