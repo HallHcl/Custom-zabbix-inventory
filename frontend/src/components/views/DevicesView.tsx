@@ -1,5 +1,5 @@
 /* Apple UI & Tesla UI Dual-System Design – Verified: 8pt Grid, Telemetry Typography, Pure OLED Black / Cupertino Frost */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Search,
   Server,
@@ -16,6 +16,9 @@ import {
   Shield,
   HardDrive,
   Cpu,
+  ChevronDown,
+  Check,
+  Filter,
 } from 'lucide-react'
 import type { Device, RackSummary } from '../../types'
 import { fetchDevices } from '../../api/client'
@@ -52,7 +55,24 @@ export function DevicesView({
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedType, setSelectedType] = useState<string>('all')
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false)
   const [isAddHostOpen, setIsAddHostOpen] = useState(false)
+  const typeDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target as Node)) {
+        setIsTypeDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const getCategoryCount = (typeId: string) => {
+    if (typeId === 'all') return devices.length
+    return devices.filter((d) => d.device_type?.toLowerCase() === typeId.toLowerCase()).length
+  }
 
   const loadDevices = () => {
     setLoading(true)
@@ -82,6 +102,22 @@ export function DevicesView({
       (d.manufacturer && d.manufacturer.toLowerCase().includes(q))
     )
   })
+
+  // Summary counts for table footer
+  const totalHosts = devices.length
+  const filteredCount = filteredDevices.length
+  const criticalCount = filteredDevices.filter(
+    (d) => d.zabbix_host_id && d.zabbix_status?.status === 'critical'
+  ).length
+  const warningCount = filteredDevices.filter(
+    (d) => d.zabbix_host_id && d.zabbix_status?.status === 'warning'
+  ).length
+  const nominalCount = filteredDevices.filter(
+    (d) =>
+      d.zabbix_host_id &&
+      (!d.zabbix_status?.status || d.zabbix_status.status === 'ok')
+  ).length
+  const unlinkedCount = filteredDevices.filter((d) => !d.zabbix_host_id).length
 
   // Helper icon for device type
   const getDeviceIcon = (type: string) => {
@@ -213,35 +249,107 @@ export function DevicesView({
           )}
         </div>
 
-        {/* Category Segmented Pills */}
-        <div
-          className={`flex p-1 border overflow-x-auto no-scrollbar ${
-            isTeslaDark
-              ? 'bg-[#161616] border-[#1F1F1F] rounded-[6px]'
-              : 'bg-black/[0.04] border-black/10 rounded-[12px]'
-          }`}
-        >
-          {DEVICE_TYPE_OPTIONS.map((opt) => {
-            const isSelected = selectedType === opt.id
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setSelectedType(opt.id)}
-                className={`h-[32px] px-3.5 text-xs font-semibold transition-all duration-150 cursor-pointer whitespace-nowrap ${
+        {/* Category Dropdown: Apple Cupertino Glass / Tesla Pure Dark */}
+        <div className="relative" ref={typeDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsTypeDropdownOpen((prev) => !prev)}
+            className={`h-[40px] px-4 text-xs font-semibold flex items-center justify-between gap-3 border transition-all cursor-pointer ${
+              isTeslaDark
+                ? 'rounded-[6px] bg-[#161616] hover:bg-[#1E1E1E] border-[#1F1F1F] text-[#F5F5F7] font-mono'
+                : 'rounded-[10px] bg-white hover:bg-black/[0.02] border-black/10 text-[#1d1d1f] shadow-xs hover:border-black/20'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Filter className={`w-3.5 h-3.5 ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`} />
+              <span>
+                {DEVICE_TYPE_OPTIONS.find((opt) => opt.id === selectedType)?.label || 'All Equipment'}
+              </span>
+              <span
+                className={`ml-1 px-1.5 py-0.5 text-[10px] font-mono font-bold rounded-full ${
                   isTeslaDark
-                    ? isSelected
-                      ? 'bg-[#1C1C1E] text-white border border-[#2E2E2E] rounded-[4px] font-mono'
-                      : 'text-[#636366] hover:text-[#A1A1A6] rounded-[4px] font-mono'
-                    : isSelected
-                    ? 'bg-white text-[#1d1d1f] shadow-sm rounded-[8px]'
-                    : 'text-zinc-600 hover:text-black hover:bg-black/[0.04] rounded-[8px]'
+                    ? 'bg-[#222222] text-[#A1A1A6]'
+                    : 'bg-black/[0.06] text-zinc-600'
                 }`}
               >
-                {opt.label}
-              </button>
-            )
-          })}
+                {getCategoryCount(selectedType)}
+              </span>
+            </div>
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                isTypeDropdownOpen ? 'rotate-180 text-[#3E6AE1]' : 'text-zinc-400'
+              }`}
+            />
+          </button>
+
+          {isTypeDropdownOpen && (
+            <div
+              className={`absolute right-0 mt-1.5 w-64 py-1.5 z-40 border shadow-2xl ${
+                isTeslaDark
+                  ? 'rounded-[8px] bg-[#161616] border-[#2A2A2A] text-[#F5F5F7]'
+                  : 'rounded-[14px] bg-white/95 backdrop-blur-xl border-black/10 text-[#1d1d1f]'
+              }`}
+            >
+              <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                Equipment Category
+              </div>
+              {DEVICE_TYPE_OPTIONS.map((opt) => {
+                const isSelected = selectedType === opt.id
+                const count = getCategoryCount(opt.id)
+                const OptionIcon = getDeviceIcon(opt.id === 'all' ? 'server' : opt.id)
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedType(opt.id)
+                      setIsTypeDropdownOpen(false)
+                    }}
+                    className={`w-full px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                      isSelected
+                        ? isTeslaDark
+                          ? 'bg-[#1C1C1E] text-white font-semibold font-mono'
+                          : 'bg-[#0071E3]/10 text-[#0071E3] font-semibold'
+                        : isTeslaDark
+                        ? 'text-[#A1A1A6] hover:bg-[#1E1E1E] hover:text-[#F5F5F7]'
+                        : 'text-zinc-700 hover:bg-black/[0.04]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <OptionIcon
+                        className={`w-3.5 h-3.5 ${
+                          isSelected
+                            ? isTeslaDark
+                              ? 'text-[#3E6AE1]'
+                              : 'text-[#0071E3]'
+                            : 'text-zinc-400'
+                        }`}
+                      />
+                      <span>{opt.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-1.5 py-0.5 text-[10px] font-mono rounded ${
+                          isSelected
+                            ? isTeslaDark
+                              ? 'bg-[#3E6AE1]/20 text-[#3E6AE1]'
+                              : 'bg-[#0071E3]/15 text-[#0071E3]'
+                            : isTeslaDark
+                            ? 'bg-[#222222] text-[#888888]'
+                            : 'bg-black/[0.05] text-zinc-500'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                      {isSelected && (
+                        <Check className={`w-3.5 h-3.5 ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`} />
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -496,6 +604,69 @@ export function DevicesView({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Table Footer Summary: Total Hosts & Posture Stats */}
+        <div
+          className={`px-6 py-3.5 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+            isTeslaDark
+              ? 'bg-[#111111] border-[#1F1F1F] text-[#A1A1A6]'
+              : 'bg-black/[0.02] border-black/10 text-zinc-600'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className={isTeslaDark ? 'font-mono' : ''}>
+              Showing <strong className={isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}>{filteredCount}</strong> of{' '}
+              <strong className={isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}>{totalHosts}</strong> Total Hosts
+            </span>
+            {(search || selectedType !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('')
+                  setSelectedType('all')
+                }}
+                className={`ml-2 text-[11px] underline underline-offset-2 transition-colors cursor-pointer ${
+                  isTeslaDark ? 'text-[#3E6AE1] hover:text-[#5B82EA] font-mono' : 'text-[#0071E3] hover:text-[#0077ED]'
+                }`}
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#00C853]" />
+              <span className={`text-[11px] ${isTeslaDark ? 'font-mono' : ''}`}>
+                Nominal: <strong className={isTeslaDark ? 'text-[#F5F5F7]' : 'text-[#1d1d1f]'}>{nominalCount}</strong>
+              </span>
+            </div>
+            {warningCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+                <span className={`text-[11px] ${isTeslaDark ? 'font-mono' : ''}`}>
+                  Warning: <strong className={isTeslaDark ? 'text-[#F59E0B]' : 'text-amber-700'}>{warningCount}</strong>
+                </span>
+              </div>
+            )}
+            {criticalCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#E82127]" />
+                <span className={`text-[11px] ${isTeslaDark ? 'font-mono' : ''}`}>
+                  Critical: <strong className={isTeslaDark ? 'text-[#E82127]' : 'text-rose-700'}>{criticalCount}</strong>
+                </span>
+              </div>
+            )}
+            {unlinkedCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-zinc-400" />
+                <span className={`text-[11px] ${isTeslaDark ? 'font-mono' : ''}`}>
+                  Unlinked: <strong className={isTeslaDark ? 'text-zinc-400' : 'text-zinc-600'}>{unlinkedCount}</strong>
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

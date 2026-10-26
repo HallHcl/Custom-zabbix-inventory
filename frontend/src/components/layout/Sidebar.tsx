@@ -7,7 +7,6 @@ import {
   Bell,
   FileText,
   Box,
-  Zap,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useTheme } from '../../lib/theme'
@@ -55,22 +54,12 @@ export function Sidebar({ activeTab, onSelectTab, alertCount = 0 }: SidebarProps
           }`}
         >
           <div className="flex items-center gap-3">
-            {isTeslaDark ? (
-              /* Tesla Telemetry System Pill */
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] bg-[#111111] border border-[#1F1F1F]">
-                <Zap className="w-3 h-3 text-[#3E6AE1]" />
-                <span className="text-[10px] font-mono font-bold tracking-[1.5px] text-[#A1A1A6] uppercase">
-                  TDS
-                </span>
-              </div>
-            ) : (
-              /* macOS Traffic Lights */
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]" />
-                <div className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
-                <div className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]" />
-              </div>
-            )}
+            {/* macOS Traffic Lights */}
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]" />
+              <div className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
+              <div className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]" />
+            </div>
 
             <div className={`h-4 w-px ${isTeslaDark ? 'bg-[#1F1F1F]' : 'bg-black/10'}`} />
 
