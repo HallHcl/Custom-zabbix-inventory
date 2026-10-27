@@ -3,6 +3,7 @@ from backend.app.schemas import (
     DeviceResponse,
     DeviceOverviewResponse,
     ZabbixLatestItem,
+    ZabbixHostInventory,
     DeviceMetricHistoryPoint,
 )
 from backend.app.db.models import Device
@@ -80,6 +81,40 @@ def test_device_overview_schema():
     assert len(overview.latest_data_items) == 1
     assert overview.latest_data_items[0].key_ == "system.cpu.util"
     assert overview.latest_data_items[0].lastvalue == "42.5"
+
+
+def test_device_overview_with_zabbix_inventory():
+    z_inv = ZabbixHostInventory(
+        os="AlmaLinux 9",
+        os_full="AlmaLinux 9.4",
+        os_arch="x86_64",
+        kernel="Linux 5.14.0",
+        serial_number="SRV-DL380-001",
+        mac_address="52:54:00:11:22:33",
+        hardware_model="ProLiant DL380 Gen10",
+        vendor="HPE",
+        cpu_cores=16,
+        hostname="dc1-srv-pgsql-01.local",
+    )
+    overview = DeviceOverviewResponse(
+        device_id="dev-123",
+        device_name="DC1-SRV-PGSQL-01",
+        device_type="Server",
+        model="ProLiant DL380",
+        manufacturer="HPE",
+        rack_name="Rack A01",
+        room_name="Data Hall Alpha",
+        start_u=20,
+        height_u=2,
+        position_face="Front",
+        zabbix_inventory=z_inv,
+    )
+    assert overview.zabbix_inventory is not None
+    assert overview.zabbix_inventory.os == "AlmaLinux 9"
+    assert overview.zabbix_inventory.os_arch == "x86_64"
+    assert overview.zabbix_inventory.serial_number == "SRV-DL380-001"
+    assert overview.zabbix_inventory.cpu_cores == 16
+    assert overview.zabbix_inventory.vendor == "HPE"
 
 
 def test_resolve_brand_metadata_cisco():

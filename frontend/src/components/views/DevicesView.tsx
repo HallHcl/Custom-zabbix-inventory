@@ -449,7 +449,9 @@ export function DevicesView({
                                 isTeslaDark ? 'text-[#636366] font-mono' : 'text-zinc-500'
                               }`}
                             >
+                              {d.zabbix_status?.inventory?.os ? `${d.zabbix_status.inventory.os} • ` : ''}
                               {d.manufacturer || 'Generic'} • {d.model || 'Standard Chassis'}
+                              {(d.serial_number || d.zabbix_status?.inventory?.serial_number) ? ` • S/N: ${d.serial_number || d.zabbix_status?.inventory?.serial_number}` : ''}
                             </span>
                           </div>
                         </div>

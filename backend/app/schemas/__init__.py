@@ -18,6 +18,22 @@ class ZabbixWebLinks(BaseModel):
     graphs_url: Optional[str] = None
 
 
+class ZabbixHostInventory(BaseModel):
+    os: Optional[str] = None
+    os_full: Optional[str] = None
+    os_arch: Optional[str] = None
+    kernel: Optional[str] = None
+    serial_number: Optional[str] = None
+    mac_address: Optional[str] = None
+    hardware_model: Optional[str] = None
+    vendor: Optional[str] = None
+    cpu_cores: Optional[int] = None
+    hostname: Optional[str] = None
+    location: Optional[str] = None
+    asset_tag: Optional[str] = None
+    inventory_mode: Optional[str] = None
+
+
 class ZabbixStatusSummary(BaseModel):
     hostid: str
     name: str
@@ -26,6 +42,7 @@ class ZabbixStatusSummary(BaseModel):
     highest_severity: int = 0
     problems_count: int = 0
     problems: List[ZabbixProblemSummary] = []
+    inventory: Optional[ZabbixHostInventory] = None
     zabbix_web_links: Optional[ZabbixWebLinks] = None
 
 
@@ -201,6 +218,8 @@ class DeviceOverviewResponse(BaseModel):
     brand_info: Optional[BrandInfo] = None
     # Zabbix Latest Data Items (Full Metric List)
     latest_data_items: List[ZabbixLatestItem] = []
+    # Live Hardware & OS Inventory from Zabbix
+    zabbix_inventory: Optional[ZabbixHostInventory] = None
     zabbix_web_links: Optional[ZabbixWebLinks] = None
 
 

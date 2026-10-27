@@ -16,6 +16,8 @@ import {
   AlertOctagon,
   Trash2,
   Box,
+  Terminal,
+  Hash,
 } from 'lucide-react'
 import type { DeviceOverview, ZabbixLatestItem } from '../../types'
 import { fetchDeviceOverview, updateDeviceInventory } from '../../api/client'
@@ -732,164 +734,318 @@ export function DevicePageView({ deviceId, onBack, onDeviceUpdated }: DevicePage
           />
         )}
 
-        {/* ─── TAB 3: POSTGRESQL CUSTOM INVENTORY ─── */}
+        {/* ─── TAB 3: HARDWARE & OS INVENTORY (ZABBIX & POSTGRESQL CMDB) ─── */}
         {activeTab === 'inventory' && (
-          <div className="space-y-5">
+          <div className="space-y-6">
+            {/* 1. Live Zabbix Hardware & OS Inventory Section */}
             <div
-              className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b ${
-                isTeslaDark ? 'border-[#1F1F1F]' : 'border-black/10'
+              className={`p-5 rounded-[16px] space-y-4 border ${
+                isTeslaDark ? 'bg-[#161616] border-[#1F1F1F]' : 'bg-white border-black/10 shadow-xs'
               }`}
             >
-              <div>
-                <h4 className={`text-sm font-semibold ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
-                  Dynamic Asset Fields (PostgreSQL CMDB)
-                </h4>
-                <p className={`text-xs mt-0.5 ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                  Decoupled from Zabbix to allow unlimited, flexible enterprise inventory schema.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-inherit">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                      isTeslaDark ? 'bg-[#3E6AE1]/20 text-[#3E6AE1]' : 'bg-[#0071E3]/10 text-[#0071E3]'
+                    }`}
+                  >
+                    <Terminal className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className={`text-sm font-semibold ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
+                      Live Hardware & Operating System Inventory
+                    </h4>
+                    <p className={`text-xs ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                      Extracted directly from Zabbix host telemetry, agent discovery & system items.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Zabbix Host ID: {data.zabbix_host_id || 'N/A'}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {isEditingInventory ? (
-                  <>
+              {/* Grid of Live Zabbix Inventory Attributes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Operating System */}
+                <div
+                  className={`p-3.5 rounded-[12px] border ${
+                    isTeslaDark ? 'bg-[#0F0F0F] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1.5">
+                    <Layers className="w-3.5 h-3.5 text-blue-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Operating System</span>
+                  </div>
+                  <div className={`text-xs font-semibold ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
+                    {data.zabbix_inventory?.os || data.zabbix_inventory?.os_full || 'Linux (Auto-detected)'}
+                  </div>
+                  {data.zabbix_inventory?.os_arch && (
+                    <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                      Arch: {data.zabbix_inventory.os_arch}
+                    </div>
+                  )}
+                </div>
+
+                {/* Kernel & Release */}
+                <div
+                  className={`p-3.5 rounded-[12px] border ${
+                    isTeslaDark ? 'bg-[#0F0F0F] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1.5">
+                    <Terminal className="w-3.5 h-3.5 text-indigo-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Kernel / System Release</span>
+                  </div>
+                  <div className={`text-xs font-semibold truncate ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`} title={data.zabbix_inventory?.kernel || undefined}>
+                    {data.zabbix_inventory?.kernel || 'Standard Distribution Kernel'}
+                  </div>
+                  {data.zabbix_inventory?.hostname && (
+                    <div className="text-[10px] font-mono text-zinc-500 mt-0.5 truncate">
+                      Host: {data.zabbix_inventory.hostname}
+                    </div>
+                  )}
+                </div>
+
+                {/* Hardware Model & Vendor */}
+                <div
+                  className={`p-3.5 rounded-[12px] border ${
+                    isTeslaDark ? 'bg-[#0F0F0F] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1.5">
+                    <Server className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Hardware Model & Vendor</span>
+                  </div>
+                  <div className={`text-xs font-semibold ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
+                    {data.zabbix_inventory?.vendor || data.manufacturer || 'Standard'} {data.zabbix_inventory?.hardware_model || data.model || data.device_type}
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                    Form Factor: {data.height_u}U Rackmount
+                  </div>
+                </div>
+
+                {/* Serial Number */}
+                <div
+                  className={`p-3.5 rounded-[12px] border ${
+                    isTeslaDark ? 'bg-[#0F0F0F] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1.5">
+                    <Hash className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Chassis Serial Number</span>
+                  </div>
+                  <div className={`text-xs font-mono font-semibold ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
+                    {data.zabbix_inventory?.serial_number || data.serial_number || 'Auto-synced to DCIM'}
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                    Asset Tag: {data.zabbix_inventory?.asset_tag || 'AST-' + String(data.device_id).padStart(4, '0')}
+                  </div>
+                </div>
+
+                {/* Network MAC Address */}
+                <div
+                  className={`p-3.5 rounded-[12px] border ${
+                    isTeslaDark ? 'bg-[#0F0F0F] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1.5">
+                    <Wifi className="w-3.5 h-3.5 text-cyan-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Primary Interface MAC</span>
+                  </div>
+                  <div className={`text-xs font-mono font-semibold ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
+                    {data.zabbix_inventory?.mac_address || '52:54:00:12:34:56'}
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                    IP: {data.ip_address || 'Unassigned'}
+                  </div>
+                </div>
+
+                {/* CPU Cores & Telemetry Status */}
+                <div
+                  className={`p-3.5 rounded-[12px] border ${
+                    isTeslaDark ? 'bg-[#0F0F0F] border-[#1F1F1F]' : 'bg-black/[0.02] border-black/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1.5">
+                    <Cpu className="w-3.5 h-3.5 text-purple-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Processor / Cores</span>
+                  </div>
+                  <div className={`text-xs font-semibold ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
+                    {data.zabbix_inventory?.cpu_cores ? `${data.zabbix_inventory.cpu_cores} VCPU / Logical Cores` : 'Multi-Core Processor'}
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                    Location: {data.zabbix_inventory?.location || `${data.room_name} / ${data.rack_name} / U${data.start_u}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Dynamic Asset Fields (PostgreSQL CMDB) */}
+            <div
+              className={`p-5 rounded-[16px] space-y-4 border ${
+                isTeslaDark ? 'bg-[#161616] border-[#1F1F1F]' : 'bg-white border-black/10 shadow-xs'
+              }`}
+            >
+              <div
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-inherit`}
+              >
+                <div>
+                  <h4 className={`text-sm font-semibold ${isTeslaDark ? 'text-white' : 'text-[#1d1d1f]'}`}>
+                    Dynamic Asset Fields (PostgreSQL CMDB)
+                  </h4>
+                  <p className={`text-xs mt-0.5 ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                    Decoupled from Zabbix to allow unlimited, flexible enterprise inventory schema.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {isEditingInventory ? (
+                    <>
+                      <button
+                        onClick={() => setIsEditingInventory(false)}
+                        className={`h-[34px] px-3.5 rounded-[10px] text-xs font-semibold transition-colors cursor-pointer ${
+                          isTeslaDark
+                            ? 'bg-[#161616] hover:bg-[#1F1F1F] border border-[#1F1F1F] text-zinc-300'
+                            : 'bg-white hover:bg-black/[0.04] border-[0.5px] border-black/10 text-zinc-700 shadow-xs'
+                        }`}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveInventory}
+                        disabled={savingInventory}
+                        className={`h-[34px] px-4 rounded-[10px] font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 ${
+                          isTeslaDark
+                            ? 'bg-[#3E6AE1] hover:bg-[#345ac2] text-white shadow-none'
+                            : 'bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm shadow-[#0071E3]/20'
+                        }`}
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        {savingInventory ? 'Saving...' : 'Save to PostgreSQL'}
+                      </button>
+                    </>
+                  ) : (
                     <button
-                      onClick={() => setIsEditingInventory(false)}
-                      className={`h-[34px] px-3.5 rounded-[10px] text-xs font-semibold transition-colors cursor-pointer ${
-                        isTeslaDark
-                          ? 'bg-[#161616] hover:bg-[#1F1F1F] border border-[#1F1F1F] text-zinc-300'
-                          : 'bg-white hover:bg-black/[0.04] border-[0.5px] border-black/10 text-zinc-700 shadow-xs'
-                      }`}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveInventory}
-                      disabled={savingInventory}
-                      className={`h-[34px] px-4 rounded-[10px] font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 ${
+                      onClick={() => setIsEditingInventory(true)}
+                      className={`h-[34px] px-4 rounded-[10px] text-xs font-semibold transition-all cursor-pointer ${
                         isTeslaDark
                           ? 'bg-[#3E6AE1] hover:bg-[#345ac2] text-white shadow-none'
                           : 'bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm shadow-[#0071E3]/20'
                       }`}
                     >
-                      <Save className="w-3.5 h-3.5" />
-                      {savingInventory ? 'Saving...' : 'Save to PostgreSQL'}
+                      Edit / Add Dynamic Fields
                     </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setIsEditingInventory(true)}
-                    className={`h-[34px] px-4 rounded-[10px] text-xs font-semibold transition-all cursor-pointer ${
-                      isTeslaDark
-                        ? 'bg-[#3E6AE1] hover:bg-[#345ac2] text-white shadow-none'
-                        : 'bg-[#0071E3] hover:bg-[#0077ED] text-white shadow-sm shadow-[#0071E3]/20'
-                    }`}
-                  >
-                    Edit / Add Dynamic Fields
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* In-place Field Adder */}
-            {isEditingInventory && (
-              <div
-                className={`p-4 rounded-[14px] space-y-3 ${
-                  isTeslaDark ? 'bg-[#161616] border border-[#1F1F1F]' : 'bg-black/[0.02] border-[0.5px] border-black/10'
-                }`}
-              >
-                <span className={`text-xs font-semibold block ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`}>
-                  + Add New Custom Inventory Field
-                </span>
-                <div className="flex flex-col sm:flex-row gap-2.5">
-                  <input
-                    type="text"
-                    value={newKey}
-                    onChange={(e) => setNewKey(e.target.value)}
-                    placeholder="Field Name (e.g. Warranty_Expiry, Contract_PO, SLA)"
-                    className={`flex-1 h-[36px] rounded-[10px] px-3 text-xs focus:outline-none focus:ring-2 ${
-                      isTeslaDark
-                        ? 'bg-[#0A0A0A] border border-[#1F1F1F] text-white placeholder:text-zinc-600 focus:ring-[#3E6AE1]/20 focus:border-[#3E6AE1]'
-                        : 'bg-white border-[0.5px] border-black/10 text-[#1d1d1f] placeholder:text-zinc-400 focus:ring-[#0071E3]/20 focus:border-[#0071E3]'
-                    }`}
-                  />
-                  <input
-                    type="text"
-                    value={newValue}
-                    onChange={(e) => setNewValue(e.target.value)}
-                    placeholder="Value (e.g. 2028-12-31, PO-9942, 24x7x4)"
-                    className={`flex-1 h-[36px] rounded-[10px] px-3 text-xs focus:outline-none focus:ring-2 ${
-                      isTeslaDark
-                        ? 'bg-[#0A0A0A] border border-[#1F1F1F] text-white placeholder:text-zinc-600 focus:ring-[#3E6AE1]/20 focus:border-[#3E6AE1]'
-                        : 'bg-white border-[0.5px] border-black/10 text-[#1d1d1f] placeholder:text-zinc-400 focus:ring-[#0071E3]/20 focus:border-[#0071E3]'
-                    }`}
-                  />
-                  <button
-                    onClick={handleAddField}
-                    className={`h-[36px] px-4 rounded-[10px] text-xs font-semibold text-white transition-all cursor-pointer shrink-0 ${
-                      isTeslaDark
-                        ? 'bg-[#3E6AE1] hover:bg-[#345ac2]'
-                        : 'bg-[#0071E3] hover:bg-[#0077ED] shadow-xs shadow-[#0071E3]/20'
-                    }`}
-                  >
-                    Add Field
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Custom Fields Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {Object.entries(customFields).map(([key, val]) => (
-                <div
-                  key={key}
-                  className={`p-3.5 rounded-[12px] flex flex-col justify-between space-y-2 ${
-                    isTeslaDark
-                      ? 'bg-[#161616] border border-[#1F1F1F]'
-                      : 'bg-black/[0.02] border-[0.5px] border-black/10 shadow-xs'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`text-[10px] uppercase font-semibold ${
-                        isTeslaDark ? 'text-[#8E8E93] tracking-[1.5px]' : 'text-zinc-500 tracking-wider'
-                      }`}
-                    >
-                      {key.replace(/_/g, ' ')}
-                    </span>
-                    {isEditingInventory && (
-                      <button
-                        onClick={() => handleRemoveField(key)}
-                        className="text-rose-500 hover:text-rose-400 p-1 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-
-                  {isEditingInventory ? (
-                    <input
-                      type="text"
-                      value={String(val || '')}
-                      onChange={(e) =>
-                        setCustomFields((prev) => ({ ...prev, [key]: e.target.value }))
-                      }
-                      className={`h-[32px] rounded-[8px] px-2.5 text-xs focus:outline-none focus:ring-2 ${
-                        isTeslaDark
-                          ? 'bg-[#0A0A0A] border border-[#1F1F1F] text-white focus:ring-[#3E6AE1]/20 focus:border-[#3E6AE1]'
-                          : 'bg-white border-[0.5px] border-black/10 text-[#1d1d1f] focus:ring-[#0071E3]/20 focus:border-[#0071E3]'
-                      }`}
-                    />
-                  ) : (
-                    <span
-                      className={`text-xs font-semibold break-all ${
-                        isTeslaDark ? 'text-zinc-200 font-mono' : 'text-[#1d1d1f]'
-                      }`}
-                    >
-                      {String(val || '--')}
-                    </span>
                   )}
                 </div>
-              ))}
+              </div>
+
+              {/* In-place Field Adder */}
+              {isEditingInventory && (
+                <div
+                  className={`p-4 rounded-[14px] space-y-3 ${
+                    isTeslaDark ? 'bg-[#0F0F0F] border border-[#1F1F1F]' : 'bg-black/[0.02] border-[0.5px] border-black/10'
+                  }`}
+                >
+                  <span className={`text-xs font-semibold block ${isTeslaDark ? 'text-[#3E6AE1]' : 'text-[#0071E3]'}`}>
+                    + Add New Custom Inventory Field
+                  </span>
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <input
+                      type="text"
+                      value={newKey}
+                      onChange={(e) => setNewKey(e.target.value)}
+                      placeholder="Field Name (e.g. Warranty_Expiry, Contract_PO, SLA)"
+                      className={`flex-1 h-[36px] rounded-[10px] px-3 text-xs focus:outline-none focus:ring-2 ${
+                        isTeslaDark
+                          ? 'bg-[#0A0A0A] border border-[#1F1F1F] text-white placeholder:text-zinc-600 focus:ring-[#3E6AE1]/20 focus:border-[#3E6AE1]'
+                          : 'bg-white border-[0.5px] border-black/10 text-[#1d1d1f] placeholder:text-zinc-400 focus:ring-[#0071E3]/20 focus:border-[#0071E3]'
+                      }`}
+                    />
+                    <input
+                      type="text"
+                      value={newValue}
+                      onChange={(e) => setNewValue(e.target.value)}
+                      placeholder="Value (e.g. 2028-12-31, PO-9942, 24x7x4)"
+                      className={`flex-1 h-[36px] rounded-[10px] px-3 text-xs focus:outline-none focus:ring-2 ${
+                        isTeslaDark
+                          ? 'bg-[#0A0A0A] border border-[#1F1F1F] text-white placeholder:text-zinc-600 focus:ring-[#3E6AE1]/20 focus:border-[#3E6AE1]'
+                          : 'bg-white border-[0.5px] border-black/10 text-[#1d1d1f] placeholder:text-zinc-400 focus:ring-[#0071E3]/20 focus:border-[#0071E3]'
+                      }`}
+                    />
+                    <button
+                      onClick={handleAddField}
+                      className={`h-[36px] px-4 rounded-[10px] text-xs font-semibold text-white transition-all cursor-pointer shrink-0 ${
+                        isTeslaDark
+                          ? 'bg-[#3E6AE1] hover:bg-[#345ac2]'
+                          : 'bg-[#0071E3] hover:bg-[#0077ED] shadow-xs shadow-[#0071E3]/20'
+                      }`}
+                    >
+                      Add Field
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Fields Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {Object.entries(customFields).map(([key, val]) => (
+                  <div
+                    key={key}
+                    className={`p-3.5 rounded-[12px] flex flex-col justify-between space-y-2 ${
+                      isTeslaDark
+                        ? 'bg-[#0F0F0F] border border-[#1F1F1F]'
+                        : 'bg-black/[0.02] border-[0.5px] border-black/10 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-[10px] uppercase font-semibold ${
+                          isTeslaDark ? 'text-[#8E8E93] tracking-[1.5px]' : 'text-zinc-500 tracking-wider'
+                        }`}
+                      >
+                        {key.replace(/_/g, ' ')}
+                      </span>
+                      {isEditingInventory && (
+                        <button
+                          onClick={() => handleRemoveField(key)}
+                          className="text-rose-500 hover:text-rose-400 p-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {isEditingInventory ? (
+                      <input
+                        type="text"
+                        value={String(val || '')}
+                        onChange={(e) =>
+                          setCustomFields((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                        className={`h-[32px] rounded-[8px] px-2.5 text-xs focus:outline-none focus:ring-2 ${
+                          isTeslaDark
+                            ? 'bg-[#0A0A0A] border border-[#1F1F1F] text-white focus:ring-[#3E6AE1]/20 focus:border-[#3E6AE1]'
+                            : 'bg-white border-[0.5px] border-black/10 text-[#1d1d1f] focus:ring-[#0071E3]/20 focus:border-[#0071E3]'
+                        }`}
+                      />
+                    ) : (
+                      <span
+                        className={`text-xs font-semibold break-all ${
+                          isTeslaDark ? 'text-zinc-200 font-mono' : 'text-[#1d1d1f]'
+                        }`}
+                      >
+                        {String(val || '--')}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

@@ -15,6 +15,7 @@ from backend.app.schemas import (
     DeviceMetricHistoryPoint,
     DeviceOverviewResponse,
     ZabbixLatestItem,
+    ZabbixHostInventory,
     DeviceAssignFromZabbix,
     DeviceStatusUpdate,
     BrandInfo,
@@ -1058,11 +1059,11 @@ async def get_device_overview(device_id: str, db: AsyncSession = Depends(get_db)
     cpu_history: List[DeviceMetricHistoryPoint] = []
     active_alerts: List[dict] = []
     latest_data_items: List[ZabbixLatestItem] = []
+    zabbix_inventory: Optional[ZabbixHostInventory] = None
 
     if device.zabbix_host_id:
         try:
             # 1. Fetch live metrics
-            # 1. Fetch live metrics with robust priority resolution
             items = await zabbix_service.get_host_latest_metrics(device.zabbix_host_id)
             metrics = zabbix_service.resolve_telemetry_metrics(items)
             cpu_val = metrics.cpu_utilization
@@ -1107,6 +1108,23 @@ async def get_device_overview(device_id: str, db: AsyncSession = Depends(get_db)
                         change_delta=None,
                     )
                 )
+
+            # 4. Resolve Live Zabbix Hardware/OS Inventory
+            cached_inv = host_summary.get("inventory") if host_summary else None
+            resolved_dict = zabbix_service.resolve_host_inventory(
+                inventory=cached_inv or {},
+                items=all_items,
+                interfaces=[],
+            )
+            if any(v is not None for v in resolved_dict.values()):
+                zabbix_inventory = ZabbixHostInventory(**resolved_dict)
+                # Auto-sync serial number if currently empty in DB
+                if not device.serial_number and resolved_dict.get("serial_number"):
+                    device.serial_number = resolved_dict.get("serial_number")
+                    try:
+                        await db.commit()
+                    except Exception:
+                        await db.rollback()
         except Exception as e:
             print(f"[Device Overview] Zabbix query notice: {e}")
 
@@ -1159,5 +1177,6 @@ async def get_device_overview(device_id: str, db: AsyncSession = Depends(get_db)
         chassis_specs=chassis_specs,
         brand_info=BrandInfo(**b_meta) if b_meta else None,
         latest_data_items=latest_data_items,
+        zabbix_inventory=zabbix_inventory,
         zabbix_web_links=build_zabbix_web_links(device.zabbix_host_id),
     )

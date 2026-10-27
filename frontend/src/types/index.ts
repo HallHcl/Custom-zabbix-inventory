@@ -13,6 +13,22 @@ export interface ZabbixWebLinks {
   graphs_url?: string | null
 }
 
+export interface ZabbixHostInventory {
+  os?: string | null
+  os_full?: string | null
+  os_arch?: string | null
+  kernel?: string | null
+  serial_number?: string | null
+  mac_address?: string | null
+  hardware_model?: string | null
+  vendor?: string | null
+  cpu_cores?: number | null
+  hostname?: string | null
+  location?: string | null
+  asset_tag?: string | null
+  inventory_mode?: string | null
+}
+
 export interface ZabbixStatusSummary {
   hostid: string
   name: string
@@ -21,6 +37,7 @@ export interface ZabbixStatusSummary {
   highest_severity: number
   problems_count: number
   problems: ZabbixProblem[]
+  inventory?: ZabbixHostInventory | null
   zabbix_web_links?: ZabbixWebLinks | null
 }
 
@@ -224,6 +241,7 @@ export interface DeviceOverview {
   chassis_specs?: ChassisSpecs
   brand_info?: BrandInfo | null
   latest_data_items: ZabbixLatestItem[]
+  zabbix_inventory?: ZabbixHostInventory | null
   zabbix_web_links?: ZabbixWebLinks | null
 }
 

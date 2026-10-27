@@ -159,6 +159,19 @@ class SyncService:
                 if iface.get("main") == "1" or not ip:
                     ip = iface.get("ip", "")
 
+            # Resolve Hardware / OS Inventory from Zabbix host.inventory & interfaces
+            inv_raw = h.get("inventory")
+            if not isinstance(inv_raw, dict):
+                inv_raw = {}
+            if "inventory_mode" in h:
+                inv_raw["inventory_mode"] = h.get("inventory_mode")
+
+            resolved_inv = zabbix_service.resolve_host_inventory(
+                inventory=inv_raw,
+                items=[],
+                interfaces=h.get("interfaces", []),
+            )
+
             summary = {
                 "hostid": hid,
                 "name": h.get("name", h.get("host", "")),
@@ -166,6 +179,7 @@ class SyncService:
                 "status": self.map_severity_to_status(highest_sev) if host_probs else "ok",
                 "highest_severity": highest_sev,
                 "problems_count": len(host_probs),
+                "inventory": resolved_inv,
                 "problems": [
                     {
                         "triggerid": p.get("triggerid"),

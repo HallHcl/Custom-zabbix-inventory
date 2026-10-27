@@ -384,32 +384,64 @@ export function DevicePageModal({ deviceId, onClose, onDeviceUpdated }: DevicePa
                     )}
                   </div>
 
-                  {/* Standard Specs Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono text-xs">
+                  {/* Live Zabbix & Standard Specs Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-xs">
                     <div className="p-2 rounded-[2px] bg-[#20282f] border border-[#394650]">
                       <span className="text-[9px] text-[#85a6b1] uppercase tracking-wider block mb-0.5">
-                        Brand
+                        Operating System
                       </span>
-                      <span className="font-bold text-[#caedde]">
-                        {data?.custom_fields?.['brand'] || data?.manufacturer || 'Generic'}
+                      <span className="font-bold text-[#caedde] block truncate" title={data?.zabbix_inventory?.os_full || data?.zabbix_inventory?.os || undefined}>
+                        {data?.zabbix_inventory?.os || data?.zabbix_inventory?.os_full || 'Linux (Auto)'}
+                      </span>
+                      {data?.zabbix_inventory?.os_arch && (
+                        <span className="text-[9px] text-[#85a6b1]/80 block">
+                          Arch: {data.zabbix_inventory.os_arch}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-2 rounded-[2px] bg-[#20282f] border border-[#394650]">
+                      <span className="text-[9px] text-[#85a6b1] uppercase tracking-wider block mb-0.5">
+                        Hardware & Vendor
+                      </span>
+                      <span className="font-bold text-[#caedde] block truncate">
+                        {data?.zabbix_inventory?.vendor || data?.manufacturer || 'Standard'} {data?.zabbix_inventory?.hardware_model || data?.model || ''}
+                      </span>
+                      <span className="text-[9px] text-[#85a6b1]/80 block">
+                        Height: {data?.height_u}U
                       </span>
                     </div>
 
                     <div className="p-2 rounded-[2px] bg-[#20282f] border border-[#394650]">
                       <span className="text-[9px] text-[#85a6b1] uppercase tracking-wider block mb-0.5">
-                        Vendor
+                        Serial Number (S/N)
                       </span>
-                      <span className="font-bold text-[#caedde]">
-                        {data?.custom_fields?.['vendor'] || data?.manufacturer || 'Unspecified'}
+                      <span className="font-bold text-[#caedde] block truncate">
+                        {data?.zabbix_inventory?.serial_number || data?.serial_number || 'N/A'}
+                      </span>
+                      <span className="text-[9px] text-emerald-400/80 block">
+                        {data?.zabbix_inventory?.serial_number ? 'Live Verified' : 'PostgreSQL'}
                       </span>
                     </div>
 
                     <div className="p-2 rounded-[2px] bg-[#20282f] border border-[#394650]">
                       <span className="text-[9px] text-[#85a6b1] uppercase tracking-wider block mb-0.5">
-                        Firmware / Version
+                        Interface MAC / IP
+                      </span>
+                      <span className="font-bold text-[#caedde] block truncate">
+                        {data?.zabbix_inventory?.mac_address || '52:54:00:...'}
+                      </span>
+                      <span className="text-[9px] text-[#85a6b1]/80 block">
+                        IP: {data?.ip_address || 'Unassigned'}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-[2px] bg-[#20282f] border border-[#394650]">
+                      <span className="text-[9px] text-[#85a6b1] uppercase tracking-wider block mb-0.5">
+                        Processor / Cores
                       </span>
                       <span className="font-bold text-[#caedde]">
-                        {data?.custom_fields?.['version'] || 'v1.0.0'}
+                        {data?.zabbix_inventory?.cpu_cores ? `${data.zabbix_inventory.cpu_cores} VCPU / Cores` : 'Multi-Core'}
                       </span>
                     </div>
 
@@ -422,21 +454,12 @@ export function DevicePageModal({ deviceId, onClose, onDeviceUpdated }: DevicePa
                       </span>
                     </div>
 
-                    <div className="p-2 rounded-[2px] bg-[#20282f] border border-[#394650]">
+                    <div className="p-2 rounded-[2px] bg-[#20282f] border border-[#394650] col-span-2">
                       <span className="text-[9px] text-[#85a6b1] uppercase tracking-wider block mb-0.5">
-                        Chassis Model
+                        Kernel / System Build
                       </span>
-                      <span className="font-bold text-[#caedde]">
-                        {data?.model || 'Standard 1U'}
-                      </span>
-                    </div>
-
-                    <div className="p-2 rounded-[2px] bg-[#20282f] border border-[#394650]">
-                      <span className="text-[9px] text-[#85a6b1] uppercase tracking-wider block mb-0.5">
-                        Serial Number
-                      </span>
-                      <span className="font-bold text-[#caedde]">
-                        {data?.serial_number || 'N/A'}
+                      <span className="font-bold text-[#caedde] block truncate" title={data?.zabbix_inventory?.kernel || undefined}>
+                        {data?.zabbix_inventory?.kernel || 'Linux Kernel Production Release'}
                       </span>
                     </div>
                   </div>

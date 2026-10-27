@@ -209,6 +209,117 @@ class ZabbixService:
             cpu_is_idle=cpu_is_idle,
         )
 
+    @staticmethod
+    def resolve_host_inventory(
+        inventory: Optional[Dict[str, Any]] = None,
+        items: Optional[List[Dict[str, Any]]] = None,
+        interfaces: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Extracts and resolves normalized Hardware and OS Inventory from:
+        1. Zabbix host inventory object (if populated)
+        2. Live Zabbix system items (system.sw.os, system.sw.arch, system.uname, etc.)
+        3. Host network interfaces
+        """
+        inv = inventory if isinstance(inventory, dict) else {}
+        items_list = items or []
+        ifaces_list = interfaces or []
+
+        items_by_key: Dict[str, str] = {}
+        for it in items_list:
+            k = it.get("key_", "").lower()
+            v = it.get("lastvalue")
+            if v is not None and v != "":
+                items_by_key[k] = str(v).strip()
+
+        # 1. OS & Kernel Resolution
+        raw_os = inv.get("os_full") or inv.get("os") or ""
+        if not raw_os:
+            for k, v in items_by_key.items():
+                if k.startswith("system.sw.os"):
+                    raw_os = v
+                    break
+        if not raw_os:
+            raw_os = items_by_key.get("system.uname", "")
+
+        # Clean/format OS Name for display
+        os_display = raw_os
+        if "almalinux" in raw_os.lower():
+            if "el9" in raw_os.lower() or " 9" in raw_os or "9." in raw_os:
+                os_display = "AlmaLinux 9"
+            elif "el8" in raw_os.lower() or " 8" in raw_os or "8." in raw_os:
+                os_display = "AlmaLinux 8"
+            else:
+                os_display = "AlmaLinux OS"
+        elif "ubuntu" in raw_os.lower():
+            os_display = "Ubuntu Linux"
+        elif "windows" in raw_os.lower():
+            os_display = "Microsoft Windows"
+        elif "debian" in raw_os.lower():
+            os_display = "Debian GNU/Linux"
+        elif "red hat" in raw_os.lower() or "rhel" in raw_os.lower():
+            os_display = "Red Hat Enterprise Linux"
+        elif raw_os.startswith("Linux ") and "(" in raw_os:
+            os_display = raw_os.split("(")[0].strip()
+
+        # 2. Architecture
+        arch = inv.get("hw_arch") or items_by_key.get("system.sw.arch", "")
+        if not arch:
+            if "x86_64" in raw_os.lower():
+                arch = "x86_64"
+            elif "aarch64" in raw_os.lower() or "arm64" in raw_os.lower():
+                arch = "aarch64"
+
+        # 3. Kernel
+        kernel = items_by_key.get("system.uname") or inv.get("software") or ""
+
+        # 4. Serial Number
+        serial = (
+            inv.get("serialno_a")
+            or inv.get("serialno_b")
+            or items_by_key.get("system.hw.serialnumber")
+            or items_by_key.get("system.hw.chassis[serial]")
+            or ""
+        )
+
+        # 5. MAC Address
+        mac = inv.get("macaddress_a") or items_by_key.get("net.if.mac", "")
+        if not mac:
+            for k, v in items_by_key.items():
+                if "mac" in k and ":" in v and len(v) == 17:
+                    mac = v
+                    break
+        if not mac and ifaces_list:
+            for iface in ifaces_list:
+                cand = iface.get("mac")
+                if cand:
+                    mac = cand
+                    break
+
+        # 6. Hardware Model & Vendor
+        model = inv.get("model") or inv.get("hardware") or items_by_key.get("system.hw.model", "")
+        vendor = inv.get("vendor") or items_by_key.get("system.hw.vendor", "")
+
+        # 7. CPU Cores & Hostname
+        cpu_count = items_by_key.get("system.cpu.num", "")
+        hostname = items_by_key.get("system.hostname", "")
+
+        return {
+            "os": os_display or None,
+            "os_full": raw_os or None,
+            "os_arch": arch or None,
+            "kernel": kernel or None,
+            "serial_number": serial or None,
+            "mac_address": mac or None,
+            "hardware_model": model or None,
+            "vendor": vendor or None,
+            "cpu_cores": int(cpu_count) if cpu_count.isdigit() else None,
+            "hostname": hostname or None,
+            "location": inv.get("location") or None,
+            "asset_tag": inv.get("asset_tag") or inv.get("tag") or None,
+            "inventory_mode": inv.get("inventory_mode", None),
+        }
+
     def __init__(self, url: Optional[str] = None, token: Optional[str] = None):
         self.url = url or settings.zabbix_effective_url
         self.token = token or settings.ZABBIX_API_TOKEN
@@ -276,12 +387,13 @@ class ZabbixService:
             raise e
 
     async def get_all_hosts(self) -> List[Dict[str, Any]]:
-        """Fetch all monitored hosts with interfaces, tags, and host groups"""
+        """Fetch all monitored hosts with interfaces, tags, host groups, and inventory"""
         params = {
-            "output": ["hostid", "host", "name", "status", "description"],
+            "output": ["hostid", "host", "name", "status", "description", "inventory_mode"],
             "selectInterfaces": ["interfaceid", "ip", "dns", "port", "type", "main"],
             "selectTags": ["tag", "value"],
             "selectHostGroups": ["groupid", "name"],
+            "selectInventory": "extend",
             "monitored_hosts": True,
         }
         try:
@@ -300,6 +412,22 @@ class ZabbixService:
                 ]
             logger.error(f"[Zabbix] Error retrieving hosts from {self.url}: {e}")
             raise e
+
+    async def get_host_inventory_items(self, host_id: str) -> List[Dict[str, Any]]:
+        """Fetch system, OS, and hardware inventory items for a host"""
+        params = {
+            "output": ["itemid", "name", "key_", "lastvalue", "units", "lastclock"],
+            "hostids": [host_id],
+            "monitored": True,
+            "search": {
+                "key_": ["system.sw.os", "system.sw.arch", "system.uname", "system.hostname", "system.cpu.num", "system.hw", "net.if.mac"],
+            },
+            "searchByAny": True,
+        }
+        try:
+            return await self._call("item.get", params) or []
+        except Exception:
+            return []
 
     async def get_active_problems(self, host_ids: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """Fetch active triggers / problems with severity and host info"""
