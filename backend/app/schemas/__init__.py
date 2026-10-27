@@ -187,6 +187,7 @@ class ZabbixLatestItem(BaseModel):
     lastclock: Optional[str] = None
     category: str = "System"
     change_delta: Optional[str] = None
+    tags: List[Dict[str, str]] = []
 
 
 class DeviceOverviewResponse(BaseModel):

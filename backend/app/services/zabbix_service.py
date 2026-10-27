@@ -471,6 +471,7 @@ class ZabbixService:
         """Fetch all latest items for a host for the Unified Device Overview / Latest Data view"""
         params = {
             "output": ["itemid", "name", "key_", "lastvalue", "units", "lastclock", "value_type"],
+            "selectTags": ["tag", "value"],
             "hostids": [host_id],
             "monitored": True,
             "sortfield": "name",

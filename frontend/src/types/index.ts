@@ -197,6 +197,7 @@ export interface ZabbixLatestItem {
   lastclock?: string | null
   category?: string
   change_delta?: string | null
+  tags?: Array<{ tag: string; value: string }>
 }
 
 export interface ChassisSpecs {

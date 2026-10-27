@@ -193,13 +193,28 @@ async def test_device_move_and_resizing_collision():
         target_rack = overview_resp.json()["racks"][0]
         rack_id = target_rack["id"]
 
-        # Mount Dev 1 at U20
+        elev_resp = await client.get(f"/api/v1/racks/{rack_id}/elevation")
+        occupied = {
+            u
+            for d in elev_resp.json().get("devices", [])
+            for u in range(d["start_u"], d["start_u"] + d["height_u"])
+        }
+        candidate_u = next(
+            (u for u in range(1, 40) if u not in occupied and (u + 1) not in occupied and (u + 2) not in occupied),
+            None
+        )
+        assert candidate_u is not None, "Need 3 consecutive open slots in rack"
+        u1 = candidate_u
+        u2 = candidate_u + 2
+        u_vacant = candidate_u + 1
+
+        # Mount Dev 1 at u1
         dev1_resp = await client.post(
             "/api/v1/devices",
             json={
                 "rack_id": rack_id,
                 "name": "TEST-MOVE-DEV1",
-                "start_u": 20,
+                "start_u": u1,
                 "height_u": 1,
                 "position_face": "FRONT",
             },
@@ -208,13 +223,13 @@ async def test_device_move_and_resizing_collision():
         dev1_id = dev1_resp.json()["id"]
 
         try:
-            # Mount Dev 2 at U22
+            # Mount Dev 2 at u2
             dev2_resp = await client.post(
                 "/api/v1/devices",
                 json={
                     "rack_id": rack_id,
                     "name": "TEST-MOVE-DEV2",
-                    "start_u": 22,
+                    "start_u": u2,
                     "height_u": 1,
                     "position_face": "FRONT",
                 },
@@ -223,10 +238,10 @@ async def test_device_move_and_resizing_collision():
             dev2_id = dev2_resp.json()["id"]
 
             try:
-                # 1. Attempt to move Dev 1 onto Dev 2 (U22) -> MUST fail with 400 collision
+                # 1. Attempt to move Dev 1 onto Dev 2 (u2) -> MUST fail with 400 collision
                 move_conflict = await client.patch(
                     f"/api/v1/devices/{dev1_id}",
-                    json={"start_u": 22},
+                    json={"start_u": u2},
                 )
                 assert move_conflict.status_code == 400
                 assert "collision" in move_conflict.json()["detail"].lower()
@@ -239,13 +254,13 @@ async def test_device_move_and_resizing_collision():
                 assert rename_resp.status_code == 200
                 assert rename_resp.json()["name"] == "TEST-MOVE-DEV1-RENAMED"
 
-                # 3. Move Dev 1 to vacant U21 -> MUST succeed
+                # 3. Move Dev 1 to vacant u_vacant -> MUST succeed
                 move_ok = await client.patch(
                     f"/api/v1/devices/{dev1_id}",
-                    json={"start_u": 21},
+                    json={"start_u": u_vacant},
                 )
                 assert move_ok.status_code == 200
-                assert move_ok.json()["start_u"] == 21
+                assert move_ok.json()["start_u"] == u_vacant
             finally:
                 await client.delete(f"/api/v1/devices/{dev2_id}")
         finally:

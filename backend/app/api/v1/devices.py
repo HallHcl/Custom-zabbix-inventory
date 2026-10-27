@@ -1106,6 +1106,7 @@ async def get_device_overview(device_id: str, db: AsyncSession = Depends(get_db)
                         lastclock=str(it.get("lastclock", "")) if it.get("lastclock") is not None else None,
                         category=categorize_zabbix_item(item_name, item_key),
                         change_delta=None,
+                        tags=it.get("tags", []),
                     )
                 )
 

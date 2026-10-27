@@ -18,11 +18,17 @@ import {
   Box,
   Terminal,
   Hash,
+  Eye,
+  Copy,
+  Check,
+  X,
+  LineChart,
 } from 'lucide-react'
 import type { DeviceOverview, ZabbixLatestItem } from '../../types'
 import { fetchDeviceOverview, updateDeviceInventory } from '../../api/client'
 import { ChassisVisualCard } from '../rack/ChassisVisualCard'
 import { useTheme } from '../../lib/theme'
+import { formatZabbixValue } from '../../lib/zabbixFormatters'
 
 interface DevicePageViewProps {
   deviceId: number
@@ -43,6 +49,8 @@ export function DevicePageView({ deviceId, onBack, onDeviceUpdated }: DevicePage
   // Zabbix Latest Data Filter State (Task 4)
   const [metricSearch, setMetricSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
+  const [viewingJson, setViewingJson] = useState<{ name: string; key_: string; raw: string } | null>(null)
+  const [copiedJson, setCopiedJson] = useState(false)
 
   // Dynamic Custom Inventory Edit State (Task 5)
   const [isEditingInventory, setIsEditingInventory] = useState(false)
@@ -631,7 +639,15 @@ export function DevicePageView({ deviceId, onBack, onDeviceUpdated }: DevicePage
                 isTeslaDark ? 'border border-[#1F1F1F] bg-[#0A0A0A]' : 'border-[0.5px] border-black/10 shadow-xs'
               }`}
             >
-              <table className="w-full text-left text-xs">
+              <table className="table-fixed w-full text-left text-xs">
+                <colgroup>
+                  <col className="w-[32%] min-w-[200px]" />
+                  <col className="w-[13%] min-w-[100px]" />
+                  <col className="w-[18%] min-w-[130px]" />
+                  <col className="w-[10%] min-w-[80px]" />
+                  <col className="w-[18%] min-w-[130px]" />
+                  <col className="w-[9%] min-w-[80px]" />
+                </colgroup>
                 <thead
                   className={`uppercase text-[11px] font-semibold tracking-wider select-none border-b ${
                     isTeslaDark
@@ -640,12 +656,12 @@ export function DevicePageView({ deviceId, onBack, onDeviceUpdated }: DevicePage
                   }`}
                 >
                   <tr>
-                    <th className="py-3 px-4 font-semibold">Item Name</th>
-                    <th className="py-3 px-3 font-semibold">Category</th>
-                    <th className="py-3 px-3 font-semibold">Zabbix Key</th>
-                    <th className="py-3 px-4 text-right font-semibold">Last Value</th>
-                    <th className="py-3 px-3 text-right font-semibold">Change Delta</th>
-                    <th className="py-3 px-4 text-right font-semibold">Last Checked</th>
+                    <th className="py-3 px-4 font-semibold truncate">Name</th>
+                    <th className="py-3 px-3 text-right font-semibold truncate">Last check</th>
+                    <th className="py-3 px-4 text-right font-semibold truncate">Last value</th>
+                    <th className="py-3 px-3 text-right font-semibold truncate">Change</th>
+                    <th className="py-3 px-3 font-semibold truncate">Tags</th>
+                    <th className="py-3 px-3 text-center font-semibold truncate">History</th>
                   </tr>
                 </thead>
                 <tbody className={isTeslaDark ? 'divide-y divide-[#1F1F1F]' : 'divide-y-[0.5px] divide-black/5'}>
@@ -656,65 +672,161 @@ export function DevicePageView({ deviceId, onBack, onDeviceUpdated }: DevicePage
                       </td>
                     </tr>
                   ) : (
-                    filteredItems.map((item, idx) => (
-                      <tr
-                        key={idx}
-                        className={`transition-colors ${
-                          isTeslaDark ? 'hover:bg-[#161616]/70' : 'hover:bg-black/[0.02]'
-                        }`}
-                      >
-                        <td className={`py-3 px-4 font-semibold ${isTeslaDark ? 'text-zinc-100' : 'text-[#1d1d1f]'}`}>
-                          {item.name}
-                        </td>
-                        <td className="py-3 px-3">
-                          <span
-                            className={`px-2 py-0.5 rounded-[6px] text-[10px] font-medium ${
-                              isTeslaDark
-                                ? 'bg-[#161616] border border-[#1F1F1F] text-zinc-300'
-                                : 'bg-black/[0.04] border-[0.5px] border-black/10 text-zinc-700'
-                            }`}
-                          >
-                            {item.category || 'General'}
-                          </span>
-                        </td>
-                        <td className={`py-3 px-3 text-[11px] font-mono ${isTeslaDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                          {item.key_}
-                        </td>
-                        <td className={`py-3 px-4 text-right font-bold ${isTeslaDark ? 'text-white font-mono' : 'text-[#1d1d1f]'}`}>
-                          {item.lastvalue !== null && item.lastvalue !== undefined ? (
-                            <span>
-                              {item.lastvalue} {item.units || ''}
-                            </span>
-                          ) : (
-                            <span className={isTeslaDark ? 'text-zinc-600' : 'text-zinc-400'}>--</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-right text-[11px]">
-                          {item.change_delta ? (
-                            <span
-                              className={`font-semibold font-mono ${
-                                item.change_delta.startsWith('+')
-                                  ? 'text-amber-500'
-                                  : item.change_delta.startsWith('-')
-                                  ? isTeslaDark
-                                    ? 'text-[#00C853]'
-                                    : 'text-emerald-600'
-                                  : 'text-zinc-500'
-                              }`}
+                    filteredItems.map((item, idx) => {
+                      const fmt = formatZabbixValue(item.lastvalue, item.units)
+                      const deltaDisplay = item.change_delta ? (() => {
+                        const m = item.change_delta.match(/^([+-]?)([0-9.]+)(.*)$/)
+                        if (m) {
+                          const val = parseFloat(m[2])
+                          if (!isNaN(val)) {
+                            const formatted = val % 1 !== 0 ? val.toFixed(2) : String(val)
+                            return `${m[1]}${formatted}${m[3]}`
+                          }
+                        }
+                        return item.change_delta
+                      })() : null
+
+                      return (
+                        <tr
+                          key={idx}
+                          className={`transition-colors ${
+                            isTeslaDark ? 'hover:bg-[#161616]/70' : 'hover:bg-black/[0.02]'
+                          }`}
+                        >
+                          {/* 1. Name + Key + Category */}
+                          <td className="py-2.5 px-4 truncate">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className={`font-semibold text-xs truncate ${isTeslaDark ? 'text-zinc-100' : 'text-[#1d1d1f]'}`}
+                                title={item.name}
+                              >
+                                {item.name}
+                              </span>
+                              {item.category && item.category !== 'General' && item.category !== 'All' && (
+                                <span
+                                  className={`px-1.5 py-0.5 rounded-[5px] text-[9px] font-medium shrink-0 ${
+                                    isTeslaDark
+                                      ? 'bg-[#181818] border border-[#222] text-zinc-400'
+                                      : 'bg-black/[0.04] border-[0.5px] border-black/10 text-zinc-600'
+                                  }`}
+                                >
+                                  {item.category}
+                                </span>
+                              )}
+                            </div>
+                            <div
+                              className={`text-[10px] font-mono truncate mt-0.5 ${isTeslaDark ? 'text-zinc-500' : 'text-zinc-400'}`}
+                              title={item.key_}
                             >
-                              {item.change_delta}
-                            </span>
-                          ) : (
-                            <span className={isTeslaDark ? 'text-zinc-700' : 'text-zinc-300'}>-</span>
-                          )}
-                        </td>
-                        <td className={`py-3 px-4 text-right text-[11px] font-mono ${isTeslaDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                          {item.lastclock
-                            ? new Date(parseInt(item.lastclock) * 1000).toLocaleTimeString()
-                            : 'Real-time'}
-                        </td>
-                      </tr>
-                    ))
+                              {item.key_}
+                            </div>
+                          </td>
+
+                          {/* 2. Last check */}
+                          <td className={`py-2.5 px-3 text-right text-[11px] font-mono truncate ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                            {item.lastclock
+                              ? new Date(parseInt(item.lastclock) * 1000).toLocaleTimeString()
+                              : 'Real-time'}
+                          </td>
+
+                          {/* 3. Last value */}
+                          <td className={`py-2.5 px-4 text-right font-bold truncate ${isTeslaDark ? 'text-white font-mono' : 'text-[#1d1d1f]'}`}>
+                            {fmt.isJson ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <span className="text-[11px] font-mono opacity-60 truncate max-w-[85px]" title={item.lastvalue || ''}>
+                                  {fmt.value}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingJson({ name: item.name, key_: item.key_, raw: fmt.jsonFormatted || item.lastvalue || '' })}
+                                  className={`h-5 px-1.5 rounded-[5px] text-[10px] font-semibold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                                    isTeslaDark
+                                      ? 'bg-[#3E6AE1]/20 hover:bg-[#3E6AE1]/35 text-[#3E6AE1] border border-[#3E6AE1]/40'
+                                      : 'bg-[#0071E3]/10 hover:bg-[#0071E3]/20 text-[#0071E3] border border-[#0071E3]/20'
+                                  }`}
+                                  title="Inspect JSON Payload"
+                                >
+                                  <Eye className="w-2.5 h-2.5" />
+                                  <span>JSON</span>
+                                </button>
+                              </div>
+                            ) : fmt.fullDisplay !== '--' ? (
+                              <span className="truncate block" title={fmt.fullDisplay}>
+                                {fmt.fullDisplay}
+                              </span>
+                            ) : (
+                              <span className={isTeslaDark ? 'text-zinc-600' : 'text-zinc-400'}>--</span>
+                            )}
+                          </td>
+
+                          {/* 4. Change Delta */}
+                          <td className="py-2.5 px-3 text-right text-[11px] truncate">
+                            {deltaDisplay ? (
+                              <span
+                                className={`font-semibold font-mono ${
+                                  deltaDisplay.startsWith('+')
+                                    ? 'text-amber-500'
+                                    : deltaDisplay.startsWith('-')
+                                    ? isTeslaDark
+                                      ? 'text-[#00C853]'
+                                      : 'text-emerald-600'
+                                    : 'text-zinc-500'
+                                }`}
+                              >
+                                {deltaDisplay}
+                              </span>
+                            ) : (
+                              <span className={isTeslaDark ? 'text-zinc-700' : 'text-zinc-300'}>-</span>
+                            )}
+                          </td>
+
+                          {/* 5. Tags */}
+                          <td className="py-2.5 px-3 truncate">
+                            {item.tags && item.tags.length > 0 ? (
+                              <div className="flex flex-wrap items-center gap-1 overflow-hidden max-h-6">
+                                {item.tags.map((t, tidx) => (
+                                  <span
+                                    key={tidx}
+                                    className={`px-1.5 py-0.5 rounded-[4px] text-[10px] font-mono truncate max-w-[130px] ${
+                                      isTeslaDark
+                                        ? 'bg-[#181818] border border-[#262626] text-zinc-300'
+                                        : 'bg-black/[0.04] border-[0.5px] border-black/10 text-zinc-700'
+                                    }`}
+                                    title={`${t.tag}: ${t.value}`}
+                                  >
+                                    {t.tag}: {t.value}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className={`text-[11px] ${isTeslaDark ? 'text-zinc-700' : 'text-zinc-300'}`}>--</span>
+                            )}
+                          </td>
+
+                          {/* 6. History / Graph */}
+                          <td className="py-2.5 px-3 text-center">
+                            {data.zabbix_web_links?.base_url && item.itemid ? (
+                              <a
+                                href={`${data.zabbix_web_links.base_url}/history.php?action=showvalues&itemids%5B%5D=${item.itemid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[5px] text-[10px] font-semibold transition-all ${
+                                  isTeslaDark
+                                    ? 'bg-[#161616] hover:bg-[#222222] border border-[#262626] text-[#3E6AE1] hover:text-white'
+                                    : 'bg-black/[0.03] hover:bg-black/[0.07] border-[0.5px] border-black/10 text-[#0071E3] hover:text-[#005bb5]'
+                                }`}
+                                title="Open in Zabbix 7.0 Web Console"
+                              >
+                                <LineChart className="w-2.5 h-2.5" />
+                                <span>History</span>
+                              </a>
+                            ) : (
+                              <span className={isTeslaDark ? 'text-zinc-700' : 'text-zinc-300'}>-</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })
                   )}
                 </tbody>
               </table>
@@ -1218,6 +1330,92 @@ export function DevicePageView({ deviceId, onBack, onDeviceUpdated }: DevicePage
           </div>
         )}
       </div>
+
+      {/* JSON Payload Inspection Modal */}
+      {viewingJson && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div
+            className={`w-full max-w-3xl rounded-[20px] shadow-2xl border overflow-hidden flex flex-col max-h-[85vh] ${
+              isTeslaDark
+                ? 'bg-[#111111] border-[#262626] text-zinc-100 font-mono'
+                : 'bg-white border-black/10 text-[#1d1d1f]'
+            }`}
+          >
+            <div
+              className={`flex items-center justify-between px-6 py-4 border-b ${
+                isTeslaDark ? 'border-[#1F1F1F] bg-[#161616]' : 'border-black/5 bg-zinc-50/80'
+              }`}
+            >
+              <div className="min-w-0 pr-4">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-2 py-0.5 rounded-[6px] text-[10px] font-bold tracking-wider uppercase ${
+                      isTeslaDark
+                        ? 'bg-[#3E6AE1]/20 text-[#3E6AE1] border border-[#3E6AE1]/30'
+                        : 'bg-[#0071E3]/10 text-[#0071E3] border border-[#0071E3]/20'
+                    }`}
+                  >
+                    RAW JSON
+                  </span>
+                  <h3 className="text-sm font-semibold truncate">{viewingJson.name}</h3>
+                </div>
+                <p className={`text-xs mt-0.5 truncate font-mono ${isTeslaDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                  {viewingJson.key_}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(viewingJson.raw)
+                    setCopiedJson(true)
+                    setTimeout(() => setCopiedJson(false), 2000)
+                  }}
+                  className={`h-[32px] px-3 rounded-[8px] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isTeslaDark
+                      ? 'bg-[#1F1F1F] hover:bg-[#262626] text-zinc-200 border border-[#2F2F2F]'
+                      : 'bg-black/[0.04] hover:bg-black/[0.08] text-zinc-700 border-[0.5px] border-black/10'
+                  }`}
+                >
+                  {copiedJson ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy JSON</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingJson(null)}
+                  className={`w-8 h-8 rounded-[8px] flex items-center justify-center transition-all cursor-pointer ${
+                    isTeslaDark
+                      ? 'hover:bg-[#1F1F1F] text-zinc-400 hover:text-white'
+                      : 'hover:bg-black/[0.06] text-zinc-500 hover:text-black'
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="p-4 overflow-auto flex-1">
+              <pre
+                className={`p-4 rounded-[12px] text-xs font-mono leading-relaxed overflow-x-auto whitespace-pre ${
+                  isTeslaDark
+                    ? 'bg-[#0A0A0A] text-emerald-400 border border-[#1F1F1F]'
+                    : 'bg-zinc-900 text-emerald-300 border border-zinc-800'
+                }`}
+              >
+                {viewingJson.raw}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

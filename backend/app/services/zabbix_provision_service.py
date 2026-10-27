@@ -4,6 +4,7 @@ import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import select, delete
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db.models import Device, DeviceConnection, DeviceModel, Rack, Room
@@ -108,22 +109,30 @@ HARDWARE_MODELS = [
 
 def parse_location_tag(tags: Dict[str, str]) -> Tuple[Optional[str], Optional[int], Optional[int]]:
     """
-    Extract rack name, start U, and height U from Zabbix Location tag.
+    Extract rack name, start U, and height U from Zabbix Location, Rack, or Unit tags.
     Example: 'Room A / Rack A01 / U34-U35' -> ('R-A01', 34, 2)
+             'Data Hall Beta / R-D02 / U14' -> ('R-D02', 14, 1)
     """
     loc_str = tags.get("Location") or tags.get("location") or ""
-    if not loc_str:
+    rack_tag = tags.get("Rack") or tags.get("rack") or ""
+    unit_tag = tags.get("Unit") or tags.get("unit") or ""
+
+    if not loc_str and not rack_tag and not unit_tag:
         return None, None, None
 
     rack_name = None
-    rack_match = re.search(r"Rack\s+([A-Za-z0-9]+)", loc_str, re.IGNORECASE)
+    target_str = rack_tag or loc_str
+    rack_match = re.search(r"(?:Rack|R)?\s*[-_]?\s*([A-Za-z]\d+)", target_str, re.IGNORECASE)
     if rack_match:
         raw_r = rack_match.group(1).upper()
-        rack_name = f"R-{raw_r}" if not raw_r.startswith("R-") else raw_r
+        rack_name = f"R-{raw_r}"
+    elif rack_tag:
+        rack_name = rack_tag.upper()
 
     start_u = None
     height_u = None
-    u_range = re.search(r"U(\d+)(?:-U?(\d+))?", loc_str, re.IGNORECASE)
+    unit_source = unit_tag or loc_str
+    u_range = re.search(r"U(\d+)(?:-U?(\d+))?", unit_source, re.IGNORECASE)
     if u_range:
         u1 = int(u_range.group(1))
         u2 = int(u_range.group(2)) if u_range.group(2) else u1
@@ -174,7 +183,7 @@ async def auto_provision_zabbix_hosts(session: AsyncSession, wipe_mock_devices: 
     room_id = room.id
 
     # 2. Fetch all Racks in Room and build comprehensive lookup map
-    rack_stmt = select(Rack)
+    rack_stmt = select(Rack).options(selectinload(Rack.row))
     rack_res = await session.execute(rack_stmt)
     all_racks = rack_res.scalars().all()
     rack_map: Dict[str, Rack] = {}
@@ -276,11 +285,26 @@ async def auto_provision_zabbix_hosts(session: AsyncSession, wipe_mock_devices: 
             dev_res = await session.execute(dev_stmt)
             existing_dev = dev_res.scalars().first()
 
+        dev_room_id = rack.room_id if rack and rack.room_id else room_id
+
+        # Displace any conflicting device (e.g. old mock device) from the target slot
+        if rack_id and start_u:
+            occ_stmt = select(Device).where(
+                Device.rack_id == rack_id,
+                Device.u_position_start == start_u,
+                Device.zabbix_hostid != hostid,
+            )
+            occ_res = await session.execute(occ_stmt)
+            for occ in occ_res.scalars().all():
+                occ.rack_id = None
+                occ.u_position_start = None
+            await session.flush()
         if existing_dev:
             existing_dev.name = name
             existing_dev.hostname = tech_name
             existing_dev.device_model_id = model_id
             existing_dev.rack_id = rack_id
+            existing_dev.room_id = dev_room_id
             existing_dev.u_position_start = start_u
             existing_dev.management_ip = ip
             existing_dev.custom_fields = custom_fields
@@ -289,7 +313,7 @@ async def auto_provision_zabbix_hosts(session: AsyncSession, wipe_mock_devices: 
             device = Device(
                 device_model_id=model_id,
                 rack_id=rack_id,
-                room_id=room_id,
+                room_id=dev_room_id,
                 name=name,
                 hostname=tech_name,
                 zabbix_hostid=hostid,
